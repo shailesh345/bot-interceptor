@@ -1,0 +1,87 @@
+# Flask Application Factory
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+from flask_cors import CORS
+from flask_jwt_extended import JWTManager
+from flask_mail import Mail
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from config import config
+import redis
+import os
+
+# Initialize extensions
+db = SQLAlchemy()
+migrate = Migrate()
+jwt = JWTManager()
+mail = Mail()
+limiter = Limiter(
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"]
+)
+
+def create_app(config_name=None):
+    if config_name is None:
+        config_name = os.environ.get('FLASK_CONFIG', 'default')
+    
+    app = Flask(__name__)
+    app.config.from_object(config[config_name])
+    
+    # Initialize extensions
+    db.init_app(app)
+    migrate.init_app(app, db)
+    jwt.init_app(app)
+    mail.init_app(app)
+    limiter.init_app(app)
+    
+    # Configure CORS
+    CORS(app, origins=['http://localhost:3000', 'https://yourdomain.com'])
+    
+    # Initialize Redis
+    app.redis = redis.from_url(app.config['REDIS_URL'])
+    
+    # Register blueprints
+    from app.api import api as api_blueprint
+    app.register_blueprint(api_blueprint, url_prefix='/api')
+    
+    from app.auth import auth as auth_blueprint
+    app.register_blueprint(auth_blueprint, url_prefix='/auth')
+    
+    from app.admin import admin as admin_blueprint
+    app.register_blueprint(admin_blueprint, url_prefix='/admin')
+    
+    from app.interceptor import interceptor as interceptor_blueprint
+    app.register_blueprint(interceptor_blueprint, url_prefix='/interceptor')
+    
+    from app.analytics import analytics as analytics_blueprint
+    app.register_blueprint(analytics_blueprint, url_prefix='/analytics')
+    
+    from app.billing import billing as billing_blueprint
+    app.register_blueprint(billing_blueprint, url_prefix='/billing')
+    
+    # JWT token handlers
+    @jwt.token_in_blocklist_loader
+    def check_if_token_revoked(jwt_header, jwt_payload):
+        jti = jwt_payload['jti']
+        token_in_redis = app.redis.get(f"revoked_token:{jti}")
+        return token_in_redis is not None
+    
+    @jwt.expired_token_loader
+    def expired_token_callback(jwt_header, jwt_payload):
+        return {'message': 'Token has expired'}, 401
+    
+    @jwt.invalid_token_loader
+    def invalid_token_callback(error):
+        return {'message': 'Invalid token'}, 401
+    
+    @jwt.unauthorized_loader
+    def missing_token_callback(error):
+        return {'message': 'Authorization token is required'}, 401
+    
+    # Health check endpoint
+    @app.route('/health')
+    def health_check():
+        return {'status': 'healthy', 'service': 'traffic-interceptor-api'}
+    
+    return app
