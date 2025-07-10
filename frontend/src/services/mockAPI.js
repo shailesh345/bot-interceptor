@@ -408,10 +408,22 @@ const mockAPI = {
   // Authentication
   login: async (credentials) => {
     await new Promise(resolve => setTimeout(resolve, 800))
-    if (credentials.email === 'demo@example.com' && credentials.password === 'password') {
+    // Allow both demo and admin logins
+    if (
+      (credentials.email === 'demo@example.com' && credentials.password === 'password') ||
+      (credentials.email === 'admin@example.com' && credentials.password === 'password')
+    ) {
+      // Return super_admin for admin@example.com, admin for demo@example.com
+      const role = credentials.email === 'admin@example.com' ? 'super_admin' : 'admin';
       return {
         data: {
-          user: generateMockUserData(),
+          user: {
+            ...generateMockUserData(),
+            email: credentials.email,
+            role,
+            firstName: role === 'super_admin' ? 'Super' : 'John',
+            lastName: role === 'super_admin' ? 'Admin' : 'Doe',
+          },
           access_token: 'mock_access_token',
           refresh_token: 'mock_refresh_token',
         }

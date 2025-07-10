@@ -39,14 +39,9 @@ export const registerUser = createAsyncThunk(
 export const logoutUser = createAsyncThunk(
   'auth/logout',
   async (_, { rejectWithValue }) => {
-    try {
-      await authAPI.logout()
-      toast.success('Logged out successfully')
-      return null
-    } catch (error) {
-      const message = error.response?.data?.message || 'Logout failed'
-      return rejectWithValue(message)
-    }
+    // Only clear local state, do not call any API
+    toast.success('Logged out successfully')
+    return null
   }
 )
 
