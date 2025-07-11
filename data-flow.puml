@@ -1,0 +1,41 @@
+@startuml Data Flow
+
+!define ACTOR actor
+!define COMPONENT component
+!define DATABASE database
+!define QUEUE queue
+
+ACTOR User
+ACTOR Admin
+ACTOR SuperAdmin
+
+COMPONENT "React Frontend" as Frontend
+COMPONENT "Redux Store" as Store
+DATABASE "Mock Data" as MockDB
+COMPONENT "Local Storage" as Storage
+
+' User flows
+User -> Frontend : Login/Register
+Frontend -> Store : Dispatch Action
+Store -> MockDB : Validate Credentials
+MockDB -> Store : Return User Data
+Store -> Storage : Save Token
+Store -> Frontend : Update State
+Frontend -> User : Show Dashboard
+
+' Admin flows
+Admin -> Frontend : Access Admin Panel
+Frontend -> Store : Check Permissions
+Store -> Frontend : Authorized
+Frontend -> Store : Fetch Clients
+Store -> MockDB : Get Client Data
+MockDB -> Store : Return Clients
+Store -> Frontend : Update View
+
+' Data management
+Frontend -> Store : CRUD Operations
+Store -> MockDB : Update Data
+Store -> Storage : Cache Data
+Store -> Frontend : Optimistic Update
+
+@enduml

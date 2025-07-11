@@ -1,0 +1,65 @@
+@startuml Component Hierarchy
+
+!define COMPONENT component
+!define INTERFACE interface
+
+' Root Component
+COMPONENT App {
+  + BrowserRouter
+  + Provider (Redux)
+  + Toaster
+  + Routes
+}
+
+' Layout Components
+COMPONENT AuthLayout {
+  + Logo
+  + AuthForm
+  + Footer
+}
+
+COMPONENT AppLayout {
+  + Sidebar
+  + TopBar
+  + MainContent
+  + Breadcrumbs
+}
+
+' Page Components
+package "User Pages" {
+  COMPONENT Dashboard
+  COMPONENT Domains
+  COMPONENT Rules
+  COMPONENT Analytics
+  COMPONENT Billing
+  COMPONENT Profile
+  COMPONENT Settings
+}
+
+package "Admin Pages" {
+  COMPONENT ClientManagement
+  COMPONENT Client360View
+  COMPONENT CommunicationHub
+  COMPONENT AdvancedBilling
+  COMPONENT RevenueIntelligence
+  COMPONENT UsageAnalytics
+  COMPONENT BIDashboard
+}
+
+package "Super Admin Pages" {
+  COMPONENT TenantManagement
+  COMPONENT FeatureFlags
+  COMPONENT WhiteLabel
+  COMPONENT SystemPerformance
+  COMPONENT SecurityOperations
+  COMPONENT ComplianceCenter
+}
+
+' Component Relationships
+App --> AuthLayout : unauthenticated
+App --> AppLayout : authenticated
+AppLayout --> "User Pages" : role=user
+AppLayout --> "Admin Pages" : role=admin
+AppLayout --> "Super Admin Pages" : role=superadmin
+
+@enduml

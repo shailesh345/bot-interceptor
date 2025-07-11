@@ -1,0 +1,13 @@
+# Create React app and install dependencies
+npx create-react-app boot-interceptor --template cra-template
+cd boot-interceptor
+
+# Install all required dependencies
+npm install redux react-redux @reduxjs/toolkit react-router-dom react-hook-form recharts axios date-fns clsx react-hot-toast react-modal @tanstack/react-table react-select react-datepicker @heroicons/react @headlessui/react
+
+# Install Tailwind CSS and its dependencies
+npm install -D tailwindcss postcss autoprefixer @tailwindcss/forms @tailwindcss/typography
+npx tailwindcss init -p
+
+# Start development
+npm start
