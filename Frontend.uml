@@ -1,0 +1,569 @@
+graph TB
+    %% Authentication Flow
+    Start([User Access]) --> Auth{Authenticated?}
+    Auth -->|No| Login[Login Page]
+    Auth -->|No| Register[Register Page]
+    Login --> AuthCheck{Valid Credentials?}
+    AuthCheck -->|No| Login
+    AuthCheck -->|Yes| RoleCheck{User Role?}
+    Register --> RegisterForm[Registration Form]
+    RegisterForm --> EmailVerify[Email Verification]
+    EmailVerify --> Login
+
+    %% Role-Based Routing
+    RoleCheck -->|Regular User| UserDash[User Dashboard]
+    RoleCheck -->|Admin| AdminDash[Admin Dashboard]
+    RoleCheck -->|Super Admin| SuperAdminDash[Super Admin Dashboard]
+
+    %% User Flow - Main Features
+    UserDash --> UserSidebar{Select Feature}
+    UserSidebar --> Dashboard[Dashboard Overview]
+    UserSidebar --> Domains[Domain Management]
+    UserSidebar --> Rules[Bot Rules & Control]
+    UserSidebar --> Analytics[Analytics & Reports]
+    UserSidebar --> Billing[Billing & Credits]
+    UserSidebar --> Profile[Profile Settings]
+    UserSidebar --> Settings[Account Settings]
+
+    %% Dashboard Features
+    Dashboard --> DashMetrics[Key Metrics Cards]
+    Dashboard --> DashCharts[Traffic & Bot Charts]
+    Dashboard --> DashAlerts[Real-time Alerts]
+    Dashboard --> DashQuick[Quick Actions]
+    DashMetrics --> DashRefresh[Auto-refresh Data]
+    DashCharts --> ChartFilters[Date/Time Filters]
+    DashAlerts --> AlertConfig[Alert Configuration]
+
+    %% Domain Management Flow
+    Domains --> DomainList[Domain List View]
+    Domains --> AddDomain[Add New Domain]
+    DomainList --> DomainDetails[Domain Details]
+    DomainList --> DomainEdit[Edit Domain]
+    DomainList --> DomainDelete[Delete Domain]
+    DomainDetails --> DomainAnalytics[Domain Analytics]
+    DomainDetails --> DomainConfig[Domain Configuration]
+    DomainDetails --> DomainVerify[Domain Verification]
+    AddDomain --> DomainForm[Domain Form]
+    DomainForm --> DomainValidation[Domain Validation]
+    DomainValidation --> DomainSuccess[Success Message]
+
+    %% Bot Rules & Control Flow
+    Rules --> RulesList[Rules List View]
+    Rules --> CreateRule[Create New Rule]
+    Rules --> BotLibrary[Bot Library]
+    Rules --> GlobalSettings[Global Bot Settings]
+    RulesList --> RuleDetails[Rule Details]
+    RulesList --> RuleEdit[Edit Rule]
+    RulesList --> RuleDelete[Delete Rule]
+    RulesList --> RuleClone[Clone Rule]
+    CreateRule --> RuleBuilder[Visual Rule Builder]
+    RuleBuilder --> RuleConditions[Set Conditions]
+    RuleBuilder --> RuleActions[Set Actions]
+    RuleBuilder --> RuleTest[Test Rule]
+    RuleBuilder --> RuleSave[Save Rule]
+    BotLibrary --> BotSearch[Search Bots]
+    BotLibrary --> BotFilter[Filter by Category]
+    BotLibrary --> BotDetails[Bot Details]
+    BotDetails --> BotAllow[Allow Bot]
+    BotDetails --> BotBlock[Block Bot]
+    BotDetails --> BotCustom[Custom Settings]
+
+    %% Analytics & Reports Flow
+    Analytics --> AnalyticsMenu{Select Report Type}
+    AnalyticsMenu --> TrafficAnalytics[Traffic Analytics]
+    AnalyticsMenu --> BotAnalytics[Bot Analytics]
+    AnalyticsMenu --> RevenueAnalytics[Revenue Analytics]
+    AnalyticsMenu --> PerformanceAnalytics[Performance Analytics]
+    AnalyticsMenu --> CustomReports[Custom Reports]
+    TrafficAnalytics --> TrafficCharts[Traffic Charts]
+    TrafficAnalytics --> TrafficTable[Traffic Data Table]
+    TrafficAnalytics --> TrafficExport[Export Data]
+    BotAnalytics --> BotCharts[Bot Activity Charts]
+    BotAnalytics --> BotClassification[Bot Classification]
+    BotAnalytics --> BotTrends[Bot Trends]
+    RevenueAnalytics --> RevCharts[Revenue Charts]
+    RevenueAnalytics --> RevForecast[Revenue Forecast]
+    CustomReports --> ReportBuilder[Report Builder]
+    ReportBuilder --> ReportDesigner[Visual Designer]
+    ReportBuilder --> ReportPreview[Preview Report]
+    ReportBuilder --> ReportSchedule[Schedule Report]
+
+    %% Billing & Credits Flow
+    Billing --> BillingMenu{Select Option}
+    BillingMenu --> CurrentPlan[Current Plan]
+    BillingMenu --> PaymentMethods[Payment Methods]
+    BillingMenu --> BillingHistory[Billing History]
+    BillingMenu --> Credits[Credits Management]
+    BillingMenu --> Invoices[Invoices]
+    CurrentPlan --> PlanUpgrade[Upgrade Plan]
+    CurrentPlan --> PlanDowngrade[Downgrade Plan]
+    CurrentPlan --> PlanCancel[Cancel Plan]
+    PaymentMethods --> AddPayment[Add Payment Method]
+    PaymentMethods --> EditPayment[Edit Payment Method]
+    PaymentMethods --> DeletePayment[Delete Payment Method]
+    Credits --> BuyCredits[Buy Credits]
+    Credits --> CreditHistory[Credit History]
+    Credits --> CreditAlerts[Credit Alerts]
+    Invoices --> InvoiceDetails[Invoice Details]
+    Invoices --> InvoiceDownload[Download Invoice]
+    Invoices --> InvoicePayment[Pay Invoice]
+
+    %% Profile & Settings Flow
+    Profile --> ProfileEdit[Edit Profile]
+    Profile --> ProfilePicture[Update Picture]
+    Profile --> ProfileSecurity[Security Settings]
+    ProfileSecurity --> ChangePassword[Change Password]
+    ProfileSecurity --> TwoFactor[Two-Factor Auth]
+    ProfileSecurity --> LoginHistory[Login History]
+    Settings --> SettingsMenu{Select Setting}
+    SettingsMenu --> NotificationSettings[Notification Settings]
+    SettingsMenu --> IntegrationSettings[Integration Settings]
+    SettingsMenu --> APISettings[API Settings]
+    SettingsMenu --> PrivacySettings[Privacy Settings]
+    APISettings --> APIKeys[API Key Management]
+    APISettings --> APIDoc[API Documentation]
+    IntegrationSettings --> WebhookSettings[Webhook Settings]
+    IntegrationSettings --> ThirdPartyIntegration[Third-party Integration]
+
+    %% Admin Flow - Main Features
+    AdminDash --> AdminSidebar{Select Feature}
+    AdminSidebar --> ClientMgmt[Client Management]
+    AdminSidebar --> CommHub[Communication Hub]
+    AdminSidebar --> AdvBilling[Advanced Billing]
+    AdminSidebar --> RevIntel[Revenue Intelligence]
+    AdminSidebar --> UsageAnalytics[Usage Analytics]
+    AdminSidebar --> BIDashboard[BI Dashboard]
+    AdminSidebar --> TenantMgmt[Tenant Management]
+    AdminSidebar --> FeatureFlags[Feature Flags]
+    AdminSidebar --> WhiteLabel[White-Label]
+    AdminSidebar --> SystemPerf[System Performance]
+    AdminSidebar --> SecurityOps[Security Operations]
+    AdminSidebar --> ComplianceCenter[Compliance Center]
+    AdminSidebar --> Client360[Client 360 View]
+
+    %% Client Management Flow
+    ClientMgmt --> ClientList[Client List]
+    ClientMgmt --> ClientSearch[Search Clients]
+    ClientMgmt --> ClientFilters[Client Filters]
+    ClientList --> ClientProfile[Client Profile]
+    ClientList --> ClientEdit[Edit Client]
+    ClientList --> ClientDelete[Delete Client]
+    ClientList --> ClientCommunicate[Communicate]
+    ClientProfile --> ClientAnalytics[Client Analytics]
+    ClientProfile --> ClientBilling[Client Billing]
+    ClientProfile --> ClientSupport[Support History]
+    ClientProfile --> ClientNotes[Client Notes]
+    ClientAnalytics --> ClientMetrics[Client Metrics]
+    ClientAnalytics --> ClientUsage[Usage Patterns]
+    ClientAnalytics --> ClientRevenue[Revenue Analytics]
+    ClientBilling --> ClientInvoices[Client Invoices]
+    ClientBilling --> ClientPayments[Payment History]
+    ClientBilling --> ClientCredits[Credit Balance]
+
+    %% Communication Hub Flow
+    CommHub --> CommMenu{Select Option}
+    CommMenu --> EmailCampaigns[Email Campaigns]
+    CommMenu --> InAppMessages[In-App Messages]
+    CommMenu --> SMSCampaigns[SMS Campaigns]
+    CommMenu --> VideoCallScheduling[Video Call Scheduling]
+    CommMenu --> CommHistory[Communication History]
+    CommMenu --> AutomationSequences[Automation Sequences]
+    EmailCampaigns --> EmailComposer[Email Composer]
+    EmailCampaigns --> EmailTemplates[Email Templates]
+    EmailCampaigns --> EmailScheduling[Email Scheduling]
+    EmailCampaigns --> EmailAnalytics[Email Analytics]
+    InAppMessages --> MessageComposer[Message Composer]
+    InAppMessages --> MessageTargeting[Message Targeting]
+    InAppMessages --> MessageScheduling[Message Scheduling]
+    AutomationSequences --> SequenceBuilder[Sequence Builder]
+    SequenceBuilder --> SequenceTriggers[Set Triggers]
+    SequenceBuilder --> SequenceActions[Set Actions]
+    SequenceBuilder --> SequenceTest[Test Sequence]
+
+    %% Advanced Billing Flow
+    AdvBilling --> AdvBillingMenu{Select Option}
+    AdvBillingMenu --> DunningMgmt[Dunning Management]
+    AdvBillingMenu --> ProrationHandling[Proration Handling]
+    AdvBillingMenu --> ComplexPricing[Complex Pricing]
+    AdvBillingMenu --> MultiCurrency[Multi-Currency]
+    AdvBillingMenu --> TaxCalculation[Tax Calculation]
+    AdvBillingMenu --> AutoInvoicing[Auto Invoicing]
+    AdvBillingMenu --> PaymentRetry[Payment Retry]
+    DunningMgmt --> DunningSequences[Dunning Sequences]
+    DunningMgmt --> DunningAnalytics[Dunning Analytics]
+    ComplexPricing --> PricingModels[Pricing Models]
+    ComplexPricing --> PricingTiers[Pricing Tiers]
+    ComplexPricing --> PricingRules[Pricing Rules]
+    MultiCurrency --> CurrencyRates[Currency Rates]
+    MultiCurrency --> CurrencyConversion[Currency Conversion]
+    TaxCalculation --> TaxRates[Tax Rates]
+    TaxCalculation --> TaxCompliance[Tax Compliance]
+
+    %% Revenue Intelligence Flow
+    RevIntel --> RevIntelMenu{Select Option}
+    RevIntelMenu --> RevRecognition[Revenue Recognition]
+    RevIntelMenu --> RevForecasting[Revenue Forecasting]
+    RevIntelMenu --> CohortAnalysis[Cohort Analysis]
+    RevIntelMenu --> ChurnPrediction[Churn Prediction]
+    RevIntelMenu --> ExpansionRevenue[Expansion Revenue]
+    RevIntelMenu --> CompetitivePricing[Competitive Pricing]
+    RevIntelMenu --> RevOptimization[Revenue Optimization]
+    RevRecognition --> RevReports[Revenue Reports]
+    RevRecognition --> RevAudit[Revenue Audit]
+    RevForecasting --> ForecastModels[Forecast Models]
+    RevForecasting --> ForecastScenarios[Forecast Scenarios]
+    CohortAnalysis --> CohortCharts[Cohort Charts]
+    CohortAnalysis --> CohortSegmentation[Cohort Segmentation]
+    ChurnPrediction --> ChurnModels[Churn Models]
+    ChurnPrediction --> ChurnAlerts[Churn Alerts]
+    ChurnPrediction --> ChurnIntervention[Churn Intervention]
+
+    %% Usage Analytics Flow
+    UsageAnalytics --> UsageMenu{Select Option}
+    UsageMenu --> ResourceUtilization[Resource Utilization]
+    UsageMenu --> CapacityPlanning[Capacity Planning]
+    UsageMenu --> CostAttribution[Cost Attribution]
+    UsageMenu --> PerfBenchmarking[Performance Benchmarking]
+    UsageMenu --> AnomalyDetection[Anomaly Detection]
+    UsageMenu --> UsagePatterns[Usage Patterns]
+    UsageMenu --> ResourceOptimization[Resource Optimization]
+    ResourceUtilization --> ResourceCharts[Resource Charts]
+    ResourceUtilization --> ResourceAlerts[Resource Alerts]
+    CapacityPlanning --> CapacityModels[Capacity Models]
+    CapacityPlanning --> CapacityForecasts[Capacity Forecasts]
+    CostAttribution --> CostBreakdown[Cost Breakdown]
+    CostAttribution --> CostAnalysis[Cost Analysis]
+    AnomalyDetection --> AnomalyAlerts[Anomaly Alerts]
+    AnomalyDetection --> AnomalyReports[Anomaly Reports]
+
+    %% BI Dashboard Flow
+    BIDashboard --> BIMenu{Select Option}
+    BIMenu --> RealtimeKPIs[Real-time KPIs]
+    BIMenu --> ExecutiveDashboards[Executive Dashboards]
+    BIMenu --> AutoReports[Automated Reports]
+    BIMenu --> CustomVisualizations[Custom Visualizations]
+    BIMenu --> DataExport[Data Export]
+    BIMenu --> BIIntegrations[BI Integrations]
+    BIMenu --> PredictiveAnalytics[Predictive Analytics]
+    RealtimeKPIs --> KPIWidgets[KPI Widgets]
+    RealtimeKPIs --> KPIAlerts[KPI Alerts]
+    ExecutiveDashboards --> ExecWidgets[Executive Widgets]
+    ExecutiveDashboards --> ExecReports[Executive Reports]
+    CustomVisualizations --> VisualizationBuilder[Visualization Builder]
+    VisualizationBuilder --> ChartTypes[Chart Types]
+    VisualizationBuilder --> DataSources[Data Sources]
+    VisualizationBuilder --> VisualizationSave[Save Visualization]
+
+    %% Tenant Management Flow
+    TenantMgmt --> TenantMenu{Select Option}
+    TenantMenu --> TenantIsolation[Tenant Isolation]
+    TenantMenu --> TenantPerformance[Tenant Performance]
+    TenantMenu --> TenantSecurity[Tenant Security]
+    TenantMenu --> TenantResources[Tenant Resources]
+    TenantMenu --> TenantMonitoring[Tenant Monitoring]
+    TenantIsolation --> DataSegregation[Data Segregation]
+    TenantIsolation --> BackupIsolation[Backup Isolation]
+    TenantPerformance --> PerfMonitoring[Performance Monitoring]
+    TenantPerformance --> ResourceAllocation[Resource Allocation]
+    TenantPerformance --> QoSMgmt[QoS Management]
+    TenantSecurity --> SecurityPolicies[Security Policies]
+    TenantSecurity --> AccessControls[Access Controls]
+    TenantSecurity --> SecurityAudit[Security Audit]
+
+    %% Feature Flags Flow
+    FeatureFlags --> FeatureFlagMenu{Select Option}
+    FeatureFlagMenu --> FlagManagement[Flag Management]
+    FeatureFlagMenu --> PercentageRollouts[Percentage Rollouts]
+    FeatureFlagMenu --> SegmentTargeting[Segment Targeting]
+    FeatureFlagMenu --> ABTesting[A/B Testing]
+    FeatureFlagMenu --> RollbackCapabilities[Rollback Capabilities]
+    FeatureFlagMenu --> FeatureAdoption[Feature Adoption]
+    FlagManagement --> CreateFlag[Create Flag]
+    FlagManagement --> EditFlag[Edit Flag]
+    FlagManagement --> DeleteFlag[Delete Flag]
+    FlagManagement --> FlagHistory[Flag History]
+    PercentageRollouts --> RolloutConfig[Rollout Configuration]
+    PercentageRollouts --> RolloutMonitoring[Rollout Monitoring]
+    ABTesting --> TestSetup[Test Setup]
+    ABTesting --> TestResults[Test Results]
+    ABTesting --> TestAnalysis[Test Analysis]
+
+    %% White-Label Flow
+    WhiteLabel --> WhiteLabelMenu{Select Option}
+    WhiteLabelMenu --> BrandingCustomization[Branding Customization]
+    WhiteLabelMenu --> DomainManagement[Domain Management]
+    WhiteLabelMenu --> ThemePersonalization[Theme Personalization]
+    WhiteLabelMenu --> AssetManagement[Asset Management]
+    WhiteLabelMenu --> EmailCustomization[Email Customization]
+    WhiteLabelMenu --> APIDocBranding[API Doc Branding]
+    WhiteLabelMenu --> OnboardingCustomization[Onboarding Customization]
+    BrandingCustomization --> LogoUpload[Logo Upload]
+    BrandingCustomization --> ColorScheme[Color Scheme]
+    BrandingCustomization --> Typography[Typography]
+    ThemePersonalization --> ThemeBuilder[Theme Builder]
+    ThemePersonalization --> ThemePreview[Theme Preview]
+    ThemePersonalization --> ThemePublish[Theme Publish]
+    AssetManagement --> AssetLibrary[Asset Library]
+    AssetManagement --> AssetUpload[Asset Upload]
+    AssetManagement --> AssetOrganization[Asset Organization]
+
+    %% System Performance Flow
+    SystemPerf --> SystemPerfMenu{Select Option}
+    SystemPerfMenu --> RealtimeMonitoring[Real-time Monitoring]
+    SystemPerfMenu --> PerfDashboards[Performance Dashboards]
+    SystemPerfMenu --> SystemAlerts[System Alerts]
+    SystemPerfMenu --> CapacityPlanning[Capacity Planning]
+    SystemPerfMenu --> MaintenancePlanning[Maintenance Planning]
+    SystemPerfMenu --> InfrastructureOptimization[Infrastructure Optimization]
+    RealtimeMonitoring --> SystemMetrics[System Metrics]
+    RealtimeMonitoring --> AlertConfiguration[Alert Configuration]
+    PerfDashboards --> MetricsDashboard[Metrics Dashboard]
+    PerfDashboards --> PerformanceReports[Performance Reports]
+    SystemAlerts --> AlertRules[Alert Rules]
+    SystemAlerts --> AlertHistory[Alert History]
+    SystemAlerts --> AlertNotifications[Alert Notifications]
+
+    %% Security Operations Flow
+    SecurityOps --> SecurityOpsMenu{Select Option}
+    SecurityOpsMenu --> ThreatDetection[Threat Detection]
+    SecurityOpsMenu --> IncidentResponse[Incident Response]
+    SecurityOpsMenu --> SecurityMonitoring[Security Monitoring]
+    SecurityOpsMenu --> VulnerabilityMgmt[Vulnerability Management]
+    SecurityOpsMenu --> ComplianceMonitoring[Compliance Monitoring]
+    SecurityOpsMenu --> SecurityReporting[Security Reporting]
+    SecurityOpsMenu --> ForensicAnalysis[Forensic Analysis]
+    ThreatDetection --> ThreatAlerts[Threat Alerts]
+    ThreatDetection --> ThreatAnalysis[Threat Analysis]
+    ThreatDetection --> ThreatResponse[Threat Response]
+    IncidentResponse --> IncidentWorkflow[Incident Workflow]
+    IncidentResponse --> IncidentTracking[Incident Tracking]
+    IncidentResponse --> IncidentReporting[Incident Reporting]
+    SecurityMonitoring --> SecurityDashboard[Security Dashboard]
+    SecurityMonitoring --> SecurityEvents[Security Events]
+    SecurityMonitoring --> SecurityMetrics[Security Metrics]
+
+    %% Compliance Center Flow
+    ComplianceCenter --> ComplianceMenu{Select Option}
+    ComplianceMenu --> GDPRCompliance[GDPR Compliance]
+    ComplianceMenu --> SOC2Compliance[SOC 2 Compliance]
+    ComplianceMenu --> DataRetention[Data Retention]
+    ComplianceMenu --> PrivacyAssessment[Privacy Assessment]
+    ComplianceMenu --> RegulatoryReporting[Regulatory Reporting]
+    ComplianceMenu --> ComplianceAudit[Compliance Audit]
+    ComplianceMenu --> ComplianceTraining[Compliance Training]
+    GDPRCompliance --> DataMapping[Data Mapping]
+    GDPRCompliance --> ConsentManagement[Consent Management]
+    GDPRCompliance --> RightToErasure[Right to Erasure]
+    GDPRCompliance --> DataPortability[Data Portability]
+    SOC2Compliance --> ControlsManagement[Controls Management]
+    SOC2Compliance --> EvidenceCollection[Evidence Collection]
+    SOC2Compliance --> AuditPreparation[Audit Preparation]
+    ComplianceAudit --> AuditScheduling[Audit Scheduling]
+    ComplianceAudit --> AuditExecution[Audit Execution]
+    ComplianceAudit --> AuditReporting[Audit Reporting]
+
+    %% Client 360 View Flow
+    Client360 --> Client360Menu{Select Option}
+    Client360Menu --> ClientProfiles[Client Profiles]
+    Client360Menu --> InteractionHistory[Interaction History]
+    Client360Menu --> RevenueAnalysis[Revenue Analysis]
+    Client360Menu --> UsagePatterns[Usage Patterns]
+    Client360Menu --> SupportHistory[Support History]
+    Client360Menu --> IntegrationUsage[Integration Usage]
+    Client360Menu --> RelationshipMapping[Relationship Mapping]
+    ClientProfiles --> ProfileOverview[Profile Overview]
+    ClientProfiles --> ClientData[Client Data]
+    ClientProfiles --> ClientInsights[Client Insights]
+    InteractionHistory --> InteractionTimeline[Interaction Timeline]
+    InteractionHistory --> InteractionAnalytics[Interaction Analytics]
+    RevenueAnalysis --> RevenueContribution[Revenue Contribution]
+    RevenueAnalysis --> RevenueForecasting[Revenue Forecasting]
+    UsagePatterns --> UsageAnalysis[Usage Analysis]
+    UsagePatterns --> UsageOptimization[Usage Optimization]
+
+    %% Super Admin Flow - Additional Features
+    SuperAdminDash --> SuperAdminSidebar{Select Feature}
+    SuperAdminSidebar --> PlatformAnalytics[Platform Analytics]
+    SuperAdminSidebar --> GlobalSettings[Global Settings]
+    SuperAdminSidebar --> LicenseManagement[License Management]
+    SuperAdminSidebar --> BackupRestore[Backup & Restore]
+    SuperAdminSidebar --> SystemHealth[System Health]
+    SuperAdminSidebar --> UserManagement[User Management]
+    SuperAdminSidebar --> AuditLogs[Audit Logs]
+    SuperAdminSidebar --> MaintenanceMode[Maintenance Mode]
+    SuperAdminSidebar --> PerformanceTuning[Performance Tuning]
+    SuperAdminSidebar --> SecurityCenter[Security Center]
+
+    %% Platform Analytics Flow
+    PlatformAnalytics --> PlatformAnalyticsMenu{Select Option}
+    PlatformAnalyticsMenu --> GlobalTraffic[Global Traffic]
+    PlatformAnalyticsMenu --> PlatformUsage[Platform Usage]
+    PlatformAnalyticsMenu --> TenantMetrics[Tenant Metrics]
+    PlatformAnalyticsMenu --> PerformanceMetrics[Performance Metrics]
+    PlatformAnalyticsMenu --> ResourceConsumption[Resource Consumption]
+    PlatformAnalyticsMenu --> UserBehavior[User Behavior]
+    GlobalTraffic --> TrafficOverview[Traffic Overview]
+    GlobalTraffic --> TrafficTrends[Traffic Trends]
+    GlobalTraffic --> TrafficGeography[Traffic Geography]
+    PlatformUsage --> UsageOverview[Usage Overview]
+    PlatformUsage --> FeatureUsage[Feature Usage]
+    PlatformUsage --> UserActivity[User Activity]
+
+    %% Global Settings Flow
+    GlobalSettings --> GlobalSettingsMenu{Select Option}
+    GlobalSettingsMenu --> SystemConfiguration[System Configuration]
+    GlobalSettingsMenu --> DefaultSettings[Default Settings]
+    GlobalSettingsMenu --> FeatureToggles[Feature Toggles]
+    GlobalSettingsMenu --> MaintenanceSettings[Maintenance Settings]
+    GlobalSettingsMenu --> NotificationSettings[Notification Settings]
+    GlobalSettingsMenu --> IntegrationSettings[Integration Settings]
+    SystemConfiguration --> DatabaseSettings[Database Settings]
+    SystemConfiguration --> CacheSettings[Cache Settings]
+    SystemConfiguration --> EmailSettings[Email Settings]
+    SystemConfiguration --> SecuritySettings[Security Settings]
+
+    %% License Management Flow
+    LicenseManagement --> LicenseMenu{Select Option}
+    LicenseMenu --> LicenseOverview[License Overview]
+    LicenseMenu --> LicenseAllocation[License Allocation]
+    LicenseMenu --> LicenseUsage[License Usage]
+    LicenseMenu --> LicenseCompliance[License Compliance]
+    LicenseMenu --> LicenseRenewal[License Renewal]
+    LicenseOverview --> LicenseDetails[License Details]
+    LicenseOverview --> LicenseHistory[License History]
+    LicenseAllocation --> AllocateUsers[Allocate Users]
+    LicenseAllocation --> AllocationReports[Allocation Reports]
+    LicenseUsage --> UsageTracking[Usage Tracking]
+    LicenseUsage --> UsageReports[Usage Reports]
+
+    %% Backup & Restore Flow
+    BackupRestore --> BackupRestoreMenu{Select Option}
+    BackupRestoreMenu --> BackupManagement[Backup Management]
+    BackupRestoreMenu --> RestoreOperations[Restore Operations]
+    BackupRestoreMenu --> BackupScheduling[Backup Scheduling]
+    BackupRestoreMenu --> BackupMonitoring[Backup Monitoring]
+    BackupRestoreMenu --> DisasterRecovery[Disaster Recovery]
+    BackupManagement --> CreateBackup[Create Backup]
+    BackupManagement --> BackupHistory[Backup History]
+    BackupManagement --> BackupVerification[Backup Verification]
+    RestoreOperations --> RestoreBackup[Restore Backup]
+    RestoreOperations --> RestoreHistory[Restore History]
+    RestoreOperations --> RestoreVerification[Restore Verification]
+
+    %% System Health Flow
+    SystemHealth --> SystemHealthMenu{Select Option}
+    SystemHealthMenu --> HealthDashboard[Health Dashboard]
+    SystemHealthMenu --> HealthChecks[Health Checks]
+    SystemHealthMenu --> HealthAlerts[Health Alerts]
+    SystemHealthMenu --> HealthReports[Health Reports]
+    SystemHealthMenu --> HealthOptimization[Health Optimization]
+    HealthDashboard --> HealthMetrics[Health Metrics]
+    HealthDashboard --> HealthStatus[Health Status]
+    HealthChecks --> AutomatedChecks[Automated Checks]
+    HealthChecks --> ManualChecks[Manual Checks]
+    HealthChecks --> CheckResults[Check Results]
+
+    %% User Management Flow
+    UserManagement --> UserMgmtMenu{Select Option}
+    UserMgmtMenu --> AllUsers[All Users]
+    UserMgmtMenu --> UserRoles[User Roles]
+    UserMgmtMenu --> UserPermissions[User Permissions]
+    UserMgmtMenu --> UserActivity[User Activity]
+    UserMgmtMenu --> UserSessions[User Sessions]
+    AllUsers --> UserSearch[User Search]
+    AllUsers --> UserDetails[User Details]
+    AllUsers --> UserEdit[User Edit]
+    AllUsers --> UserDelete[User Delete]
+    UserRoles --> RoleManagement[Role Management]
+    UserRoles --> RoleAssignment[Role Assignment]
+    UserPermissions --> PermissionMatrix[Permission Matrix]
+    UserPermissions --> PermissionAudit[Permission Audit]
+
+    %% Audit Logs Flow
+    AuditLogs --> AuditLogsMenu{Select Option}
+    AuditLogsMenu --> ActivityLogs[Activity Logs]
+    AuditLogsMenu --> SecurityLogs[Security Logs]
+    AuditLogsMenu --> SystemLogs[System Logs]
+    AuditLogsMenu --> ComplianceLogs[Compliance Logs]
+    AuditLogsMenu --> LogAnalytics[Log Analytics]
+    ActivityLogs --> LogViewer[Log Viewer]
+    ActivityLogs --> LogFilters[Log Filters]
+    ActivityLogs --> LogExport[Log Export]
+    SecurityLogs --> SecurityEvents[Security Events]
+    SecurityLogs --> SecurityAlerts[Security Alerts]
+    LogAnalytics --> LogTrends[Log Trends]
+    LogAnalytics --> LogInsights[Log Insights]
+
+    %% Maintenance Mode Flow
+    MaintenanceMode --> MaintenanceMenu{Select Option}
+    MaintenanceMenu --> MaintenanceScheduling[Maintenance Scheduling]
+    MaintenanceMenu --> MaintenanceExecution[Maintenance Execution]
+    MaintenanceMenu --> MaintenanceHistory[Maintenance History]
+    MaintenanceMenu --> MaintenanceNotifications[Maintenance Notifications]
+    MaintenanceScheduling --> ScheduleMaintenance[Schedule Maintenance]
+    MaintenanceScheduling --> MaintenanceCalendar[Maintenance Calendar]
+    MaintenanceExecution --> StartMaintenance[Start Maintenance]
+    MaintenanceExecution --> MaintenanceProgress[Maintenance Progress]
+    MaintenanceExecution --> EndMaintenance[End Maintenance]
+
+    %% Performance Tuning Flow
+    PerformanceTuning --> PerfTuningMenu{Select Option}
+    PerfTuningMenu --> DatabaseTuning[Database Tuning]
+    PerfTuningMenu --> CacheTuning[Cache Tuning]
+    PerfTuningMenu --> ApplicationTuning[Application Tuning]
+    PerfTuningMenu --> InfrastructureTuning[Infrastructure Tuning]
+    PerfTuningMenu --> TuningReports[Tuning Reports]
+    DatabaseTuning --> QueryOptimization[Query Optimization]
+    DatabaseTuning --> IndexOptimization[Index Optimization]
+    DatabaseTuning --> DatabaseSettings[Database Settings]
+    CacheTuning --> CacheConfiguration[Cache Configuration]
+    CacheTuning --> CacheMonitoring[Cache Monitoring]
+    ApplicationTuning --> CodeOptimization[Code Optimization]
+    ApplicationTuning --> ResourceOptimization[Resource Optimization]
+
+    %% Security Center Flow
+    SecurityCenter --> SecurityCenterMenu{Select Option}
+    SecurityCenterMenu --> SecurityPolicies[Security Policies]
+    SecurityCenterMenu --> AccessManagement[Access Management]
+    SecurityCenterMenu --> ThreatManagement[Threat Management]
+    SecurityCenterMenu --> SecurityAuditing[Security Auditing]
+    SecurityCenterMenu --> SecurityCompliance[Security Compliance]
+    SecurityPolicies --> PolicyCreation[Policy Creation]
+    SecurityPolicies --> PolicyEnforcement[Policy Enforcement]
+    SecurityPolicies --> PolicyAuditing[Policy Auditing]
+    AccessManagement --> AccessControls[Access Controls]
+    AccessManagement --> AccessReviews[Access Reviews]
+    ThreatManagement --> ThreatMonitoring[Threat Monitoring]
+    ThreatManagement --> ThreatResponse[Threat Response]
+
+    %% Common Navigation Elements
+    Dashboard --> Logout[Logout]
+    AdminDash --> Logout
+    SuperAdminDash --> Logout
+    Logout --> Login
+
+    %% Error Handling
+    DashMetrics --> ErrorHandler[Error Handler]
+    DomainForm --> ErrorHandler
+    RuleBuilder --> ErrorHandler
+    ErrorHandler --> ErrorDisplay[Error Display]
+    ErrorDisplay --> RetryAction[Retry Action]
+    ErrorDisplay --> SupportContact[Contact Support]
+
+    %% Responsive Design States
+    Dashboard --> MobileView[Mobile View]
+    Dashboard --> TabletView[Tablet View]
+    Dashboard --> DesktopView[Desktop View]
+    
+    %% Accessibility Features
+    Dashboard --> AccessibilityMenu[Accessibility Menu]
+    AccessibilityMenu --> HighContrast[High Contrast]
+    AccessibilityMenu --> FontSize[Font Size]
+    AccessibilityMenu --> ScreenReader[Screen Reader]
+    AccessibilityMenu --> KeyboardNav[Keyboard Navigation]
+
+    %% Notification System
+    DashAlerts --> NotificationCenter[Notification Center]
+    NotificationCenter --> NotificationList[Notification List]
+    NotificationCenter --> NotificationSettings[Notification Settings]
+    NotificationCenter
