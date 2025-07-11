@@ -1,0 +1,261 @@
+@startuml Bot Interceptor Platform Architecture
+
+!define RECTANGLE class
+!define DATABASE database
+!define COMPONENT component
+!define PACKAGE package
+
+' Color definitions
+!define USER_COLOR #E3F2FD
+!define ADMIN_COLOR #F3E5F5
+!define SUPER_COLOR #FFEBEE
+!define COMPONENT_COLOR #E8F5E9
+!define DATA_COLOR #FFF3E0
+
+' Main Architecture Overview
+package "Frontend (React + Redux)" <<Rectangle>> {
+  
+  package "Authentication Layer" #USER_COLOR {
+    RECTANGLE Login
+    RECTANGLE Register
+    RECTANGLE ForgotPassword
+    RECTANGLE ProtectedRoute
+    RECTANGLE RoleBasedAccess
+  }
+  
+  package "User Dashboard" #USER_COLOR {
+    RECTANGLE Dashboard {
+      + trafficMetrics
+      + botAnalytics
+      + revenueStats
+      + recentActivity
+    }
+    
+    RECTANGLE Domains {
+      + domainList
+      + addDomain()
+      + verifyDomain()
+      + manageDNS()
+    }
+    
+    RECTANGLE Rules {
+      + ruleBuilder
+      + conditions[]
+      + actions[]
+      + testRule()
+    }
+    
+    RECTANGLE Analytics {
+      + trafficCharts
+      + botDistribution
+      + revenueGraphs
+      + exportData()
+    }
+    
+    RECTANGLE Billing {
+      + subscription
+      + invoices[]
+      + paymentMethods
+      + credits
+    }
+  }
+  
+  package "Admin Portal" #ADMIN_COLOR {
+    RECTANGLE ClientManagement {
+      + clientList[]
+      + clientSearch()
+      + clientFilters
+      + bulkActions()
+    }
+    
+    RECTANGLE Client360View {
+      + clientProfile
+      + usageMetrics
+      + healthScore
+      + communications[]
+    }
+    
+    RECTANGLE CommunicationHub {
+      + messaging
+      + announcements
+      + emailCampaigns
+      + notifications
+    }
+    
+    RECTANGLE RevenueIntelligence {
+      + mrrTracking
+      + churnAnalysis
+      + growthMetrics
+      + forecasting
+    }
+    
+    RECTANGLE BIDashboard {
+      + customWidgets[]
+      + kpiTracking
+      + reportBuilder
+      + dataExport()
+    }
+  }
+  
+  package "Super Admin Portal" #SUPER_COLOR {
+    RECTANGLE TenantManagement {
+      + tenantList[]
+      + resourceQuotas
+      + isolation
+      + monitoring
+    }
+    
+    RECTANGLE FeatureFlags {
+      + featureToggle()
+      + rolloutStrategy
+      + a/bTesting
+      + targeting
+    }
+    
+    RECTANGLE SystemPerformance {
+      + serverMetrics
+      + apiPerformance
+      + errorTracking
+      + alerting
+    }
+    
+    RECTANGLE SecurityOperations {
+      + threatDetection
+      + accessControl
+      + auditLogs
+      + compliance
+    }
+  }
+  
+  package "Redux Store" #COMPONENT_COLOR {
+    COMPONENT authSlice {
+      + user
+      + token
+      + role
+      + login()
+      + logout()
+    }
+    
+    COMPONENT domainsSlice {
+      + domains[]
+      + filters
+      + addDomain()
+      + updateDomain()
+    }
+    
+    COMPONENT rulesSlice {
+      + rules[]
+      + templates[]
+      + createRule()
+      + testRule()
+    }
+    
+    COMPONENT analyticsSlice {
+      + traffic{}
+      + bots{}
+      + revenue{}
+      + dateRange
+    }
+    
+    COMPONENT clientsSlice {
+      + clients[]
+      + selectedClient
+      + health{}
+      + communications[]
+    }
+    
+    COMPONENT platformSlice {
+      + tenants[]
+      + features{}
+      + security{}
+      + performance{}
+    }
+  }
+  
+  package "Common Components" #COMPONENT_COLOR {
+    COMPONENT Layout {
+      + AppLayout
+      + Sidebar
+      + TopBar
+      + Footer
+    }
+    
+    COMPONENT Charts {
+      + LineChart
+      + BarChart
+      + PieChart
+      + HeatMap
+    }
+    
+    COMPONENT Tables {
+      + DataTable
+      + SortableTable
+      + PaginatedTable
+      + ExportableTable
+    }
+    
+    COMPONENT Forms {
+      + FormInput
+      + RuleBuilder
+      + DomainVerifier
+      + CreditCardInput
+    }
+  }
+}
+
+package "Mock Data Layer" #DATA_COLOR {
+  DATABASE MockUsers {
+    + id
+    + email
+    + password
+    + role
+    + avatar
+  }
+  
+  DATABASE MockDomains {
+    + id
+    + name
+    + status
+    + traffic
+    + revenue
+  }
+  
+  DATABASE MockRules {
+    + id
+    + type
+    + conditions
+    + actions
+    + hits
+  }
+  
+  DATABASE MockAnalytics {
+    + traffic[]
+    + bots[]
+    + revenue[]
+    + trends[]
+  }
+  
+  DATABASE MockClients {
+    + id
+    + name
+    + plan
+    + health
+    + usage
+  }
+}
+
+' Relationships
+Login --> authSlice : authenticate
+Dashboard --> analyticsSlice : fetch data
+Domains --> domainsSlice : manage
+Rules --> rulesSlice : configure
+ClientManagement --> clientsSlice : CRUD
+SystemPerformance --> platformSlice : monitor
+
+authSlice --> MockUsers : validate
+domainsSlice --> MockDomains : CRUD
+rulesSlice --> MockRules : CRUD
+analyticsSlice --> MockAnalytics : fetch
+clientsSlice --> MockClients : manage
+
+@enduml
