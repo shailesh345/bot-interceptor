@@ -1,6 +1,7 @@
 import React from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
+import toast from 'react-hot-toast'
 import { Menu, Bell, User, LogOut } from 'lucide-react'
 import { logoutUser } from '../../store/slices/authSlice'
 import { toggleSidebar } from '../../store/slices/uiSlice'
@@ -32,7 +33,10 @@ const Header = () => {
         </div>
         
         <div className="flex items-center space-x-4">
-          <button className="p-2 rounded-full text-gray-500 hover:text-gray-700 hover:bg-gray-100">
+          <button 
+            onClick={() => toast.info('Notifications feature coming soon!')}
+            className="p-2 rounded-full text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+          >
             <Bell className="w-5 h-5" />
           </button>
           

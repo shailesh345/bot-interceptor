@@ -9,7 +9,8 @@ import {
   CreditCard, 
   Users, 
   Building,
-  TrendingUp
+  TrendingUp,
+  Play
 } from 'lucide-react'
 
 const Sidebar = () => {
@@ -21,8 +22,9 @@ const Sidebar = () => {
     { name: 'Rules', href: '/rules', icon: Shield },
     { name: 'Analytics', href: '/analytics', icon: BarChart3 },
     { name: 'Billing', href: '/billing', icon: CreditCard },
-    { name: 'Profile', href: '/profile', icon: Users }, // Added Profile
+    { name: 'Profile', href: '/profile', icon: Users },
     { name: 'Settings', href: '/settings', icon: Settings },
+    { name: 'API Demo', href: '/demo', icon: Play },
   ]
 
   // Group admin links for better UX

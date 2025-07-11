@@ -19,6 +19,8 @@ import Analytics from './pages/Analytics'
 import Billing from './pages/Billing'
 import Settings from './pages/Settings'
 import Profile from './pages/Profile'
+import Admin from './pages/Admin'
+import Demo from './pages/Demo'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminUsers from './pages/admin/AdminUsers'
 import AdminTenants from './pages/admin/AdminTenants'
@@ -90,11 +92,10 @@ function App() {
           <Route path="billing" element={<Billing />} />
           <Route path="settings" element={<Settings />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="demo" element={<Demo />} />
           
           {/* Admin Routes */}
-          <Route path="admin" element={
-            user?.role === 'super_admin' ? <AdminDashboard /> : <Navigate to="/dashboard" replace />
-          } />
+          <Route path="admin" element={<Admin />} />
           <Route path="admin/users" element={
             user?.role === 'super_admin' ? <AdminUsers /> : <Navigate to="/dashboard" replace />
           } />

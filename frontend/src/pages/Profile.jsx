@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { useSelector, useDispatch } from 'react-redux'
+import toast from 'react-hot-toast'
 import { 
   User, Camera, Mail, Phone, MapPin, Calendar, 
   Edit3, Save, X, Shield, Key, Bell, 
@@ -89,16 +90,97 @@ const Profile = () => {
   }
 
   const handleSaveProfile = () => {
-    // Dispatch update profile action
-    console.log('Saving profile:', profileData)
-    setEditMode(false)
+    // Validate required fields
+    if (!profileData.firstName.trim()) {
+      toast.error('First name is required')
+      return
+    }
+    
+    if (!profileData.lastName.trim()) {
+      toast.error('Last name is required')
+      return
+    }
+    
+    if (!profileData.email.trim()) {
+      toast.error('Email is required')
+      return
+    }
+    
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(profileData.email)) {
+      toast.error('Please enter a valid email address')
+      return
+    }
+    
+    // Validate phone number if provided
+    if (profileData.phone && profileData.phone.trim()) {
+      const phoneRegex = /^[\+]?[(]?[\d\s\-\(\)]{10,}$/
+      if (!phoneRegex.test(profileData.phone)) {
+        toast.error('Please enter a valid phone number')
+        return
+      }
+    }
+    
+    try {
+      // Save profile data to localStorage for demo
+      localStorage.setItem('userProfile', JSON.stringify(profileData))
+      toast.success('Profile updated successfully!')
+      setEditMode(false)
+    } catch (error) {
+      toast.error('Failed to update profile')
+    }
   }
 
   const handleChangePassword = () => {
-    // Dispatch change password action
-    console.log('Changing password')
-    setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
-    setShowChangePassword(false)
+    // Validate current password
+    if (!passwordForm.currentPassword.trim()) {
+      toast.error('Current password is required')
+      return
+    }
+    
+    // Validate new password
+    if (!passwordForm.newPassword.trim()) {
+      toast.error('New password is required')
+      return
+    }
+    
+    if (passwordForm.newPassword.length < 8) {
+      toast.error('Password must be at least 8 characters')
+      return
+    }
+    
+    // Check password strength
+    const hasUpperCase = /[A-Z]/.test(passwordForm.newPassword)
+    const hasLowerCase = /[a-z]/.test(passwordForm.newPassword)
+    const hasNumbers = /\d/.test(passwordForm.newPassword)
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(passwordForm.newPassword)
+    
+    if (!hasUpperCase || !hasLowerCase || !hasNumbers || !hasSpecialChar) {
+      toast.error('Password must contain uppercase, lowercase, number, and special character')
+      return
+    }
+    
+    // Validate password confirmation
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      toast.error('New passwords do not match')
+      return
+    }
+    
+    // Check if new password is different from current
+    if (passwordForm.currentPassword === passwordForm.newPassword) {
+      toast.error('New password must be different from current password')
+      return
+    }
+    
+    try {
+      // Simulate password change
+      toast.success('Password changed successfully!')
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
+      setShowChangePassword(false)
+    } catch (error) {
+      toast.error('Failed to change password')
+    }
   }
 
   const getActivityIcon = (type) => {

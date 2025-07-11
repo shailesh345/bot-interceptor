@@ -1,448 +1,676 @@
 import React, { useEffect, useState } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { useDispatch, useSelector } from 'react-redux'
-import { fetchDomains, createDomain } from '../store/slices/domainsSlice'
-import LoadingSpinner from '../components/common/LoadingSpinner'
+import { motion, AnimatePresence } from 'framer-motion'
+import { 
+  fetchDomains, 
+  createDomain, 
+  updateDomain, 
+  deleteDomain, 
+  verifyDomain,
+  setFilters,
+  clearError 
+} from '../store/slices/domainsSlice'
+import toast from 'react-hot-toast'
 import { 
   Plus, Search, Globe, Shield, TrendingUp, Activity, 
   Edit, Trash2, Settings, ExternalLink, Copy, CheckCircle,
-  AlertTriangle, Clock, Zap, Target, BarChart3
+  AlertTriangle, Clock, Zap, Target, BarChart3, Eye,
+  Download, Filter, RefreshCw, Calendar, DollarSign,
+  Server, X
 } from 'lucide-react'
+
+// Domain Form Modal Component
+const DomainFormModal = ({ isOpen, onClose, domain = null, onSubmit }) => {
+  const [formData, setFormData] = useState({
+    name: domain?.name || '',
+    verificationMethod: domain?.verificationMethod || 'dns',
+    sslEnabled: domain?.sslEnabled || true,
+    cdnEnabled: domain?.cdnEnabled || false,
+    trafficEnabled: domain?.trafficEnabled || true
+  })
+  
+  const [validationError, setValidationError] = useState('')
+
+  const validateDomain = (domainName) => {
+    if (!domainName.trim()) {
+      setValidationError('')
+      return false
+    }
+    
+    const domainRegex = /^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]?\.[a-zA-Z]{2,}$/
+    if (!domainRegex.test(domainName)) {
+      setValidationError('Please enter a valid domain name (e.g., example.com)')
+      return false
+    }
+    
+    setValidationError('')
+    return true
+  }
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    
+    // Final validation check
+    if (!validateDomain(formData.name)) {
+      if (!formData.name.trim()) {
+        toast.error('Domain name is required')
+      }
+      return
+    }
+    
+    onSubmit(formData)
+    onClose()
+  }
+
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+        className="bg-white rounded-lg p-6 w-full max-w-md mx-4"
+      >
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">
+            {domain ? 'Edit Domain' : 'Add New Domain'}
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Domain Name
+            </label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => {
+                const value = e.target.value.toLowerCase()
+                setFormData({ ...formData, name: value })
+                validateDomain(value)
+              }}
+              className={`w-full px-3 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${
+                validationError ? 'border-red-300' : 'border-gray-300'
+              }`}
+              placeholder="example.com"
+              disabled={!!domain}
+            />
+            {validationError && (
+              <p className="mt-1 text-sm text-red-600">{validationError}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Verification Method
+            </label>
+            <select
+              value={formData.verificationMethod}
+              onChange={(e) => setFormData({ ...formData, verificationMethod: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="dns">DNS Record</option>
+              <option value="file">File Upload</option>
+              <option value="html">HTML Meta Tag</option>
+            </select>
+          </div>
+
+          <div className="space-y-3">
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={formData.sslEnabled}
+                onChange={(e) => setFormData({ ...formData, sslEnabled: e.target.checked })}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <span className="ml-2 text-sm text-gray-700">Enable SSL</span>
+            </label>
+
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={formData.cdnEnabled}
+                onChange={(e) => setFormData({ ...formData, cdnEnabled: e.target.checked })}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <span className="ml-2 text-sm text-gray-700">Enable CDN</span>
+            </label>
+
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={formData.trafficEnabled}
+                onChange={(e) => setFormData({ ...formData, trafficEnabled: e.target.checked })}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <span className="ml-2 text-sm text-gray-700">Enable Traffic Monitoring</span>
+            </label>
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              {domain ? 'Update Domain' : 'Add Domain'}
+            </button>
+          </div>
+        </form>
+      </motion.div>
+    </div>
+  )
+}
+
+// Domain Details Modal Component
+const DomainDetailsModal = ({ isOpen, onClose, domain }) => {
+  if (!isOpen || !domain) return null
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+        className="bg-white rounded-lg p-6 w-full max-w-4xl mx-4 max-h-screen overflow-y-auto"
+      >
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-semibold">{domain.name}</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <X className="h-6 w-6" />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Domain Info */}
+          <div className="space-y-4">
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h3 className="font-medium mb-3">Domain Information</h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Status:</span>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    domain.status === 'verified' 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {domain.status}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">SSL Enabled:</span>
+                  <span>{domain.sslEnabled ? 'Yes' : 'No'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">CDN Enabled:</span>
+                  <span>{domain.cdnEnabled ? 'Yes' : 'No'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Created:</span>
+                  <span>{new Date(domain.createdAt).toLocaleDateString()}</span>
+                </div>
+              </div>
+            </div>
+
+            {domain.status === 'pending' && (
+              <div className="bg-yellow-50 p-4 rounded-lg">
+                <h3 className="font-medium mb-3 text-yellow-800">Verification Required</h3>
+                <div className="text-sm text-yellow-700">
+                  {domain.verificationMethod === 'dns' && (
+                    <div>
+                      <p className="mb-2">Add this DNS record:</p>
+                      <div className="bg-white p-2 rounded border font-mono text-xs">
+                        {domain.dnsRecord}
+                      </div>
+                    </div>
+                  )}
+                  {domain.verificationMethod === 'file' && (
+                    <div>
+                      <p className="mb-2">Upload this file to your domain root:</p>
+                      <div className="bg-white p-2 rounded border font-mono text-xs">
+                        {domain.verificationFile}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Analytics */}
+          <div className="space-y-4">
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h3 className="font-medium mb-3">Monthly Statistics</h3>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <div className="text-gray-600">Total Requests</div>
+                  <div className="text-lg font-semibold">{domain.monthlyRequests?.toLocaleString() || '0'}</div>
+                </div>
+                <div>
+                  <div className="text-gray-600">Blocked Requests</div>
+                  <div className="text-lg font-semibold text-red-600">{domain.monthlyBlocked?.toLocaleString() || '0'}</div>
+                </div>
+                <div>
+                  <div className="text-gray-600">Revenue</div>
+                  <div className="text-lg font-semibold text-green-600">${domain.monthlyRevenue?.toFixed(2) || '0.00'}</div>
+                </div>
+                <div>
+                  <div className="text-gray-600">Rules</div>
+                  <div className="text-lg font-semibold">{domain.rules || 0}</div>
+                </div>
+              </div>
+            </div>
+
+            {domain.subdomains && domain.subdomains.length > 0 && (
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="font-medium mb-3">Subdomains</h3>
+                <div className="space-y-1">
+                  {domain.subdomains.map((subdomain, index) => (
+                    <div key={index} className="text-sm text-gray-700">{subdomain}</div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex justify-end pt-6">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+          >
+            Close
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  )
+}
 
 const Domains = () => {
   const dispatch = useDispatch()
-  const { domains, loading, error } = useSelector((state) => state.domains)
-  const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState({ 
-    domain_name: '', 
-    ssl_enabled: true,
-    cdn_enabled: false,
-    protection_level: 'medium'
-  })
+  const { domains, loading, error, filters } = useSelector((state) => state.domains)
+  
+  // Local state
+  const [showFormModal, setShowFormModal] = useState(false)
+  const [showDetailsModal, setShowDetailsModal] = useState(false)
+  const [selectedDomain, setSelectedDomain] = useState(null)
+  const [editingDomain, setEditingDomain] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
-  const [editDomainId, setEditDomainId] = useState(null)
-
-  // Mock domains data for enhanced display
-  const mockDomains = [
-    {
-      id: '1',
-      domain_name: 'example.com',
-      status: 'active',
-      ssl_enabled: true,
-      cdn_enabled: true,
-      protection_level: 'high',
-      requests_today: 15420,
-      blocked_today: 1240,
-      revenue_today: 89.50,
-      uptime: 99.8,
-      last_incident: '3 days ago',
-      created_at: '2024-01-15',
-      rules_count: 8
-    },
-    {
-      id: '2',
-      domain_name: 'api.example.com',
-      status: 'active',
-      ssl_enabled: true,
-      cdn_enabled: false,
-      protection_level: 'medium',
-      requests_today: 8230,
-      blocked_today: 156,
-      revenue_today: 45.20,
-      uptime: 99.9,
-      last_incident: '1 week ago',
-      created_at: '2024-01-20',
-      rules_count: 5
-    },
-    {
-      id: '3',
-      domain_name: 'staging.example.com',
-      status: 'warning',
-      ssl_enabled: true,
-      cdn_enabled: false,
-      protection_level: 'low',
-      requests_today: 1250,
-      blocked_today: 45,
-      revenue_today: 12.30,
-      uptime: 98.5,
-      last_incident: '2 hours ago',
-      created_at: '2024-02-01',
-      rules_count: 3
-    }
-  ]
+  const [statusFilter, setStatusFilter] = useState('all')
 
   useEffect(() => {
     dispatch(fetchDomains())
   }, [dispatch])
 
-  const filteredDomains = mockDomains.filter(domain =>
-    domain.domain_name.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  // Filter domains based on search and status
+  const filteredDomains = domains.filter(domain => {
+    const matchesSearch = domain.name.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesStatus = statusFilter === 'all' || domain.status === statusFilter
+    return matchesSearch && matchesStatus
+  })
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'active': return 'text-green-600 bg-green-100'
-      case 'warning': return 'text-yellow-600 bg-yellow-100'
-      case 'error': return 'text-red-600 bg-red-100'
-      default: return 'text-gray-600 bg-gray-100'
-    }
-  }
-
-  const getProtectionLevelColor = (level) => {
-    switch (level) {
-      case 'high': return 'text-red-600 bg-red-100'
-      case 'medium': return 'text-yellow-600 bg-yellow-100'
-      case 'low': return 'text-green-600 bg-green-100'
-      default: return 'text-gray-600 bg-gray-100'
-    }
-  }
-
-  const handleDeleteDomain = (domainId) => {
-    if (window.confirm('Are you sure you want to delete this domain?')) {
-      dispatch(deleteDomain(domainId));
-    }
+  const handleAddDomain = (formData) => {
+    dispatch(createDomain(formData))
+      .unwrap()
+      .then(() => {
+        toast.success('Domain added successfully!')
+        setShowFormModal(false)
+      })
+      .catch((error) => {
+        toast.error(error || 'Failed to add domain')
+      })
   }
 
   const handleEditDomain = (domain) => {
-    setEditDomainId(domain.id)
-    setForm({
-      domain_name: domain.domain_name,
-      protection_level: domain.protection_level,
-      ssl_enabled: domain.ssl_enabled,
-      cdn_enabled: domain.cdn_enabled,
-    })
-    setShowForm(true)
+    setEditingDomain(domain)
+    setShowFormModal(true)
   }
 
-  const handleAddDomain = (e) => {
-    e.preventDefault()
-    if (form.domain_name.trim()) {
-      if (editDomainId) {
-        dispatch(updateDomain({ id: editDomainId, ...form }))
-      } else {
-        dispatch(addDomain(form))
-      }
-      setForm({
-        domain_name: '',
-        protection_level: 'medium',
-        ssl_enabled: true,
-        cdn_enabled: false,
+  const handleUpdateDomain = (formData) => {
+    if (!editingDomain) return
+    
+    dispatch(updateDomain({ id: editingDomain.id, data: formData }))
+      .unwrap()
+      .then(() => {
+        toast.success('Domain updated successfully!')
+        setShowFormModal(false)
+        setEditingDomain(null)
       })
-      setShowForm(false)
-      setEditDomainId(null)
+      .catch((error) => {
+        toast.error(error || 'Failed to update domain')
+      })
+  }
+
+  const handleDeleteDomain = (domain) => {
+    if (window.confirm(`Are you sure you want to delete ${domain.name}?`)) {
+      dispatch(deleteDomain(domain.id))
+        .unwrap()
+        .then(() => {
+          toast.success('Domain deleted successfully!')
+        })
+        .catch((error) => {
+          toast.error(error || 'Failed to delete domain')
+        })
     }
   }
+
+  const handleVerifyDomain = (domain) => {
+    dispatch(verifyDomain(domain.id))
+      .unwrap()
+      .then(() => {
+        toast.success('Domain verification started!')
+      })
+      .catch((error) => {
+        toast.error(error || 'Failed to verify domain')
+      })
+  }
+
+  const handleViewDetails = (domain) => {
+    setSelectedDomain(domain)
+    setShowDetailsModal(true)
+  }
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text)
+    toast.success('Copied to clipboard!')
+  }
+
+  const getStatusBadge = (status) => {
+    const statusConfig = {
+      verified: { color: 'bg-green-100 text-green-800', label: 'Verified' },
+      pending: { color: 'bg-yellow-100 text-yellow-800', label: 'Pending' },
+      failed: { color: 'bg-red-100 text-red-800', label: 'Failed' }
+    }
+    const config = statusConfig[status] || statusConfig.pending
+    return (
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>
+        {config.label}
+      </span>
+    )
+  }
+
+  const getDomainStats = (domain) => ({
+    requests: domain.monthlyRequests || 0,
+    blocked: domain.monthlyBlocked || 0,
+    revenue: domain.monthlyRevenue || 0,
+    blockRate: domain.monthlyRequests ? ((domain.monthlyBlocked / domain.monthlyRequests) * 100).toFixed(1) : 0
+  })
 
   return (
     <>
       <Helmet>
-        <title>Protected Domains - Traffic Interceptor</title>
+        <title>Domain Management - Traffic Interceptor</title>
       </Helmet>
-      
+
       <div className="space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Protected Domains</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Domain Management</h1>
             <p className="mt-1 text-sm text-gray-600">
-              Manage your protected domains and monitor their traffic patterns
+              Manage your domains and configure bot protection settings.
             </p>
           </div>
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={() => setShowForm(true)}
-              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+          <button
+            onClick={() => setShowFormModal(true)}
+            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Domain
+          </button>
+        </div>
+
+        {/* Filters and Search */}
+        <div className="bg-white p-4 rounded-lg shadow">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Search domains..."
+              />
+            </div>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
             >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Domain
+              <option value="all">All Status</option>
+              <option value="verified">Verified</option>
+              <option value="pending">Pending</option>
+              <option value="failed">Failed</option>
+            </select>
+            <button
+              onClick={() => dispatch(fetchDomains())}
+              className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
             </button>
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white p-6 rounded-lg shadow border">
-            <div className="flex items-center">
-              <div className="p-3 rounded-full bg-blue-100">
-                <Globe className="h-6 w-6 text-blue-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Domains</p>
-                <p className="text-2xl font-bold text-gray-900">{mockDomains.length}</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white p-6 rounded-lg shadow border">
-            <div className="flex items-center">
-              <div className="p-3 rounded-full bg-green-100">
-                <Activity className="h-6 w-6 text-green-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Active Domains</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {mockDomains.filter(d => d.status === 'active').length}
-                </p>
+        {/* Error Display */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-md p-4">
+            <div className="flex">
+              <AlertTriangle className="h-5 w-5 text-red-400" />
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">Error</h3>
+                <p className="mt-1 text-sm text-red-700">{error}</p>
+                <button
+                  onClick={() => dispatch(clearError())}
+                  className="mt-2 text-sm text-red-700 underline"
+                >
+                  Dismiss
+                </button>
               </div>
             </div>
           </div>
+        )}
 
-          <div className="bg-white p-6 rounded-lg shadow border">
-            <div className="flex items-center">
-              <div className="p-3 rounded-full bg-yellow-100">
-                <TrendingUp className="h-6 w-6 text-yellow-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Requests</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {mockDomains.reduce((sum, domain) => sum + domain.requests_today, 0).toLocaleString()}
-                </p>
-              </div>
-            </div>
+        {/* Loading State */}
+        {loading && (
+          <div className="flex justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           </div>
+        )}
 
-          <div className="bg-white p-6 rounded-lg shadow border">
-            <div className="flex items-center">
-              <div className="p-3 rounded-full bg-red-100">
-                <Shield className="h-6 w-6 text-red-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Blocked Today</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {mockDomains.reduce((sum, domain) => sum + domain.blocked_today, 0).toLocaleString()}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Search */}
-        <div className="bg-white p-6 rounded-lg shadow border">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search domains..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-        </div>
-
-        {/* Domains List */}
-        <div className="bg-white rounded-lg shadow border overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Domain
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Protection
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Requests Today
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Blocked
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Revenue
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Uptime
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredDomains.map((domain) => (
-                  <tr key={domain.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
+        {/* Domains Grid */}
+        {!loading && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            <AnimatePresence>
+              {filteredDomains.map((domain) => {
+                const stats = getDomainStats(domain)
+                return (
+                  <motion.div
+                    key={domain.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+                  >
+                    {/* Domain Header */}
+                    <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center">
-                        <Globe className="h-5 w-5 text-gray-400 mr-3" />
+                        <Globe className="h-5 w-5 text-blue-600 mr-2" />
                         <div>
-                          <div className="text-sm font-medium text-gray-900">{domain.domain_name}</div>
-                          <div className="text-sm text-gray-500">{domain.rules_count} rules active</div>
+                          <h3 className="font-semibold text-gray-900">{domain.name}</h3>
+                          <div className="flex items-center mt-1">
+                            {getStatusBadge(domain.status)}
+                          </div>
                         </div>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(domain.status)}`}>
-                          {domain.status}
-                        </span>
-                        {domain.ssl_enabled && (
-                          <CheckCircle className="h-4 w-4 text-green-500 ml-2" title="SSL Enabled" />
-                        )}
-                        {domain.cdn_enabled && (
-                          <Zap className="h-4 w-4 text-blue-500 ml-1" title="CDN Enabled" />
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getProtectionLevelColor(domain.protection_level)}`}>
-                        {domain.protection_level}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {domain.requests_today.toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <div className="flex items-center">
-                        <span>{domain.blocked_today.toLocaleString()}</span>
-                        <span className="ml-2 text-xs text-gray-500">
-                          ({((domain.blocked_today / domain.requests_today) * 100).toFixed(1)}%)
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      ${domain.revenue_today}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <div className="flex items-center">
-                        <span className={domain.uptime >= 99.5 ? 'text-green-600' : domain.uptime >= 99 ? 'text-yellow-600' : 'text-red-600'}>
-                          {domain.uptime}%
-                        </span>
-                        {domain.uptime < 99.5 && (
-                          <AlertTriangle className="h-4 w-4 text-yellow-500 ml-1" />
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex items-center justify-end space-x-2">
+                      <div className="flex items-center space-x-1">
                         <button
-                          onClick={() => window.open(`https://${domain.domain_name}`, '_blank')}
-                          className="text-blue-600 hover:text-blue-900"
-                          title="Visit domain"
+                          onClick={() => handleViewDetails(domain)}
+                          className="p-1 text-gray-400 hover:text-blue-600"
+                          title="View Details"
                         >
-                          <ExternalLink className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => navigator.clipboard.writeText(domain.domain_name)}
-                          className="text-green-600 hover:text-green-900"
-                          title="Copy domain"
-                        >
-                          <Copy className="h-4 w-4" />
+                          <Eye className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => handleEditDomain(domain)}
-                          className="text-blue-600 hover:text-blue-900"
-                          title="Edit domain"
+                          className="p-1 text-gray-400 hover:text-yellow-600"
+                          title="Edit"
                         >
-                          <Settings className="h-4 w-4" />
+                          <Edit className="h-4 w-4" />
                         </button>
                         <button
-                          onClick={() => handleDeleteDomain(domain.id)}
-                          className="text-red-600 hover:text-red-900"
-                          title="Delete domain"
+                          onClick={() => handleDeleteDomain(domain)}
+                          className="p-1 text-gray-400 hover:text-red-600"
+                          title="Delete"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                    </div>
 
-        {/* Add/Edit Domain Modal */}
-        {showForm && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium text-gray-900">
-                  {editDomainId ? 'Edit Domain' : 'Add New Domain'}
-                </h3>
+                    {/* Domain Features */}
+                    <div className="flex items-center space-x-4 mb-4 text-sm">
+                      {domain.sslEnabled && (
+                        <div className="flex items-center text-green-600">
+                          <Shield className="h-4 w-4 mr-1" />
+                          SSL
+                        </div>
+                      )}
+                      {domain.cdnEnabled && (
+                        <div className="flex items-center text-blue-600">
+                          <Zap className="h-4 w-4 mr-1" />
+                          CDN
+                        </div>
+                      )}
+                      {domain.trafficEnabled && (
+                        <div className="flex items-center text-purple-600">
+                          <Activity className="h-4 w-4 mr-1" />
+                          Monitor
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Stats */}
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <div className="text-xs text-gray-500">Monthly Requests</div>
+                        <div className="font-semibold">{stats.requests.toLocaleString()}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-500">Blocked</div>
+                        <div className="font-semibold text-red-600">{stats.blocked.toLocaleString()}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-500">Revenue</div>
+                        <div className="font-semibold text-green-600">${stats.revenue.toFixed(2)}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-500">Block Rate</div>
+                        <div className="font-semibold">{stats.blockRate}%</div>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex flex-wrap gap-2">
+                      {domain.status === 'pending' && (
+                        <button
+                          onClick={() => handleVerifyDomain(domain)}
+                          className="flex-1 px-3 py-2 bg-blue-50 text-blue-700 rounded-md text-sm font-medium hover:bg-blue-100"
+                        >
+                          Verify Domain
+                        </button>
+                      )}
+                      {domain.status === 'verified' && (
+                        <>
+                          <button
+                            onClick={() => copyToClipboard(domain.name)}
+                            className="flex-1 px-3 py-2 bg-gray-50 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-100"
+                          >
+                            <Copy className="h-3 w-3 inline mr-1" />
+                            Copy
+                          </button>
+                          <button
+                            onClick={() => window.open(`https://${domain.name}`, '_blank')}
+                            className="flex-1 px-3 py-2 bg-gray-50 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-100"
+                          >
+                            <ExternalLink className="h-3 w-3 inline mr-1" />
+                            Visit
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </motion.div>
+                )
+              })}
+            </AnimatePresence>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!loading && filteredDomains.length === 0 && (
+          <div className="text-center py-12">
+            <Globe className="mx-auto h-12 w-12 text-gray-400" />
+            <h3 className="mt-2 text-sm font-medium text-gray-900">No domains found</h3>
+            <p className="mt-1 text-sm text-gray-500">
+              {searchTerm || statusFilter !== 'all' 
+                ? 'Try adjusting your search or filters.' 
+                : 'Get started by adding your first domain.'
+              }
+            </p>
+            {!searchTerm && statusFilter === 'all' && (
+              <div className="mt-6">
                 <button
-                  onClick={() => setShowForm(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  onClick={() => setShowFormModal(true)}
+                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
                 >
-                  ×
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Domain
                 </button>
               </div>
-              
-              <form onSubmit={handleAddDomain} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Domain Name
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="example.com"
-                    value={form.domain_name}
-                    onChange={(e) => setForm({ ...form, domain_name: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Protection Level
-                  </label>
-                  <select
-                    value={form.protection_level}
-                    onChange={(e) => setForm({ ...form, protection_level: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="low">Low - Basic bot detection</option>
-                    <option value="medium">Medium - Standard protection</option>
-                    <option value="high">High - Maximum security</option>
-                  </select>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={form.ssl_enabled}
-                      onChange={(e) => setForm({ ...form, ssl_enabled: e.target.checked })}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                    <span className="ml-2 text-sm text-gray-700">Enable SSL/TLS</span>
-                  </label>
-
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={form.cdn_enabled}
-                      onChange={(e) => setForm({ ...form, cdn_enabled: e.target.checked })}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                    <span className="ml-2 text-sm text-gray-700">Enable CDN</span>
-                  </label>
-                </div>
-
-                <div className="flex justify-end space-x-3 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => setShowForm(false)}
-                    className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
-                  >
-                    {editDomainId ? 'Update Domain' : 'Add Domain'}
-                  </button>
-                </div>
-              </form>
-            </div>
+            )}
           </div>
         )}
       </div>
+
+      {/* Modals */}
+      <DomainFormModal
+        isOpen={showFormModal}
+        onClose={() => {
+          setShowFormModal(false)
+          setEditingDomain(null)
+        }}
+        domain={editingDomain}
+        onSubmit={editingDomain ? handleUpdateDomain : handleAddDomain}
+      />
+
+      <DomainDetailsModal
+        isOpen={showDetailsModal}
+        onClose={() => {
+          setShowDetailsModal(false)
+          setSelectedDomain(null)
+        }}
+        domain={selectedDomain}
+      />
     </>
   )
 }

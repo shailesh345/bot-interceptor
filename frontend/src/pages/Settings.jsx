@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Helmet } from 'react-helmet-async'
+import toast from 'react-hot-toast'
 import { 
   User, 
   Bell, 
@@ -72,19 +73,41 @@ const Settings = () => {
   }
 
   const handleSave = () => {
-    // Save settings logic here
-    alert('Settings saved successfully!')
+    try {
+      // Save all settings to localStorage for demo
+      localStorage.setItem('appSettings', JSON.stringify(settings))
+      toast.success('Settings saved successfully!')
+    } catch (error) {
+      toast.error('Failed to save settings')
+    }
   }
 
   const handleGenerateApiKey = () => {
     if (window.confirm('This will invalidate your current API key. Continue?')) {
-      alert('New API key generated!')
+      const newKey = 'sk_' + Math.random().toString(36).substr(2, 32)
+      setApiKey(newKey)
+      toast.success('New API key generated!')
     }
   }
 
   const handleExportData = () => {
-    // Export data logic
-    alert('Data export started. You will receive an email when ready.')
+    try {
+      const exportData = {
+        settings,
+        exportDate: new Date().toISOString(),
+        userInfo: { email: 'user@example.com' }
+      }
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `settings-export-${new Date().toISOString().split('T')[0]}.json`
+      a.click()
+      URL.revokeObjectURL(url)
+      toast.success('Settings exported successfully!')
+    } catch (error) {
+      toast.error('Failed to export data')
+    }
   }
 
   const tabs = [

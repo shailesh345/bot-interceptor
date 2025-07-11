@@ -1,21 +1,43 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-import mockAPI from '../../services/mockAPI'
+import { mockAPI } from '../../services/comprehensiveMockAPI'
 
 const initialState = {
   domains: [],
   selectedDomain: null,
   loading: false,
   error: null,
+  filters: {
+    status: 'all',
+    search: ''
+  },
+  pagination: {
+    page: 1,
+    limit: 10,
+    total: 0
+  }
 }
 
+// Async thunks
 export const fetchDomains = createAsyncThunk(
   'domains/fetchDomains',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await mockAPI.getDomains()
-      return response.data.domains
+      const domains = await mockAPI.getDomains()
+      return domains
     } catch (error) {
       return rejectWithValue(error.message || 'Failed to fetch domains')
+    }
+  }
+)
+
+export const fetchDomain = createAsyncThunk(
+  'domains/fetchDomain',
+  async (id, { rejectWithValue }) => {
+    try {
+      const domain = await mockAPI.getDomain(id)
+      return domain
+    } catch (error) {
+      return rejectWithValue(error.message || 'Failed to fetch domain')
     }
   }
 )
@@ -24,10 +46,46 @@ export const createDomain = createAsyncThunk(
   'domains/createDomain',
   async (domainData, { rejectWithValue }) => {
     try {
-      const response = await mockAPI.createDomain(domainData)
-      return response.data.domain
+      const domain = await mockAPI.createDomain(domainData)
+      return domain
     } catch (error) {
       return rejectWithValue(error.message || 'Failed to create domain')
+    }
+  }
+)
+
+export const updateDomain = createAsyncThunk(
+  'domains/updateDomain',
+  async ({ id, data }, { rejectWithValue }) => {
+    try {
+      const domain = await mockAPI.updateDomain(id, data)
+      return domain
+    } catch (error) {
+      return rejectWithValue(error.message || 'Failed to update domain')
+    }
+  }
+)
+
+export const deleteDomain = createAsyncThunk(
+  'domains/deleteDomain',
+  async (id, { rejectWithValue }) => {
+    try {
+      await mockAPI.deleteDomain(id)
+      return id
+    } catch (error) {
+      return rejectWithValue(error.message || 'Failed to delete domain')
+    }
+  }
+)
+
+export const verifyDomain = createAsyncThunk(
+  'domains/verifyDomain',
+  async (id, { rejectWithValue }) => {
+    try {
+      const result = await mockAPI.verifyDomain(id)
+      return { id, verified: result.verified }
+    } catch (error) {
+      return rejectWithValue(error.message || 'Failed to verify domain')
     }
   }
 )
@@ -36,21 +94,25 @@ const domainsSlice = createSlice({
   name: 'domains',
   initialState,
   reducers: {
-    setDomains: (state, action) => {
-      state.domains = action.payload
-    },
     setSelectedDomain: (state, action) => {
       state.selectedDomain = action.payload
     },
-    setLoading: (state, action) => {
-      state.loading = action.payload
+    setFilters: (state, action) => {
+      state.filters = { ...state.filters, ...action.payload }
     },
-    setError: (state, action) => {
-      state.error = action.payload
+    setPagination: (state, action) => {
+      state.pagination = { ...state.pagination, ...action.payload }
     },
+    clearError: (state) => {
+      state.error = null
+    },
+    clearSelectedDomain: (state) => {
+      state.selectedDomain = null
+    }
   },
   extraReducers: (builder) => {
     builder
+      // Fetch domains
       .addCase(fetchDomains.pending, (state) => {
         state.loading = true
         state.error = null
@@ -58,16 +120,108 @@ const domainsSlice = createSlice({
       .addCase(fetchDomains.fulfilled, (state, action) => {
         state.loading = false
         state.domains = action.payload
+        state.pagination.total = action.payload.length
       })
       .addCase(fetchDomains.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload
       })
-      .addCase(createDomain.fulfilled, (state, action) => {
-        state.domains.push(action.payload)
+      
+      // Fetch single domain
+      .addCase(fetchDomain.pending, (state) => {
+        state.loading = true
+        state.error = null
       })
-  },
+      .addCase(fetchDomain.fulfilled, (state, action) => {
+        state.loading = false
+        state.selectedDomain = action.payload
+      })
+      .addCase(fetchDomain.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload
+      })
+      
+      // Create domain
+      .addCase(createDomain.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(createDomain.fulfilled, (state, action) => {
+        state.loading = false
+        state.domains.push(action.payload)
+        state.pagination.total += 1
+      })
+      .addCase(createDomain.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload
+      })
+      
+      // Update domain
+      .addCase(updateDomain.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(updateDomain.fulfilled, (state, action) => {
+        state.loading = false
+        const index = state.domains.findIndex(d => d.id === action.payload.id)
+        if (index !== -1) {
+          state.domains[index] = action.payload
+        }
+        if (state.selectedDomain?.id === action.payload.id) {
+          state.selectedDomain = action.payload
+        }
+      })
+      .addCase(updateDomain.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload
+      })
+      
+      // Delete domain
+      .addCase(deleteDomain.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(deleteDomain.fulfilled, (state, action) => {
+        state.loading = false
+        state.domains = state.domains.filter(d => d.id !== action.payload)
+        state.pagination.total -= 1
+        if (state.selectedDomain?.id === action.payload) {
+          state.selectedDomain = null
+        }
+      })
+      .addCase(deleteDomain.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload
+      })
+      
+      // Verify domain
+      .addCase(verifyDomain.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(verifyDomain.fulfilled, (state, action) => {
+        state.loading = false
+        const index = state.domains.findIndex(d => d.id === action.payload.id)
+        if (index !== -1) {
+          state.domains[index] = { ...state.domains[index], status: 'verified', verifiedAt: new Date().toISOString() }
+        }
+        if (state.selectedDomain?.id === action.payload.id) {
+          state.selectedDomain = { ...state.selectedDomain, status: 'verified', verifiedAt: new Date().toISOString() }
+        }
+      })
+      .addCase(verifyDomain.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload
+      })
+  }
 })
 
-export const { setDomains, setSelectedDomain, setLoading, setError } = domainsSlice.actions
+export const { 
+  setSelectedDomain, 
+  setFilters, 
+  setPagination, 
+  clearError, 
+  clearSelectedDomain 
+} = domainsSlice.actions
+
 export default domainsSlice.reducer

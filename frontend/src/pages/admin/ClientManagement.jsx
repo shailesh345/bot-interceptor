@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
+import toast from 'react-hot-toast';
 import { 
   Search, Filter, Plus, Download, Eye, Edit, Trash2, 
   Building, MapPin, DollarSign, TrendingUp, Users, 
@@ -68,6 +69,40 @@ const ClientManagement = () => {
     'at-risk': clients.filter(c => c.lifecycle === 'at-risk').length
   };
 
+  const handleExportClients = () => {
+    try {
+      const csvData = clients.map(client => 
+        `${client.name},${client.email},${client.industry},${client.lifecycle},${client.healthScore},${client.mrr}`
+      ).join('\n')
+      const blob = new Blob([`Name,Email,Industry,Lifecycle,Health Score,MRR\n${csvData}`], { type: 'text/csv' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `clients-export-${new Date().toISOString().split('T')[0]}.csv`
+      a.click()
+      URL.revokeObjectURL(url)
+      toast.success('Client data exported successfully!')
+    } catch (error) {
+      toast.error('Failed to export client data')
+    }
+  }
+
+  const handleAddClient = () => {
+    toast.info('Add Client modal would open here - feature coming soon!')
+  }
+
+  const handleEditClient = (client) => {
+    toast.info(`Edit client ${client.name} - feature coming soon!`)
+  }
+
+  const handleDeleteClient = (client) => {
+    if (window.confirm(`Are you sure you want to delete client ${client.name}?`)) {
+      const updatedClients = clients.filter(c => c.id !== client.id)
+      setClients(updatedClients)
+      toast.success(`Client ${client.name} deleted successfully`)
+    }
+  }
+
   return (
     <>
       <Helmet><title>Client Management - Admin</title></Helmet>
@@ -79,11 +114,17 @@ const ClientManagement = () => {
             <p className="text-gray-600">Manage your client portfolio and track health metrics</p>
           </div>
           <div className="flex space-x-3">
-            <button className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+            <button 
+              onClick={handleExportClients}
+              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+            >
               <Download className="h-4 w-4 mr-2" />
               Export
             </button>
-            <button className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+            <button 
+              onClick={handleAddClient}
+              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+            >
               <Plus className="h-4 w-4 mr-2" />
               Add Client
             </button>
@@ -238,10 +279,16 @@ const ClientManagement = () => {
                         >
                           <Eye className="h-4 w-4" />
                         </button>
-                        <button className="text-gray-600 hover:text-gray-900">
+                        <button 
+                          onClick={() => handleEditClient(client)}
+                          className="text-gray-600 hover:text-gray-900"
+                        >
                           <Edit className="h-4 w-4" />
                         </button>
-                        <button className="text-red-600 hover:text-red-900">
+                        <button 
+                          onClick={() => handleDeleteClient(client)}
+                          className="text-red-600 hover:text-red-900"
+                        >
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
