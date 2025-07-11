@@ -20,7 +20,8 @@ export default defineConfig({
         target: 'http://localhost:5000',
         changeOrigin: true,
       },
-      '/admin': {
+      // Only proxy API endpoints, not client-side routes
+      '^/admin/api': {
         target: 'http://localhost:5000',
         changeOrigin: true,
       },
