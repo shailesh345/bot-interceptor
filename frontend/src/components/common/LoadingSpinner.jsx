@@ -15,7 +15,7 @@ const LoadingSpinner = ({ size = 'md', color = 'primary' }) => {
   }
 
   return (
-    <div className="flex items-center justify-center">
+    <div className="flex items-center justify-center" data-testid="loading-spinner">
       <div
         className={`animate-spin rounded-full border-b-2 ${sizeClasses[size]} ${colorClasses[color]}`}
       />
