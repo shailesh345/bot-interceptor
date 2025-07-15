@@ -39,6 +39,16 @@ import ComplianceCenter from './pages/admin/ComplianceCenter'
 import Client360 from './pages/admin/Client360'
 import NotFound from './pages/NotFound'
 
+// MVP Components
+import MVPDashboard from './components/mvp/MVPDashboard'
+
+// New Admin Components
+import AdminDashboardComponent from './components/admin/AdminDashboard'
+import AdminUserManagement from './components/admin/AdminUserManagement'
+import SystemMonitoring from './components/admin/SystemMonitoring'
+import SecurityOperationsComponent from './components/admin/SecurityOperations'
+import SystemHealth from './components/admin/SystemHealth'
+
 // Redux actions
 import { fetchUserProfile } from './store/slices/authSlice'
 
@@ -94,8 +104,28 @@ function App() {
           <Route path="profile" element={<Profile />} />
           <Route path="demo" element={<Demo />} />
           
+          {/* MVP Development Dashboard */}
+          <Route path="mvp" element={
+            process.env.NODE_ENV === 'development' ? <MVPDashboard /> : <Navigate to="/dashboard" replace />
+          } />
+          
           {/* Admin Routes */}
           <Route path="admin" element={<Admin />} />
+          <Route path="admin/dashboard" element={
+            user?.role === 'admin' || user?.role === 'super_admin' ? <AdminDashboardComponent /> : <Navigate to="/dashboard" replace />
+          } />
+          <Route path="admin/user-management" element={
+            user?.role === 'admin' || user?.role === 'super_admin' ? <AdminUserManagement /> : <Navigate to="/dashboard" replace />
+          } />
+          <Route path="admin/system-monitoring" element={
+            user?.role === 'admin' || user?.role === 'super_admin' ? <SystemMonitoring /> : <Navigate to="/dashboard" replace />
+          } />
+          <Route path="admin/security-operations" element={
+            user?.role === 'admin' || user?.role === 'super_admin' ? <SecurityOperationsComponent /> : <Navigate to="/dashboard" replace />
+          } />
+          <Route path="admin/system-health" element={
+            user?.role === 'admin' || user?.role === 'super_admin' ? <SystemHealth /> : <Navigate to="/dashboard" replace />
+          } />
           <Route path="admin/users" element={
             user?.role === 'super_admin' ? <AdminUsers /> : <Navigate to="/dashboard" replace />
           } />

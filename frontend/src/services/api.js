@@ -59,24 +59,92 @@ export const domainsAPI = {
   updateDomain: (id, domainData) => api.put(`/domains/${id}`, domainData),
   deleteDomain: (id) => api.delete(`/domains/${id}`),
   verifyDomain: (id) => api.post(`/domains/${id}/verify`),
+  getDomainStats: (id) => api.get(`/domains/${id}/stats`),
+  bulkImportDomains: (domains) => api.post('/domains/bulk-import', { domains }),
+  exportDomains: () => api.get('/domains/export'),
 }
 
-// Rules API
+// Phase 2: Domain Management API
+export const domainAPI = {
+  // Get all domains
+  getDomains: (params = {}) => api.get('/v1/domains', { params }),
+
+  // Create new domain
+  createDomain: (domainData) => api.post('/v1/domains', domainData),
+
+  // Get specific domain
+  getDomain: (domainId) => api.get(`/v1/domains/${domainId}`),
+
+  // Update domain
+  updateDomain: (domainId, domainData) => api.put(`/v1/domains/${domainId}`, domainData),
+
+  // Delete domain
+  deleteDomain: (domainId) => api.delete(`/v1/domains/${domainId}`),
+
+  // Verify domain ownership
+  verifyDomain: (domainId) => api.post(`/v1/domains/${domainId}/verify`),
+
+  // Get verification instructions
+  getVerificationInstructions: (domainId) => api.get(`/v1/domains/${domainId}/verification-instructions`),
+}
+
+// Rules API (Enhanced for Phase 2)
 export const rulesAPI = {
-  getRules: (domainId) => api.get(`/domains/${domainId}/rules`),
-  createRule: (domainId, ruleData) => api.post(`/domains/${domainId}/rules`, ruleData),
-  updateRule: (domainId, ruleId, ruleData) => api.put(`/domains/${domainId}/rules/${ruleId}`, ruleData),
-  deleteRule: (domainId, ruleId) => api.delete(`/domains/${domainId}/rules/${ruleId}`),
-  toggleRule: (domainId, ruleId) => api.patch(`/domains/${domainId}/rules/${ruleId}/toggle`),
+  // Phase 2 enhanced endpoints
+  getRules: (params = {}) => api.get('/v1/rules', { params }),
+  createRule: (ruleData) => api.post('/v1/rules', ruleData),
+  getRule: (ruleId) => api.get(`/v1/rules/${ruleId}`),
+  updateRule: (ruleId, ruleData) => api.put(`/v1/rules/${ruleId}`, ruleData),
+  deleteRule: (ruleId) => api.delete(`/v1/rules/${ruleId}`),
+  testRule: (ruleId, sampleRequests) => api.post(`/v1/rules/${ruleId}/test`, { sample_requests: sampleRequests }),
+  
+  // Legacy endpoints (maintain backward compatibility)
+  getRulesByDomain: (domainId) => api.get(`/rules/${domainId}`),
+  enableRule: (id) => api.post(`/rules/${id}/enable`),
+  disableRule: (id) => api.post(`/rules/${id}/disable`),
+  getRuleTemplates: () => api.get('/rules/templates'),
+  getGlobalRules: () => api.get('/rules/global'),
+  createGlobalRule: (ruleData) => api.post('/rules/global', ruleData),
+  updateGlobalRule: (id, ruleData) => api.put(`/rules/global/${id}`, ruleData),
+  deleteGlobalRule: (id) => api.delete(`/rules/global/${id}`),
+}
+
+// Traffic API (Enhanced for Phase 2)
+export const trafficAPI = {
+  // Phase 2 enhanced endpoints
+  processRequest: (requestData) => api.post('/v1/traffic/process', requestData),
+  getStats: () => api.get('/v1/traffic/stats'),
+  getLogs: (params = {}) => api.get('/v1/traffic/logs', { params }),
+  
+  // Legacy endpoints (maintain backward compatibility)
+  getTrafficLogs: (params) => api.get('/traffic/logs', { params }),
+  getTrafficStats: (params) => api.get('/traffic/stats', { params }),
+  getTrafficSummary: (domainId) => api.get(`/traffic/summary/${domainId}`),
+  getTopTraffic: (params) => api.get('/traffic/top', { params }),
+  exportTrafficData: (params) => api.get('/traffic/export', { params }),
+  getTrafficAnalytics: (params) => api.get('/traffic/analytics', { params }),
+  getRealTimeTraffic: (domainId) => api.get(`/traffic/realtime/${domainId}`),
 }
 
 // Analytics API
 export const analyticsAPI = {
+  getDashboard: (params) => api.get('/analytics/dashboard', { params }),
   getDashboardStats: (timeRange = '7d') => api.get(`/analytics/dashboard?timeRange=${timeRange}`),
   getTrafficLogs: (params = {}) => api.get('/analytics/traffic', { params }),
+  getTrafficAnalytics: (params) => api.get('/analytics/traffic', { params }),
   getBotAnalytics: (params = {}) => api.get('/analytics/bots', { params }),
+  getPerformanceAnalytics: (params) => api.get('/analytics/performance', { params }),
+  getRealTimeAnalytics: (domainId) => api.get(`/analytics/realtime/${domainId}`),
+  getHistoricalAnalytics: (params) => api.get('/analytics/historical', { params }),
+  getCustomAnalytics: (params) => api.get('/analytics/custom', { params }),
+  exportAnalytics: (params) => api.get('/analytics/export', { params }),
   getGeographicData: (params = {}) => api.get('/analytics/geographic', { params }),
   exportData: (params = {}) => api.get('/analytics/export', { params }),
+  getSystemHealth: () => api.get('/analytics/health'),
+  getAlerts: () => api.get('/analytics/alerts'),
+  createAlert: (alertData) => api.post('/analytics/alerts', alertData),
+  updateAlert: (id, alertData) => api.put(`/analytics/alerts/${id}`, alertData),
+  deleteAlert: (id) => api.delete(`/analytics/alerts/${id}`),
 }
 
 // Billing API
@@ -89,6 +157,15 @@ export const billingAPI = {
   getPaymentMethods: () => api.get('/billing/payment-methods'),
   addPaymentMethod: (paymentMethodData) => api.post('/billing/payment-methods', paymentMethodData),
   deletePaymentMethod: (id) => api.delete(`/billing/payment-methods/${id}`),
+  getUsage: (params) => api.get('/billing/usage', { params }),
+  getPlans: () => api.get('/billing/plans'),
+  createPaymentMethod: (paymentData) => api.post('/billing/payment-method', paymentData),
+  updatePaymentMethod: (id, paymentData) => api.put(`/billing/payment-method/${id}`, paymentData),
+  getInvoice: (id) => api.get(`/billing/invoices/${id}`),
+  downloadInvoice: (id) => api.get(`/billing/invoices/${id}/download`),
+  getUsageHistory: (params) => api.get('/billing/usage-history', { params }),
+  getBillingSettings: () => api.get('/billing/settings'),
+  updateBillingSettings: (settings) => api.put('/billing/settings', settings),
 }
 
 // Admin API

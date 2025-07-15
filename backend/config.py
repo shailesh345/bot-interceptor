@@ -8,7 +8,7 @@ class Config:
     
     # Database Configuration
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
-        'postgresql://user:password@localhost/traffic_interceptor'
+        'sqlite:///traffic_interceptor.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # JWT Configuration

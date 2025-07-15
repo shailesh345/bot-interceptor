@@ -68,6 +68,7 @@ class Domain(db.Model):
     domain_name = db.Column(db.String(255), nullable=False)
     is_verified = db.Column(db.Boolean, default=False)
     verification_token = db.Column(db.String(255))
+    verification_method = db.Column(db.String(50), default='dns')  # dns, file, meta
     ssl_enabled = db.Column(db.Boolean, default=False)
     status = db.Column(db.String(20), default='active')  # active, suspended, pending
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -79,6 +80,21 @@ class Domain(db.Model):
     # Relationships
     rules = db.relationship('InterceptorRule', backref='domain', lazy=True)
     traffic_logs = db.relationship('TrafficLog', backref='domain', lazy=True)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'uuid': self.uuid,
+            'domain_name': self.domain_name,
+            'is_verified': self.is_verified,
+            'verification_token': self.verification_token,
+            'verification_method': self.verification_method,
+            'ssl_enabled': self.ssl_enabled,
+            'status': self.status,
+            'tenant_id': self.tenant_id,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
     
     def __repr__(self):
         return f'<Domain {self.domain_name}>'
@@ -117,11 +133,31 @@ class InterceptorRule(db.Model):
     actions = db.Column(db.JSON)  # JSON actions to take when rule matches
     priority = db.Column(db.Integer, default=0)
     is_active = db.Column(db.Boolean, default=True)
+    status = db.Column(db.String(20), default='active')  # active, inactive, deleted
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Foreign Keys
     domain_id = db.Column(db.Integer, db.ForeignKey('domains.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'uuid': self.uuid,
+            'name': self.name,
+            'description': self.description,
+            'rule_type': self.rule_type,
+            'conditions': self.conditions,
+            'actions': self.actions,
+            'priority': self.priority,
+            'is_active': self.is_active,
+            'status': self.status,
+            'domain_id': self.domain_id,
+            'user_id': self.user_id,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
     
     def __repr__(self):
         return f'<InterceptorRule {self.name}>'

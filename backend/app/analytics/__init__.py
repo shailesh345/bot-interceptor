@@ -3,4 +3,4 @@ from flask import Blueprint
 
 analytics = Blueprint('analytics', __name__)
 
-from app.analytics import routes
+# Routes will be imported later when needed
