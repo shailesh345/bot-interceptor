@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-import { mockAPI } from '../../services/comprehensiveMockAPI'
+import { domainsAPI } from '../../services/api'
 
 const initialState = {
   domains: [],
@@ -22,10 +22,10 @@ export const fetchDomains = createAsyncThunk(
   'domains/fetchDomains',
   async (_, { rejectWithValue }) => {
     try {
-      const domains = await mockAPI.getDomains()
-      return domains
+      const response = await domainsAPI.getDomains()
+      return response.data
     } catch (error) {
-      return rejectWithValue(error.message || 'Failed to fetch domains')
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch domains')
     }
   }
 )
@@ -34,10 +34,10 @@ export const fetchDomain = createAsyncThunk(
   'domains/fetchDomain',
   async (id, { rejectWithValue }) => {
     try {
-      const domain = await mockAPI.getDomain(id)
-      return domain
+      const response = await domainsAPI.getDomain(id)
+      return response.data
     } catch (error) {
-      return rejectWithValue(error.message || 'Failed to fetch domain')
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch domain')
     }
   }
 )
@@ -46,10 +46,10 @@ export const createDomain = createAsyncThunk(
   'domains/createDomain',
   async (domainData, { rejectWithValue }) => {
     try {
-      const domain = await mockAPI.createDomain(domainData)
-      return domain
+      const response = await domainsAPI.createDomain(domainData)
+      return response.data
     } catch (error) {
-      return rejectWithValue(error.message || 'Failed to create domain')
+      return rejectWithValue(error.response?.data?.message || 'Failed to create domain')
     }
   }
 )
@@ -58,10 +58,10 @@ export const updateDomain = createAsyncThunk(
   'domains/updateDomain',
   async ({ id, data }, { rejectWithValue }) => {
     try {
-      const domain = await mockAPI.updateDomain(id, data)
-      return domain
+      const response = await domainsAPI.updateDomain(id, data)
+      return response.data
     } catch (error) {
-      return rejectWithValue(error.message || 'Failed to update domain')
+      return rejectWithValue(error.response?.data?.message || 'Failed to update domain')
     }
   }
 )
@@ -70,10 +70,10 @@ export const deleteDomain = createAsyncThunk(
   'domains/deleteDomain',
   async (id, { rejectWithValue }) => {
     try {
-      await mockAPI.deleteDomain(id)
+      await domainsAPI.deleteDomain(id)
       return id
     } catch (error) {
-      return rejectWithValue(error.message || 'Failed to delete domain')
+      return rejectWithValue(error.response?.data?.message || 'Failed to delete domain')
     }
   }
 )
@@ -82,10 +82,10 @@ export const verifyDomain = createAsyncThunk(
   'domains/verifyDomain',
   async (id, { rejectWithValue }) => {
     try {
-      const result = await mockAPI.verifyDomain(id)
-      return { id, verified: result.verified }
+      const response = await domainsAPI.verifyDomain(id)
+      return { id, verified: response.data.verified }
     } catch (error) {
-      return rejectWithValue(error.message || 'Failed to verify domain')
+      return rejectWithValue(error.response?.data?.message || 'Failed to verify domain')
     }
   }
 )

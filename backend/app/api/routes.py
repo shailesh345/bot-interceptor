@@ -12,9 +12,9 @@ import re
 from .phase2_endpoints import domains_bp, rules_bp, traffic_bp
 
 # Register Phase 2 blueprints
-api.register_blueprint(domains_bp, url_prefix='/api/v1')
-api.register_blueprint(rules_bp, url_prefix='/api/v1')
-api.register_blueprint(traffic_bp, url_prefix='/api/v1')
+api.register_blueprint(domains_bp, url_prefix='/v1')
+api.register_blueprint(rules_bp, url_prefix='/v1')
+api.register_blueprint(traffic_bp, url_prefix='/v1')
 
 def get_current_user():
     """Helper function to get current user from JWT token"""

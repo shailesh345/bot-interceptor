@@ -308,6 +308,7 @@ const DomainDetailsModal = ({ isOpen, onClose, domain }) => {
 const Domains = () => {
   const dispatch = useDispatch()
   const { domains, loading, error, filters } = useSelector((state) => state.domains)
+  const { isAuthenticated } = useSelector((state) => state.auth)
   
   // Local state
   const [showFormModal, setShowFormModal] = useState(false)
@@ -318,8 +319,10 @@ const Domains = () => {
   const [statusFilter, setStatusFilter] = useState('all')
 
   useEffect(() => {
-    dispatch(fetchDomains())
-  }, [dispatch])
+    if (isAuthenticated) {
+      dispatch(fetchDomains())
+    }
+  }, [dispatch, isAuthenticated])
 
   // Filter domains based on search and status
   const filteredDomains = domains.filter(domain => {

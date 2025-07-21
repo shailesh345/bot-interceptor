@@ -8,12 +8,17 @@ export const loginUser = createAsyncThunk(
   'auth/login',
   async (credentials, { rejectWithValue }) => {
     try {
-      // const response = await authAPI.login(credentials)
-      const response = await mockAPI.login(credentials)
+      const response = await authAPI.login(credentials)
+      
+      // Store tokens and user data in localStorage
+      localStorage.setItem('token', response.data.access_token)
+      localStorage.setItem('refreshToken', response.data.refresh_token)
+      localStorage.setItem('user', JSON.stringify(response.data.user))
+      
       toast.success('Login successful!')
       return response.data
     } catch (error) {
-      const message = error.message || 'Login failed'
+      const message = error.response?.data?.message || 'Login failed'
       toast.error(message)
       return rejectWithValue(message)
     }
@@ -24,12 +29,17 @@ export const registerUser = createAsyncThunk(
   'auth/register',
   async (userData, { rejectWithValue }) => {
     try {
-      // const response = await authAPI.register(userData)
-      const response = await mockAPI.register(userData)
+      const response = await authAPI.register(userData)
+      
+      // Store tokens and user data in localStorage
+      localStorage.setItem('token', response.data.access_token)
+      localStorage.setItem('refreshToken', response.data.refresh_token)
+      localStorage.setItem('user', JSON.stringify(response.data.user))
+      
       toast.success('Registration successful!')
       return response.data
     } catch (error) {
-      const message = error.message || 'Registration failed'
+      const message = error.response?.data?.message || 'Registration failed'
       toast.error(message)
       return rejectWithValue(message)
     }
@@ -39,7 +49,10 @@ export const registerUser = createAsyncThunk(
 export const logoutUser = createAsyncThunk(
   'auth/logout',
   async (_, { rejectWithValue }) => {
-    // Only clear local state, do not call any API
+    // Clear tokens and user data from localStorage
+    localStorage.removeItem('token')
+    localStorage.removeItem('refreshToken')
+    localStorage.removeItem('user')
     toast.success('Logged out successfully')
     return null
   }
@@ -61,11 +74,10 @@ export const fetchUserProfile = createAsyncThunk(
   'auth/fetchProfile',
   async (_, { rejectWithValue }) => {
     try {
-      // const response = await authAPI.getProfile()
-      const response = await mockAPI.getProfile()
+      const response = await authAPI.getProfile()
       return response.data
     } catch (error) {
-      return rejectWithValue(error.message || 'Failed to fetch profile')
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch profile')
     }
   }
 )
@@ -86,10 +98,10 @@ export const updateUserProfile = createAsyncThunk(
 )
 
 const initialState = {
-  user: null,
-  token: null,
-  refreshToken: null,
-  isAuthenticated: false,
+  user: localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null,
+  token: localStorage.getItem('token'),
+  refreshToken: localStorage.getItem('refreshToken'),
+  isAuthenticated: !!localStorage.getItem('token'),
   loading: false,
   error: null,
 }

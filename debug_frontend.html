@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Frontend State</title>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <h1>Debug Frontend State</h1>
+    <div id="status">Loading...</div>
+    <button id="testBtn">Test Domains API</button>
+    <script>
+        function updateStatus(message) {
+            document.getElementById('status').innerHTML += '<p>' + message + '</p>';
+        }
+        
+        // Check localStorage
+        const token = localStorage.getItem('token');
+        const userStr = localStorage.getItem('user');
+        
+        if (token && userStr) {
+            const user = JSON.parse(userStr);
+            updateStatus(`✓ Token found: ${token.substring(0, 50)}...`);
+            updateStatus(`✓ User: ${user.username} (${user.email})`);
+            updateStatus(`✓ Tenant: ${user.tenant_id}`);
+        } else {
+            updateStatus('✗ No token or user found in localStorage');
+        }
+        
+        // Test button
+        document.getElementById('testBtn').addEventListener('click', async () => {
+            updateStatus('Testing domains API...');
+            
+            if (!token) {
+                updateStatus('✗ No token available');
+                return;
+            }
+            
+            try {
+                const response = await axios.get('http://localhost:3000/api/v1/domains', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                updateStatus(`✓ API Response: ${response.status}`);
+                updateStatus(`✓ Domains found: ${response.data.domains ? response.data.domains.length : 0}`);
+            } catch (error) {
+                updateStatus(`✗ API Error: ${error.response ? error.response.status : error.message}`);
+                updateStatus(`✗ Error details: ${error.response ? error.response.data : error.message}`);
+            }
+        });
+    </script>
+</body>
+</html>

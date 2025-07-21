@@ -52,16 +52,17 @@ export const authAPI = {
   changePassword: (passwordData) => axios.post('/auth/change-password', passwordData),
 }
 
-// Domains API
+// Domains API (Updated for Phase 2)
 export const domainsAPI = {
-  getDomains: () => api.get('/domains'),
-  createDomain: (domainData) => api.post('/domains', domainData),
-  updateDomain: (id, domainData) => api.put(`/domains/${id}`, domainData),
-  deleteDomain: (id) => api.delete(`/domains/${id}`),
-  verifyDomain: (id) => api.post(`/domains/${id}/verify`),
-  getDomainStats: (id) => api.get(`/domains/${id}/stats`),
-  bulkImportDomains: (domains) => api.post('/domains/bulk-import', { domains }),
-  exportDomains: () => api.get('/domains/export'),
+  getDomains: () => api.get('/v1/domains'),
+  createDomain: (domainData) => api.post('/v1/domains', domainData),
+  updateDomain: (id, domainData) => api.put(`/v1/domains/${id}`, domainData),
+  deleteDomain: (id) => api.delete(`/v1/domains/${id}`),
+  verifyDomain: (id) => api.post(`/v1/domains/${id}/verify`),
+  getDomainStats: (id) => api.get(`/v1/domains/${id}/stats`),
+  getDomain: (id) => api.get(`/v1/domains/${id}`),
+  bulkImportDomains: (domains) => api.post('/v1/domains/bulk-import', { domains }),
+  exportDomains: () => api.get('/v1/domains/export'),
 }
 
 // Phase 2: Domain Management API

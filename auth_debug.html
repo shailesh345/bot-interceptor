@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .warning { background-color: #fff3cd; color: #856404; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        pre { background-color: #f8f9fa; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Authentication Debug</h1>
+    
+    <div id="localStorage-status" class="status"></div>
+    <div id="api-status" class="status"></div>
+    
+    <button onclick="checkLocalStorage()">Check localStorage</button>
+    <button onclick="testLogin()">Test Login</button>
+    <button onclick="testDomainsAPI()">Test Domains API</button>
+    <button onclick="clearStorage()">Clear Storage</button>
+    
+    <div id="results"></div>
+    
+    <script>
+        function checkLocalStorage() {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            const refreshToken = localStorage.getItem('refreshToken');
+            
+            const statusDiv = document.getElementById('localStorage-status');
+            const results = document.getElementById('results');
+            
+            if (token && user) {
+                statusDiv.className = 'status success';
+                statusDiv.innerHTML = '✓ Authentication data found in localStorage';
+                
+                try {
+                    const userData = JSON.parse(user);
+                    results.innerHTML = `
+                        <h3>LocalStorage Contents:</h3>
+                        <pre><strong>Token:</strong> ${token.substring(0, 50)}...</pre>
+                        <pre><strong>User:</strong> ${JSON.stringify(userData, null, 2)}</pre>
+                        <pre><strong>Refresh Token:</strong> ${refreshToken ? refreshToken.substring(0, 50) + '...' : 'Not found'}</pre>
+                    `;
+                } catch (e) {
+                    results.innerHTML = `<pre>Error parsing user data: ${e.message}</pre>`;
+                }
+            } else {
+                statusDiv.className = 'status error';
+                statusDiv.innerHTML = '✗ No authentication data found in localStorage';
+                results.innerHTML = '<pre>No authentication data found</pre>';
+            }
+        }
+        
+        async function testLogin() {
+            const apiStatus = document.getElementById('api-status');
+            const results = document.getElementById('results');
+            
+            apiStatus.className = 'status warning';
+            apiStatus.innerHTML = '⏳ Testing login...';
+            
+            try {
+                const response = await fetch('http://localhost:3000/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'test@example.com',
+                        password: 'password123'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    apiStatus.className = 'status success';
+                    apiStatus.innerHTML = '✓ Login successful';
+                    
+                    // Store in localStorage
+                    localStorage.setItem('token', data.access_token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    localStorage.setItem('refreshToken', data.refresh_token);
+                    
+                    results.innerHTML = `
+                        <h3>Login Response:</h3>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    const error = await response.text();
+                    apiStatus.className = 'status error';
+                    apiStatus.innerHTML = '✗ Login failed: ' + response.status;
+                    results.innerHTML = `<pre>Error: ${error}</pre>`;
+                }
+            } catch (error) {
+                apiStatus.className = 'status error';
+                apiStatus.innerHTML = '✗ Login error: ' + error.message;
+                results.innerHTML = `<pre>Error: ${error.message}</pre>`;
+            }
+        }
+        
+        async function testDomainsAPI() {
+            const apiStatus = document.getElementById('api-status');
+            const results = document.getElementById('results');
+            const token = localStorage.getItem('token');
+            
+            if (!token) {
+                apiStatus.className = 'status error';
+                apiStatus.innerHTML = '✗ No token found. Please login first.';
+                return;
+            }
+            
+            apiStatus.className = 'status warning';
+            apiStatus.innerHTML = '⏳ Testing domains API...';
+            
+            try {
+                const response = await fetch('http://localhost:3000/api/v1/domains', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    apiStatus.className = 'status success';
+                    apiStatus.innerHTML = '✓ Domains API working';
+                    results.innerHTML = `
+                        <h3>Domains Response:</h3>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    const error = await response.text();
+                    apiStatus.className = 'status error';
+                    apiStatus.innerHTML = '✗ Domains API failed: ' + response.status;
+                    results.innerHTML = `<pre>Error: ${error}</pre>`;
+                }
+            } catch (error) {
+                apiStatus.className = 'status error';
+                apiStatus.innerHTML = '✗ Domains API error: ' + error.message;
+                results.innerHTML = `<pre>Error: ${error.message}</pre>`;
+            }
+        }
+        
+        function clearStorage() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            localStorage.removeItem('refreshToken');
+            
+            const statusDiv = document.getElementById('localStorage-status');
+            statusDiv.className = 'status warning';
+            statusDiv.innerHTML = '⚠️ localStorage cleared';
+            
+            document.getElementById('results').innerHTML = '<pre>localStorage cleared</pre>';
+        }
+        
+        // Check localStorage on page load
+        checkLocalStorage();
+    </script>
+</body>
+</html>
