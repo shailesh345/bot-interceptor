@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Domains Page Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 15px; margin: 10px 0; border-radius: 4px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .warning { background-color: #fff3cd; color: #856404; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        iframe { width: 100%; height: 500px; border: 1px solid #ccc; }
+        pre { background-color: #f8f9fa; padding: 10px; overflow-x: auto; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Domains Page Debug</h1>
+    
+    <div id="auth-status" class="status info">Checking authentication...</div>
+    
+    <button onclick="checkAuth()">Check Auth</button>
+    <button onclick="openDomainsPage()">Open Domains Page</button>
+    <button onclick="testAPI()">Test API Direct</button>
+    
+    <div id="results"></div>
+    
+    <h3>Domains Page in iframe:</h3>
+    <iframe id="domains-iframe" src="http://localhost:3000/domains"></iframe>
+    
+    <script>
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            const refreshToken = localStorage.getItem('refreshToken');
+            
+            const authStatus = document.getElementById('auth-status');
+            const results = document.getElementById('results');
+            
+            if (token && user) {
+                const userData = JSON.parse(user);
+                authStatus.className = 'status success';
+                authStatus.innerHTML = '✅ Authentication data found';
+                
+                results.innerHTML = `
+                    <h3>Authentication Details:</h3>
+                    <pre><strong>User:</strong> ${userData.username} (${userData.email})</pre>
+                    <pre><strong>Role:</strong> ${userData.role}</pre>
+                    <pre><strong>Tenant ID:</strong> ${userData.tenant_id}</pre>
+                    <pre><strong>Token:</strong> ${token.substring(0, 50)}...</pre>
+                    <pre><strong>Token Valid:</strong> ${!isTokenExpired(token)}</pre>
+                `;
+            } else {
+                authStatus.className = 'status error';
+                authStatus.innerHTML = '❌ No authentication data found';
+                results.innerHTML = '<pre>No authentication data in localStorage</pre>';
+            }
+        }
+        
+        function isTokenExpired(token) {
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                const currentTime = Date.now() / 1000;
+                return payload.exp < currentTime;
+            } catch (e) {
+                return true;
+            }
+        }
+        
+        function openDomainsPage() {
+            window.open('http://localhost:3000/domains', '_blank');
+        }
+        
+        async function testAPI() {
+            const token = localStorage.getItem('token');
+            const results = document.getElementById('results');
+            
+            if (!token) {
+                results.innerHTML = '<div class="status error">❌ No token found</div>';
+                return;
+            }
+            
+            try {
+                results.innerHTML = '<div class="status warning">⏳ Testing API...</div>';
+                
+                // Test direct backend
+                const directResponse = await fetch('http://127.0.0.1:5000/api/v1/domains', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                let directResult = '';
+                if (directResponse.ok) {
+                    const directData = await directResponse.json();
+                    directResult = `✅ Direct Backend: ${directData.domains.length} domains`;
+                } else {
+                    directResult = `❌ Direct Backend: ${directResponse.status}`;
+                }
+                
+                // Test through frontend proxy
+                const proxyResponse = await fetch('http://localhost:3000/api/v1/domains', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                let proxyResult = '';
+                if (proxyResponse.ok) {
+                    const proxyData = await proxyResponse.json();
+                    proxyResult = `✅ Frontend Proxy: ${proxyData.domains.length} domains`;
+                } else {
+                    proxyResult = `❌ Frontend Proxy: ${proxyResponse.status}`;
+                }
+                
+                results.innerHTML = `
+                    <h3>API Test Results:</h3>
+                    <div class="status ${directResult.includes('✅') ? 'success' : 'error'}">${directResult}</div>
+                    <div class="status ${proxyResult.includes('✅') ? 'success' : 'error'}">${proxyResult}</div>
+                `;
+                
+            } catch (error) {
+                results.innerHTML = `<div class="status error">❌ API Test Error: ${error.message}</div>`;
+            }
+        }
+        
+        // Check auth on load
+        checkAuth();
+        
+        // Refresh iframe every 10 seconds to see changes
+        setInterval(() => {
+            const iframe = document.getElementById('domains-iframe');
+            iframe.src = iframe.src;
+        }, 10000);
+    </script>
+</body>
+</html>

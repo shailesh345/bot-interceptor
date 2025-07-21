@@ -28,10 +28,13 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid
-      localStorage.removeItem('token')
-      localStorage.removeItem('refreshToken')
-      window.location.href = '/login'
+      // Token expired or invalid - only clear if it's an auth endpoint or critical failure
+      console.log('API 401 error:', error.config?.url)
+      
+      // Don't auto-redirect on every 401, let the app handle it
+      // localStorage.removeItem('token')
+      // localStorage.removeItem('refreshToken')
+      // window.location.href = '/login'
     } else if (error.response?.status === 500) {
       toast.error('Server error. Please try again later.')
     } else if (!error.response) {
@@ -45,9 +48,9 @@ api.interceptors.response.use(
 export const authAPI = {
   login: (credentials) => axios.post('/auth/login', credentials),
   register: (userData) => axios.post('/auth/register', userData),
-  logout: () => axios.post('/auth/logout'),
-  refreshToken: () => axios.post('/auth/refresh'),
-  getProfile: () => axios.get('/auth/profile'),
+  logout: () => api.post('/auth/logout'),
+  refreshToken: () => api.post('/auth/refresh'),
+  getProfile: () => api.get('/auth/profile'),
   updateProfile: (profileData) => axios.put('/auth/profile', profileData),
   changePassword: (passwordData) => axios.post('/auth/change-password', passwordData),
 }

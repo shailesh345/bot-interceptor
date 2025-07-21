@@ -4,7 +4,10 @@ import { Navigate } from 'react-router-dom'
 import LoadingSpinner from '../common/LoadingSpinner'
 
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useSelector((state) => state.auth)
+  const { isAuthenticated, loading, user, token } = useSelector((state) => state.auth)
+  
+  // Debug logging
+  console.log('ProtectedRoute - isAuthenticated:', isAuthenticated, 'loading:', loading, 'user:', user, 'token:', token ? token.substring(0, 30) + '...' : 'null')
 
   if (loading) {
     return (
@@ -15,6 +18,7 @@ const ProtectedRoute = ({ children }) => {
   }
 
   if (!isAuthenticated) {
+    console.log('ProtectedRoute - Redirecting to login, isAuthenticated:', isAuthenticated)
     return <Navigate to="/login" replace />
   }
 

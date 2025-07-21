@@ -37,7 +37,7 @@
     <script>
         // Set up fresh authentication data
         function setupAuth() {
-            const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc1MzExOTgyNiwianRpIjoiMjBhMTRjMjMtYzVkMS00Y2VhLTgxZWMtMTZjMTAwN2MzMzYzIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IjlhMDA1YzMzLTFjM2YtNDIwMS1iZDhlLWVjMGRjYTA2YWNiOCIsIm5iZiI6MTc1MzExOTgyNiwiZXhwIjoxNzUzMjA2MjI2fQ.nyX_3aWys4W-aqDgvnmRe_0FP9xKN0_s_S7yzxFe73g';
+            const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc1MzEyMDMwNiwianRpIjoiMTAxYmI4ZDctZTNjNC00NDc5LThhYWYtOTcxZDFjYzY1MzliIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IjlhMDA1YzMzLTFjM2YtNDIwMS1iZDhlLWVjMGRjYTA2YWNiOCIsIm5iZiI6MTc1MzEyMDMwNiwiZXhwIjoxNzUzMjA2NzA2fQ.LpFs2qyL20D3hB207LdwBIviiDYbTX6cngzaE15S9BA';
             const user = {
                 "email": "test@example.com",
                 "first_name": "Test",
@@ -47,7 +47,7 @@
                 "tenant_id": "f1b471d7-1cc7-4353-8e71-db7332eae9a0",
                 "username": "testuser"
             };
-            const refreshToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc1MzExOTgyNiwianRpIjoiNGU3OWQxNGEtNzc1MC00MWQ3LWE5OTctYmJjNGI1Zjk3YTdhIiwidHlwZSI6InJlZnJlc2giLCJzdWIiOiI5YTAwNWMzMy0xYzNmLTQyMDEtYmQ4ZS1lYzBkY2EwNmFjYjgiLCJuYmYiOjE3NTMxMTk4MjYsImV4cCI6MTc1NTcxMTgyNn0.mChltiUsXohFo17OV1Xe11azxIndV9MMCCi4N1mK5Ks';
+            const refreshToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc1MzEyMDMwNiwianRpIjoiYTFmYTVhYTktNGZmOC00MGZhLWIwZmUtYzQ2NjNlYjJkZjJjIiwidHlwZSI6InJlZnJlc2giLCJzdWIiOiI5YTAwNWMzMy0xYzNmLTQyMDEtYmQ4ZS1lYzBkY2EwNmFjYjgiLCJuYmYiOjE3NTMxMjAzMDYsImV4cCI6MTc1NTcxMjMwNn0.kJyZ2uMglnx_k9BEewTZJxxnxVoseZqhz7H7ISoMgC4';
             
             // Store in localStorage
             localStorage.setItem('token', token);

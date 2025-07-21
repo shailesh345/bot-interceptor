@@ -55,9 +55,14 @@ import { fetchUserProfile } from './store/slices/authSlice'
 function App() {
   const dispatch = useDispatch()
   const { isAuthenticated, loading, user } = useSelector((state) => state.auth)
+  
+  // Debug logging
+  console.log('App - isAuthenticated:', isAuthenticated, 'loading:', loading, 'user:', user)
 
   useEffect(() => {
+    console.log('App useEffect - isAuthenticated:', isAuthenticated, 'user:', user)
     if (isAuthenticated && !user) {
+      console.log('App - Fetching user profile...')
       dispatch(fetchUserProfile())
     }
   }, [dispatch, isAuthenticated, user])
