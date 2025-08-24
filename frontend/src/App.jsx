@@ -16,17 +16,24 @@ import Dashboard from './pages/Dashboard'
 import Domains from './pages/Domains'
 import Rules from './pages/Rules'
 import Analytics from './pages/Analytics'
-import Billing from './pages/Billing'
+
 import Settings from './pages/Settings'
 import Profile from './pages/Profile'
 import Admin from './pages/Admin'
 import Demo from './pages/Demo'
 import TrafficInterception from './pages/TrafficInterception'
 import MLModelManagement from './components/ml/MLModelManagement'
+import ContentProtection from './components/protection/ContentProtection'
+import BillingManagement from './components/billing/BillingManagement'
+import SecurityManagement from './components/security/SecurityManagement'
+import PerformanceMonitoring from './components/performance/PerformanceMonitoring'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminUsers from './pages/admin/AdminUsers'
 import AdminSystemMonitoring from './pages/admin/AdminSystemMonitoring'
 import AdminSecurityOperations from './pages/admin/AdminSecurityOperations'
+import SystemHealth from './pages/admin/SystemHealth'
+import ClientManagement from './pages/admin/ClientManagement'
+import UserManagement from './pages/admin/UserManagement'
 import NotFound from './pages/NotFound'
 
 // MVP Components
@@ -89,14 +96,17 @@ function App() {
           <Route path="domains" element={<Domains />} />
           <Route path="rules" element={<Rules />} />
           <Route path="analytics" element={<Analytics />} />
-          <Route path="billing" element={<Billing />} />
+          <Route path="billing" element={<BillingManagement />} />
           <Route path="settings" element={<Settings />} />
           <Route path="profile" element={<Profile />} />
           <Route path="demo" element={<Demo />} />
           <Route path="traffic-interception" element={<TrafficInterception />} />
           <Route path="ml-management" element={<MLModelManagement />} />
-          
-          {/* MVP Development Dashboard */}
+          <Route path="content-protection" element={<ContentProtection />} />
+          <Route path="security" element={<SecurityManagement />} />
+          <Route path="performance" element={<PerformanceMonitoring />} />
+                        
+                        {/* MVP Development Dashboard */}
           <Route path="mvp" element={
             process.env.NODE_ENV === 'development' ? <MVPDashboard /> : <Navigate to="/dashboard" replace />
           } />
@@ -109,11 +119,20 @@ function App() {
           <Route path="admin/users" element={
             user?.role === 'admin' || user?.role === 'super_admin' ? <AdminUsers /> : <Navigate to="/dashboard" replace />
           } />
+          <Route path="admin/user-management" element={
+            user?.role === 'admin' || user?.role === 'super_admin' ? <UserManagement /> : <Navigate to="/dashboard" replace />
+          } />
           <Route path="admin/system-monitoring" element={
             user?.role === 'admin' || user?.role === 'super_admin' ? <AdminSystemMonitoring /> : <Navigate to="/dashboard" replace />
           } />
+          <Route path="admin/system-health" element={
+            user?.role === 'admin' || user?.role === 'super_admin' ? <SystemHealth /> : <Navigate to="/dashboard" replace />
+          } />
           <Route path="admin/security-operations" element={
             user?.role === 'admin' || user?.role === 'super_admin' ? <AdminSecurityOperations /> : <Navigate to="/dashboard" replace />
+          } />
+          <Route path="admin/client-management" element={
+            user?.role === 'admin' || user?.role === 'super_admin' ? <ClientManagement /> : <Navigate to="/dashboard" replace />
           } />
         </Route>
 

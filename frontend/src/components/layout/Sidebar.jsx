@@ -31,7 +31,10 @@ const Sidebar = () => {
     { name: 'Traffic Interception', href: '/traffic-interception', icon: Shield, mvpKey: 'traffic_interception' },
     { name: 'Analytics', href: '/analytics', icon: BarChart3, mvpKey: 'analytics' },
     { name: 'ML Model Management', href: '/ml-management', icon: Cpu, mvpKey: 'ml_management' },
-    { name: 'Billing', href: '/billing', icon: CreditCard, mvpKey: 'billing' },
+    { name: 'Content Protection', href: '/content-protection', icon: Lock, mvpKey: 'content_protection' },
+    { name: 'Billing & Subscription', href: '/billing', icon: CreditCard, mvpKey: 'billing' },
+          { name: 'Security & Compliance', href: '/security', icon: Shield, mvpKey: 'security' },
+      { name: 'Performance & Monitoring', href: '/performance', icon: Speed, mvpKey: 'performance' },
     { name: 'Profile', href: '/profile', icon: Users, mvpKey: 'profile' },
     { name: 'Settings', href: '/settings', icon: Settings, mvpKey: 'settings' },
   ].filter(item => MVP_CONFIG.CORE_FEATURES[item.mvpKey]?.enabled)

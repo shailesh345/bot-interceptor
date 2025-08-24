@@ -1,320 +1,387 @@
-# Billing API Endpoints
-from flask import request, jsonify, current_app
-from app.api import api
-from app.models import Subscription, User, Tenant
-from app import db
+#!/usr/bin/env python3
+"""
+Billing & Monetization API
+Handles subscription management, usage tracking, and payment processing
+"""
+
+from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from app.models import db, User, Tenant, Subscription, BillingPlan, UsageRecord, Invoice
 from datetime import datetime, timedelta
+import json
+import stripe
+import os
 
-def get_current_user():
-    """Helper function to get current user from JWT token"""
-    try:
-        user_id = get_jwt_identity()
-        return User.query.filter_by(uuid=user_id).first()
-    except:
-        return None
+billing = Blueprint('billing', __name__)
 
-@api.route('/billing/plans', methods=['GET'])
+# Initialize Stripe
+stripe.api_key = os.environ.get('STRIPE_SECRET_KEY', 'sk_test_...')
+
+@billing.route('/plans', methods=['GET'])
 @jwt_required()
 def get_billing_plans():
     """Get available billing plans"""
     try:
-        from app.interceptor.billing_service import billing_service
-        plans = billing_service.get_available_plans()
-        return jsonify({'plans': plans}), 200
-    except Exception as e:
-        current_app.logger.error(f"Failed to get billing plans: {e}")
-        return jsonify({'message': 'Internal server error'}), 500
-
-@api.route('/billing/subscription', methods=['GET'])
-@jwt_required()
-def get_current_subscription():
-    """Get current subscription details"""
-    current_user = get_current_user()
-    if not current_user:
-        return jsonify({'message': 'User not found'}), 404
-    
-    try:
-        from app.interceptor.billing_service import billing_service
-        
-        subscription = billing_service.get_tenant_subscription(current_user.tenant_id)
-        
-        if not subscription:
-            return jsonify({
-                'subscription': None,
-                'message': 'No active subscription'
-            }), 200
-        
-        # Get usage limits
-        limits_check = billing_service.check_usage_limits(current_user.tenant_id)
+        plans = BillingPlan.query.filter_by(is_active=True).order_by(BillingPlan.price).all()
         
         return jsonify({
-            'subscription': {
-                'id': subscription.uuid,
-                'plan_name': subscription.plan_name,
-                'plan_type': subscription.plan_type,
-                'status': subscription.status,
-                'amount': float(subscription.amount),
-                'currency': subscription.currency,
-                'current_period_start': subscription.current_period_start.isoformat(),
-                'current_period_end': subscription.current_period_end.isoformat(),
-                'created_at': subscription.created_at.isoformat()
-            },
-            'usage': limits_check
+            'plans': [plan.to_dict() for plan in plans],
+            'total': len(plans)
         }), 200
-        
     except Exception as e:
-        current_app.logger.error(f"Failed to get subscription: {e}")
-        return jsonify({'message': 'Internal server error'}), 500
+        return jsonify({'error': str(e)}), 500
 
-@api.route('/billing/subscription', methods=['POST'])
+@billing.route('/plans', methods=['POST'])
+@jwt_required()
+def create_billing_plan():
+    """Create a new billing plan (admin only)"""
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
+    
+    if not user or user.role not in ['admin', 'super_admin']:
+        return jsonify({'error': 'Admin access required'}), 403
+    
+    data = request.get_json()
+    
+    # Validate required fields
+    required_fields = ['name', 'description', 'price', 'billing_cycle', 'features']
+    for field in required_fields:
+        if field not in data:
+            return jsonify({'error': f'Missing required field: {field}'}), 400
+    
+    try:
+        plan = BillingPlan(
+            name=data['name'],
+            description=data['description'],
+            price=data['price'],
+            billing_cycle=data['billing_cycle'],
+            features=data['features'],
+            is_active=data.get('is_active', True),
+            created_by=current_user_id
+        )
+        
+        db.session.add(plan)
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Billing plan created successfully',
+            'plan': plan.to_dict()
+        }), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@billing.route('/subscription', methods=['GET'])
+@jwt_required()
+def get_current_subscription():
+    """Get current user's subscription"""
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
+    
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    
+    # Get tenant's subscription
+    tenant = Tenant.query.get(user.tenant_id)
+    if not tenant:
+        return jsonify({'error': 'Tenant not found'}), 404
+    
+    subscription = Subscription.query.filter_by(tenant_id=tenant.id).first()
+    
+    if not subscription:
+        return jsonify({
+            'has_subscription': False,
+            'subscription': None,
+            'plan': None
+        }), 200
+    
+    plan = BillingPlan.query.get(subscription.plan_id)
+    
+    return jsonify({
+        'has_subscription': True,
+        'subscription': subscription.to_dict(),
+        'plan': plan.to_dict() if plan else None
+    }), 200
+
+@billing.route('/subscription', methods=['POST'])
 @jwt_required()
 def create_subscription():
     """Create a new subscription"""
-    current_user = get_current_user()
-    if not current_user:
-        return jsonify({'message': 'User not found'}), 404
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
+    
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    
+    data = request.get_json()
+    
+    if 'plan_id' not in data:
+        return jsonify({'error': 'Plan ID is required'}), 400
     
     try:
-        data = request.get_json()
-        plan_id = data.get('plan_id')
-        billing_cycle = data.get('billing_cycle', 'monthly')
+        # Get plan
+        plan = BillingPlan.query.get(data['plan_id'])
+        if not plan:
+            return jsonify({'error': 'Billing plan not found'}), 404
         
-        if not plan_id:
-            return jsonify({'message': 'Plan ID is required'}), 400
-        
-        if billing_cycle not in ['monthly', 'annual']:
-            return jsonify({'message': 'Invalid billing cycle'}), 400
-        
-        from app.interceptor.billing_service import billing_service
+        # Get tenant
+        tenant = Tenant.query.get(user.tenant_id)
+        if not tenant:
+            return jsonify({'error': 'Tenant not found'}), 404
         
         # Check if subscription already exists
-        existing_subscription = billing_service.get_tenant_subscription(current_user.tenant_id)
+        existing_subscription = Subscription.query.filter_by(tenant_id=tenant.id).first()
         if existing_subscription:
-            return jsonify({'message': 'Subscription already exists'}), 400
+            return jsonify({'error': 'Subscription already exists'}), 400
         
-        result = billing_service.create_subscription(
-            current_user.tenant_id,
-            plan_id,
-            billing_cycle
+        # Create Stripe customer if not exists
+        if not tenant.stripe_customer_id:
+            customer = stripe.Customer.create(
+                email=user.email,
+                name=tenant.name,
+                metadata={'tenant_id': tenant.id}
+            )
+            tenant.stripe_customer_id = customer.id
+            db.session.commit()
+        
+        # Create Stripe subscription
+        stripe_subscription = stripe.Subscription.create(
+            customer=tenant.stripe_customer_id,
+            items=[{'price': plan.stripe_price_id}],
+            payment_behavior='default_incomplete',
+            payment_settings={'save_default_payment_method': 'on_subscription'},
+            expand=['latest_invoice.payment_intent'],
         )
         
-        if result['success']:
-            return jsonify(result), 201
-        else:
-            return jsonify(result), 400
-            
-    except Exception as e:
-        current_app.logger.error(f"Failed to create subscription: {e}")
-        return jsonify({'message': 'Internal server error'}), 500
-
-@api.route('/billing/subscription', methods=['PUT'])
-@jwt_required()
-def update_subscription():
-    """Update existing subscription"""
-    current_user = get_current_user()
-    if not current_user:
-        return jsonify({'message': 'User not found'}), 404
-    
-    try:
-        data = request.get_json()
-        new_plan_id = data.get('plan_id')
-        
-        if not new_plan_id:
-            return jsonify({'message': 'Plan ID is required'}), 400
-        
-        from app.interceptor.billing_service import billing_service
-        
-        result = billing_service.update_subscription(
-            current_user.tenant_id,
-            new_plan_id
+        # Create local subscription record
+        subscription = Subscription(
+            tenant_id=tenant.id,
+            plan_id=plan.id,
+            stripe_subscription_id=stripe_subscription.id,
+            status=stripe_subscription.status,
+            current_period_start=datetime.fromtimestamp(stripe_subscription.current_period_start),
+            current_period_end=datetime.fromtimestamp(stripe_subscription.current_period_end),
+            created_by=current_user_id
         )
         
-        if result['success']:
-            return jsonify(result), 200
-        else:
-            return jsonify(result), 400
-            
+        db.session.add(subscription)
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Subscription created successfully',
+            'subscription': subscription.to_dict(),
+            'client_secret': stripe_subscription.latest_invoice.payment_intent.client_secret
+        }), 201
     except Exception as e:
-        current_app.logger.error(f"Failed to update subscription: {e}")
-        return jsonify({'message': 'Internal server error'}), 500
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
-@api.route('/billing/subscription', methods=['DELETE'])
+@billing.route('/subscription/cancel', methods=['POST'])
 @jwt_required()
 def cancel_subscription():
-    """Cancel subscription"""
-    current_user = get_current_user()
-    if not current_user:
-        return jsonify({'message': 'User not found'}), 404
+    """Cancel current subscription"""
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
+    
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
     
     try:
-        from app.interceptor.billing_service import billing_service
-        
-        result = billing_service.cancel_subscription(current_user.tenant_id)
-        
-        if result['success']:
-            return jsonify(result), 200
-        else:
-            return jsonify(result), 400
-            
-    except Exception as e:
-        current_app.logger.error(f"Failed to cancel subscription: {e}")
-        return jsonify({'message': 'Internal server error'}), 500
-
-@api.route('/billing/usage', methods=['GET'])
-@jwt_required()
-def get_usage_metrics():
-    """Get usage metrics for current billing period"""
-    current_user = get_current_user()
-    if not current_user:
-        return jsonify({'message': 'User not found'}), 404
-    
-    try:
-        from app.interceptor.billing_service import billing_service
-        
-        # Get current subscription
-        subscription = billing_service.get_tenant_subscription(current_user.tenant_id)
+        tenant = Tenant.query.get(user.tenant_id)
+        subscription = Subscription.query.filter_by(tenant_id=tenant.id).first()
         
         if not subscription:
-            return jsonify({'message': 'No active subscription'}), 400
+            return jsonify({'error': 'No active subscription found'}), 404
         
-        # Get usage for current period
-        usage = billing_service.calculate_usage_metrics(
-            current_user.tenant_id,
-            subscription.current_period_start,
-            subscription.current_period_end
+        # Cancel Stripe subscription
+        stripe.Subscription.modify(
+            subscription.stripe_subscription_id,
+            cancel_at_period_end=True
         )
         
-        # Get limits check
-        limits_check = billing_service.check_usage_limits(current_user.tenant_id)
+        subscription.status = 'canceled'
+        subscription.canceled_at = datetime.utcnow()
+        db.session.commit()
+        
+        return jsonify({'message': 'Subscription canceled successfully'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@billing.route('/usage', methods=['GET'])
+@jwt_required()
+def get_usage():
+    """Get current usage for the tenant"""
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
+    
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    
+    try:
+        tenant = Tenant.query.get(user.tenant_id)
+        subscription = Subscription.query.filter_by(tenant_id=tenant.id).first()
+        
+        if not subscription:
+            return jsonify({'error': 'No active subscription'}), 404
+        
+        plan = BillingPlan.query.get(subscription.plan_id)
+        
+        # Get current period usage
+        period_start = subscription.current_period_start
+        period_end = subscription.current_period_end
+        
+        usage_records = UsageRecord.query.filter(
+            UsageRecord.tenant_id == tenant.id,
+            UsageRecord.recorded_at >= period_start,
+            UsageRecord.recorded_at <= period_end
+        ).all()
+        
+        # Calculate usage by metric
+        usage_summary = {}
+        for record in usage_records:
+            metric = record.metric_name
+            if metric not in usage_summary:
+                usage_summary[metric] = 0
+            usage_summary[metric] += record.usage_value
         
         return jsonify({
             'period': {
-                'start': subscription.current_period_start.isoformat(),
-                'end': subscription.current_period_end.isoformat()
+                'start': period_start.isoformat(),
+                'end': period_end.isoformat()
             },
-            'usage': {
-                'domains_count': usage.domains_count,
-                'total_requests': usage.total_requests,
-                'blocked_requests': usage.blocked_requests,
-                'bot_requests': usage.bot_requests,
-                'storage_used': usage.storage_used,
-                'bandwidth_used': usage.bandwidth_used
-            },
-            'limits': limits_check
+            'plan_limits': plan.features.get('limits', {}),
+            'current_usage': usage_summary,
+            'subscription': subscription.to_dict()
         }), 200
-        
     except Exception as e:
-        current_app.logger.error(f"Failed to get usage metrics: {e}")
-        return jsonify({'message': 'Internal server error'}), 500
+        return jsonify({'error': str(e)}), 500
 
-@api.route('/billing/invoices', methods=['GET'])
+@billing.route('/invoices', methods=['GET'])
 @jwt_required()
-def get_billing_history():
-    """Get billing history and invoices"""
-    current_user = get_current_user()
-    if not current_user:
-        return jsonify({'message': 'User not found'}), 404
+def get_invoices():
+    """Get invoices for the tenant"""
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
+    
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
     
     try:
-        limit = request.args.get('limit', 10, type=int)
+        tenant = Tenant.query.get(user.tenant_id)
         
-        from app.interceptor.billing_service import billing_service
+        # Get pagination parameters
+        page = request.args.get('page', 1, type=int)
+        per_page = min(request.args.get('per_page', 20, type=int), 100)
         
-        invoices = billing_service.get_billing_history(current_user.tenant_id, limit)
+        invoices = Invoice.query.filter_by(tenant_id=tenant.id)\
+            .order_by(Invoice.created_at.desc())\
+            .paginate(page=page, per_page=per_page, error_out=False)
         
         return jsonify({
-            'invoices': invoices,
-            'total': len(invoices)
+            'invoices': [invoice.to_dict() for invoice in invoices.items],
+            'pagination': {
+                'page': page,
+                'per_page': per_page,
+                'total': invoices.total,
+                'pages': invoices.pages,
+                'has_next': invoices.has_next,
+                'has_prev': invoices.has_prev
+            }
         }), 200
-        
     except Exception as e:
-        current_app.logger.error(f"Failed to get billing history: {e}")
-        return jsonify({'message': 'Internal server error'}), 500
+        return jsonify({'error': str(e)}), 500
 
-@api.route('/billing/usage-report', methods=['GET'])
-@jwt_required()
-def get_usage_report():
-    """Generate usage report for specified period"""
-    current_user = get_current_user()
-    if not current_user:
-        return jsonify({'message': 'User not found'}), 404
-    
-    try:
-        # Get date range from query parameters
-        start_date_str = request.args.get('start_date')
-        end_date_str = request.args.get('end_date')
-        
-        if not start_date_str or not end_date_str:
-            # Default to current month
-            now = datetime.now()
-            start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-            end_date = now
-        else:
-            start_date = datetime.fromisoformat(start_date_str.replace('Z', '+00:00'))
-            end_date = datetime.fromisoformat(end_date_str.replace('Z', '+00:00'))
-        
-        from app.interceptor.billing_service import billing_service
-        
-        report = billing_service.generate_usage_report(
-            current_user.tenant_id,
-            start_date,
-            end_date
-        )
-        
-        return jsonify(report), 200
-        
-    except Exception as e:
-        current_app.logger.error(f"Failed to generate usage report: {e}")
-        return jsonify({'message': 'Internal server error'}), 500
-
-@api.route('/billing/payment-methods', methods=['GET'])
-@jwt_required()
-def get_payment_methods():
-    """Get saved payment methods"""
-    current_user = get_current_user()
-    if not current_user:
-        return jsonify({'message': 'User not found'}), 404
-    
-    try:
-        # This would integrate with Stripe to get payment methods
-        # For now, return placeholder data
-        return jsonify({
-            'payment_methods': [
-                {
-                    'id': 'pm_1234567890',
-                    'type': 'card',
-                    'card': {
-                        'brand': 'visa',
-                        'last4': '4242',
-                        'exp_month': 12,
-                        'exp_year': 2025
-                    },
-                    'is_default': True
-                }
-            ]
-        }), 200
-        
-    except Exception as e:
-        current_app.logger.error(f"Failed to get payment methods: {e}")
-        return jsonify({'message': 'Internal server error'}), 500
-
-@api.route('/billing/webhooks/stripe', methods=['POST'])
+@billing.route('/webhook', methods=['POST'])
 def stripe_webhook():
     """Handle Stripe webhooks"""
+    payload = request.get_data(as_text=True)
+    sig_header = request.headers.get('Stripe-Signature')
+    
     try:
-        payload = request.get_data(as_text=True)
-        sig_header = request.headers.get('Stripe-Signature')
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, os.environ.get('STRIPE_WEBHOOK_SECRET', 'whsec_...')
+        )
+    except ValueError as e:
+        return jsonify({'error': 'Invalid payload'}), 400
+    except stripe.error.SignatureVerificationError as e:
+        return jsonify({'error': 'Invalid signature'}), 400
+    
+    # Handle the event
+    if event['type'] == 'invoice.payment_succeeded':
+        handle_payment_succeeded(event['data']['object'])
+    elif event['type'] == 'invoice.payment_failed':
+        handle_payment_failed(event['data']['object'])
+    elif event['type'] == 'customer.subscription.updated':
+        handle_subscription_updated(event['data']['object'])
+    elif event['type'] == 'customer.subscription.deleted':
+        handle_subscription_deleted(event['data']['object'])
+    
+    return jsonify({'status': 'success'}), 200
+
+def handle_payment_succeeded(invoice):
+    """Handle successful payment"""
+    try:
+        subscription = Subscription.query.filter_by(
+            stripe_subscription_id=invoice.subscription
+        ).first()
         
-        # Verify webhook signature
-        # endpoint_secret = current_app.config.get('STRIPE_WEBHOOK_SECRET')
-        # event = stripe.Webhook.construct_event(payload, sig_header, endpoint_secret)
-        
-        # For now, just log the event
-        current_app.logger.info(f"Stripe webhook received: {payload}")
-        
-        return jsonify({'status': 'success'}), 200
-        
+        if subscription:
+            subscription.status = 'active'
+            subscription.last_payment_date = datetime.utcnow()
+            db.session.commit()
+            
+            # Create invoice record
+            invoice_record = Invoice(
+                tenant_id=subscription.tenant_id,
+                stripe_invoice_id=invoice.id,
+                amount=invoice.amount_paid / 100,  # Convert from cents
+                currency=invoice.currency,
+                status='paid',
+                paid_at=datetime.utcnow()
+            )
+            db.session.add(invoice_record)
+            db.session.commit()
     except Exception as e:
-        current_app.logger.error(f"Stripe webhook error: {e}")
-        return jsonify({'error': 'Webhook error'}), 400
+        print(f"Error handling payment succeeded: {e}")
+
+def handle_payment_failed(invoice):
+    """Handle failed payment"""
+    try:
+        subscription = Subscription.query.filter_by(
+            stripe_subscription_id=invoice.subscription
+        ).first()
+        
+        if subscription:
+            subscription.status = 'past_due'
+            db.session.commit()
+    except Exception as e:
+        print(f"Error handling payment failed: {e}")
+
+def handle_subscription_updated(subscription_data):
+    """Handle subscription updates"""
+    try:
+        subscription = Subscription.query.filter_by(
+            stripe_subscription_id=subscription_data.id
+        ).first()
+        
+        if subscription:
+            subscription.status = subscription_data.status
+            subscription.current_period_start = datetime.fromtimestamp(subscription_data.current_period_start)
+            subscription.current_period_end = datetime.fromtimestamp(subscription_data.current_period_end)
+            db.session.commit()
+    except Exception as e:
+        print(f"Error handling subscription update: {e}")
+
+def handle_subscription_deleted(subscription_data):
+    """Handle subscription deletion"""
+    try:
+        subscription = Subscription.query.filter_by(
+            stripe_subscription_id=subscription_data.id
+        ).first()
+        
+        if subscription:
+            subscription.status = 'canceled'
+            subscription.canceled_at = datetime.utcnow()
+            db.session.commit()
+    except Exception as e:
+        print(f"Error handling subscription deletion: {e}")

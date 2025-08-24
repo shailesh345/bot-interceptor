@@ -7,13 +7,14 @@ import { QueryClient, QueryClientProvider } from 'react-query'
 import { HelmetProvider } from 'react-helmet-async'
 import { Toaster } from 'react-hot-toast'
 import { ErrorBoundary } from 'react-error-boundary'
+import { ThemeProvider, createTheme } from '@mui/material/styles'
+import CssBaseline from '@mui/material/CssBaseline'
+import 'react-toastify/dist/ReactToastify.css'
 
 import App from './App'
 import { store, persistor } from './store'
 import LoadingSpinner from './components/common/LoadingSpinner'
 import ErrorFallback from './components/common/ErrorFallback'
-import Profile from './pages/Profile'
-import Admin from './pages/Admin'
 import './index.css'
 
 // Create a query client
@@ -27,6 +28,19 @@ const queryClient = new QueryClient({
   },
 })
 
+// Create Material-UI theme
+const theme = createTheme({
+  palette: {
+    mode: 'light',
+    primary: {
+      main: '#1976d2',
+    },
+    secondary: {
+      main: '#dc004e',
+    },
+  },
+})
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ErrorBoundary FallbackComponent={ErrorFallback}>
@@ -35,33 +49,36 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <QueryClientProvider client={queryClient}>
             <BrowserRouter>
               <HelmetProvider>
-                <Routes>
-                  <Route path="/*" element={<App />} />
-                </Routes>
-                <Toaster
-                  position="top-right"
-                  toastOptions={{
-                    duration: 4000,
-                    style: {
-                      background: '#363636',
-                      color: '#fff',
-                    },
-                    success: {
-                      duration: 3000,
-                      iconTheme: {
-                        primary: '#10b981',
-                        secondary: '#fff',
-                      },
-                    },
-                    error: {
+                <ThemeProvider theme={theme}>
+                  <CssBaseline />
+                  <Routes>
+                    <Route path="/*" element={<App />} />
+                  </Routes>
+                  <Toaster
+                    position="top-right"
+                    toastOptions={{
                       duration: 4000,
-                      iconTheme: {
-                        primary: '#ef4444',
-                        secondary: '#fff',
+                      style: {
+                        background: '#363636',
+                        color: '#fff',
                       },
-                    },
-                  }}
-                />
+                      success: {
+                        duration: 3000,
+                        iconTheme: {
+                          primary: '#10b981',
+                          secondary: '#fff',
+                        },
+                      },
+                      error: {
+                        duration: 4000,
+                        iconTheme: {
+                          primary: '#ef4444',
+                          secondary: '#fff',
+                        },
+                      },
+                    }}
+                  />
+                </ThemeProvider>
               </HelmetProvider>
             </BrowserRouter>
           </QueryClientProvider>

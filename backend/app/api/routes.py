@@ -17,6 +17,10 @@ from .export import export
 from .notifications import notifications
 from .real_time import real_time
 from .ml_management import ml_management
+from .content_protection import content_protection
+from .billing import billing
+from .security import security
+from .performance import performance
 
 # Register Phase 2 blueprints
 api.register_blueprint(domains_bp, url_prefix='/v1')
@@ -29,6 +33,10 @@ api.register_blueprint(export, url_prefix='/export')
 api.register_blueprint(notifications, url_prefix='/notifications')
 api.register_blueprint(real_time, url_prefix='/real-time')
 api.register_blueprint(ml_management, url_prefix='/ml')
+api.register_blueprint(content_protection, url_prefix='/content-protection')
+api.register_blueprint(billing, url_prefix='/billing')
+api.register_blueprint(security, url_prefix='/security')
+api.register_blueprint(performance, url_prefix='/performance')
 
 def get_current_user():
     """Helper function to get current user from JWT token"""
