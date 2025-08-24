@@ -479,13 +479,44 @@ class EnhancedBotDetector:
             vectorizer_path = 'models/bot_detector_vectorizer.pkl'
             
             if os.path.exists(model_path) and os.path.exists(vectorizer_path):
-                self.ml_model = joblib.load(model_path)
-                self.vectorizer = joblib.load(vectorizer_path)
-                return True
+                # Suppress scikit-learn version warnings during loading
+                import warnings
+                with warnings.catch_warnings():
+                    warnings.filterwarnings("ignore", category=UserWarning)
+                    warnings.filterwarnings("ignore", category=FutureWarning)
+                    
+                    try:
+                        self.ml_model = joblib.load(model_path)
+                        self.vectorizer = joblib.load(vectorizer_path)
+                        print("ML model and vectorizer loaded successfully")
+                        return True
+                    except Exception as e:
+                        print(f"Error loading saved model (version conflict): {e}")
+                        print("Will create new model instance...")
+                        self._create_new_model()
+                        return False
+            else:
+                print("No existing model found. Will create new model instance...")
+                self._create_new_model()
+                return False
         except Exception as e:
             print(f"Model load error: {e}")
-        
-        return False
+            self._create_new_model()
+            return False
+    
+    def _create_new_model(self):
+        """Create a new model instance when loading fails"""
+        try:
+            from sklearn.ensemble import RandomForestClassifier
+            from sklearn.feature_extraction.text import TfidfVectorizer
+            
+            self.ml_model = RandomForestClassifier(n_estimators=100, random_state=42)
+            self.vectorizer = TfidfVectorizer(max_features=1000)
+            print("New ML model and vectorizer created successfully")
+        except Exception as e:
+            print(f"Error creating new model: {e}")
+            self.ml_model = None
+            self.vectorizer = None
 
 # Global instance
 bot_detector = EnhancedBotDetector()

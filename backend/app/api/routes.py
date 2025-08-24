@@ -21,6 +21,12 @@ from .content_protection import content_protection
 from .billing import billing
 from .security import security
 from .performance import performance
+from .reporting import reporting
+from .api_management import api_management
+from .collaboration import collaboration
+from .white_label import white_label
+from .advanced_security import advanced_security
+from .business_intelligence import business_intelligence
 
 # Register Phase 2 blueprints
 api.register_blueprint(domains_bp, url_prefix='/v1')
@@ -37,6 +43,12 @@ api.register_blueprint(content_protection, url_prefix='/content-protection')
 api.register_blueprint(billing, url_prefix='/billing')
 api.register_blueprint(security, url_prefix='/security')
 api.register_blueprint(performance, url_prefix='/performance')
+api.register_blueprint(reporting, url_prefix='/reporting')
+api.register_blueprint(api_management, url_prefix='/api-management')
+api.register_blueprint(collaboration, url_prefix='/collaboration')
+api.register_blueprint(white_label, url_prefix='/white-label')
+api.register_blueprint(advanced_security, url_prefix='/advanced-security')
+api.register_blueprint(business_intelligence, url_prefix='/business-intelligence')
 
 def get_current_user():
     """Helper function to get current user from JWT token"""

@@ -59,20 +59,41 @@ class MLBotClassifier:
         try:
             model_dir = os.path.join(os.path.dirname(__file__), 'models')
             
-            # Load Random Forest classifier
-            rf_model_path = os.path.join(model_dir, 'bot_classifier_rf.pkl')
-            if os.path.exists(rf_model_path):
-                self.models['random_forest'] = joblib.load(rf_model_path)
-            
-            # Load feature scaler
-            scaler_path = os.path.join(model_dir, 'feature_scaler.pkl')
-            if os.path.exists(scaler_path):
-                self.scalers['standard'] = joblib.load(scaler_path)
-            
-            # Load TF-IDF vectorizer for user agent analysis
-            vectorizer_path = os.path.join(model_dir, 'user_agent_vectorizer.pkl')
-            if os.path.exists(vectorizer_path):
-                self.vectorizers['tfidf'] = joblib.load(vectorizer_path)
+            # Suppress scikit-learn version warnings during loading
+            import warnings
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", category=UserWarning)
+                warnings.filterwarnings("ignore", category=FutureWarning)
+                
+                # Load Random Forest classifier
+                rf_model_path = os.path.join(model_dir, 'bot_classifier_rf.pkl')
+                if os.path.exists(rf_model_path):
+                    try:
+                        self.models['random_forest'] = joblib.load(rf_model_path)
+                        print("Random Forest model loaded successfully")
+                    except Exception as e:
+                        print(f"Error loading Random Forest model: {e}")
+                        print("Will train new model...")
+                
+                # Load feature scaler
+                scaler_path = os.path.join(model_dir, 'feature_scaler.pkl')
+                if os.path.exists(scaler_path):
+                    try:
+                        self.scalers['standard'] = joblib.load(scaler_path)
+                        print("Feature scaler loaded successfully")
+                    except Exception as e:
+                        print(f"Error loading feature scaler: {e}")
+                        print("Will create new scaler...")
+                
+                # Load TF-IDF vectorizer for user agent analysis
+                vectorizer_path = os.path.join(model_dir, 'user_agent_vectorizer.pkl')
+                if os.path.exists(vectorizer_path):
+                    try:
+                        self.vectorizers['tfidf'] = joblib.load(vectorizer_path)
+                        print("TF-IDF vectorizer loaded successfully")
+                    except Exception as e:
+                        print(f"Error loading TF-IDF vectorizer: {e}")
+                        print("Will create new vectorizer...")
                 
         except Exception as e:
             print(f"Failed to load ML models: {e}")

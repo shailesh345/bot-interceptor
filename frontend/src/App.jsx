@@ -27,6 +27,10 @@ import ContentProtection from './components/protection/ContentProtection'
 import BillingManagement from './components/billing/BillingManagement'
 import SecurityManagement from './components/security/SecurityManagement'
 import PerformanceMonitoring from './components/performance/PerformanceMonitoring'
+import AdvancedReporting from './components/reporting/AdvancedReporting'
+import APIManagement from './components/api/APIManagement'
+import AdvancedSecurity from './components/security/AdvancedSecurity'
+import BusinessIntelligence from './components/business/BusinessIntelligence'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminUsers from './pages/admin/AdminUsers'
 import AdminSystemMonitoring from './pages/admin/AdminSystemMonitoring'
@@ -105,6 +109,10 @@ function App() {
           <Route path="content-protection" element={<ContentProtection />} />
           <Route path="security" element={<SecurityManagement />} />
           <Route path="performance" element={<PerformanceMonitoring />} />
+          <Route path="reporting" element={<AdvancedReporting />} />
+          <Route path="api-management" element={<APIManagement />} />
+          <Route path="advanced-security" element={<AdvancedSecurity />} />
+          <Route path="business-intelligence" element={<BusinessIntelligence />} />
                         
                         {/* MVP Development Dashboard */}
           <Route path="mvp" element={

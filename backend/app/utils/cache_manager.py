@@ -270,3 +270,4 @@ def query_optimizer(func: Callable) -> Callable:
         return func(*args, **kwargs)
     
     return wrapper
+

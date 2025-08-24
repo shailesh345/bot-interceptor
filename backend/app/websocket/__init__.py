@@ -94,3 +94,15 @@ def broadcast_notification(user_id, notification_data):
     """Broadcast notification to specific user"""
     room = f'notifications_{user_id}'
     socketio.emit('new_notification', notification_data, room=room)
+
+def broadcast_to_team(team_id, event_type, data):
+    """Broadcast event to all team members"""
+    room = f'team_{team_id}'
+    socketio.emit(event_type, data, room=room)
+    
+    # Also emit to general team room
+    socketio.emit('team_event', {
+        'team_id': team_id,
+        'event_type': event_type,
+        'data': data
+    }, room='teams')

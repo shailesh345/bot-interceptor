@@ -368,16 +368,51 @@ class BotDetectionModel:
         """Load the trained model and metadata"""
         try:
             if os.path.exists(self.model_path):
-                model_data = joblib.load(self.model_path)
-                self.model = model_data['model']
-                self.scaler = model_data['scaler']
-                self.model_metadata = model_data.get('metadata', {})
-                self.is_trained = model_data.get('is_trained', False)
-                print(f"Model loaded from {self.model_path}")
+                # Suppress scikit-learn version warnings during loading
+                import warnings
+                with warnings.catch_warnings():
+                    warnings.filterwarnings("ignore", category=UserWarning)
+                    warnings.filterwarnings("ignore", category=FutureWarning)
+                    
+                    try:
+                        model_data = joblib.load(self.model_path)
+                        self.model = model_data['model']
+                        self.scaler = model_data['scaler']
+                        self.model_metadata = model_data.get('metadata', {})
+                        self.is_trained = model_data.get('is_trained', False)
+                        print(f"Model loaded from {self.model_path}")
+                    except Exception as model_error:
+                        print(f"Error loading saved model (version conflict): {model_error}")
+                        print("Creating new model instance...")
+                        self._create_new_model()
             else:
                 print("No existing model found. Model will need to be trained.")
+                self._create_new_model()
         except Exception as e:
             print(f"Error loading model: {e}")
+            self._create_new_model()
+    
+    def _create_new_model(self):
+        """Create a new model instance when loading fails"""
+        try:
+            from sklearn.ensemble import RandomForestClassifier
+            from sklearn.preprocessing import StandardScaler
+            
+            self.model = RandomForestClassifier(
+                n_estimators=100,
+                max_depth=10,
+                random_state=42
+            )
+            self.scaler = StandardScaler()
+            self.model_metadata = {
+                'created_at': datetime.utcnow().isoformat(),
+                'version': 'new_instance',
+                'model_type': 'RandomForestClassifier'
+            }
+            self.is_trained = False
+            print("New model instance created successfully")
+        except Exception as e:
+            print(f"Error creating new model: {e}")
             self.is_trained = False
     
     def get_model_info(self) -> Dict[str, Any]:

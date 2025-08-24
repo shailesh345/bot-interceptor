@@ -1,5 +1,42 @@
 Model loaded from models/bot_detection_model.pkl
- * Serving Flask app 'app'
- * Debug mode: on
-Address already in use
-Port 5001 is in use by another program. Either identify and stop that program, or start the server with a different port.
+Traceback (most recent call last):
+  File "/Users/shaileshdwivedi/CursorProj/boot-interceptor/backend/app.py", line 7, in <module>
+    app = create_app()
+          ^^^^^^^^^^^^
+  File "/Users/shaileshdwivedi/CursorProj/boot-interceptor/backend/app/__init__.py", line 52, in create_app
+    from app.api import api as api_blueprint
+  File "/Users/shaileshdwivedi/CursorProj/boot-interceptor/backend/app/api/__init__.py", line 6, in <module>
+    from app.api import routes
+  File "/Users/shaileshdwivedi/CursorProj/boot-interceptor/backend/app/api/routes.py", line 25, in <module>
+    from .api_management import api_management
+  File "/Users/shaileshdwivedi/CursorProj/boot-interceptor/backend/app/api/api_management.py", line 8, in <module>
+    from flask_jwt_extended import jwt_required, get_jwt_identity, admin_required
+ImportError: cannot import name 'admin_required' from 'flask_jwt_extended' (/LibrarModel loaded from models/bot_detection_model.pkl
+Traceback (most recent call last):
+  File "/Users/shaileshdwivedi/CursorProj/boot-interceptor/backend/app.py", line 10, in <module>
+    socketio.run(app, host='0.0.0.0', port=5001, debug=True)
+  File "/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/flask_socketio/__init__.py", line 650, in run
+Fatal Python error: init_sys_streams: can't initialize sys standard streams
+Python runtime state: core initialized
+OSError: [Errno 9] Bad file descriptor
+
+Current thread 0x00000002089020c0 (most recent call first):
+  <no Python frame>
+    app.run(host=host, port=port, threaded=True,
+  File "/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/flask/app.py", line 662, in run
+    run_simple(t.cast(str, host), port, self, **options)
+  File "/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/werkzeug/serving.py", line 1115, in run_simple
+    run_with_reloader(
+  File "/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/werkzeug/_reloader.py", line 459, in run_with_reloader
+    ensure_echo_on()
+  File "/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/werkzeug/_reloader.py", line 439, in ensure_echo_on
+    termios.tcsetattr(sys.stdin, termios.TCSANOW, attributes)
+termios.error: (4, 'Interrupted system call')
+/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/resource_tracker.py:104: UserWarning: resource_tracker: process died unexpectedly, relaunching.  Some resources might leak.
+  warnings.warn('resource_tracker: process died unexpectedly, '
+Fatal Python error: init_sys_streams: can't initialize sys standard streams
+Python runtime state: core initialized
+OSError: [Errno 9] Bad file descriptor
+
+Current thread 0x00000002089020c0 (most recent call first):
+  <no Python frame>

@@ -69,7 +69,8 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['Inter', 'ui-sans-serif', 'system-ui'],
+        'yandex': ['Yandex Sans Display', 'system-ui', 'sans-serif'],
+        sans: ['Yandex Sans Display', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
       },
       spacing: {

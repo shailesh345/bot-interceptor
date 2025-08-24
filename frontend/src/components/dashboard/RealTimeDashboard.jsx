@@ -12,7 +12,7 @@ import {
   Database,
   Wifi,
   Zap,
-  BarChart3,
+  BarChart as BarChartIcon,
   Eye,
   EyeOff
 } from 'lucide-react'

@@ -403,3 +403,4 @@ def init_database_optimizer(app):
     """Initialize database optimizer with Flask app"""
     db_optimizer.init_app(app)
     return db_optimizer
+
