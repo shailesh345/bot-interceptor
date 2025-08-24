@@ -40,6 +40,7 @@ def create_app(config_name=None):
     
     # Initialize Redis
     app.redis = redis.from_url(app.config['REDIS_URL'])
+    app.redis_client = app.redis  # Alias for compatibility
     
     # Register blueprints
     from app.api import api as api_blueprint
@@ -59,6 +60,10 @@ def create_app(config_name=None):
     
     from app.billing import billing as billing_blueprint
     app.register_blueprint(billing_blueprint, url_prefix='/billing')
+    
+    # Register traffic interception blueprint
+    from app.api.traffic_interception import traffic_interception_bp
+    app.register_blueprint(traffic_interception_bp)
     
     # JWT token handlers
     @jwt.token_in_blocklist_loader

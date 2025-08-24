@@ -13,28 +13,38 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:5000',
+        target: 'http://127.0.0.1:5001',
         changeOrigin: true,
       },
       '/auth': {
-        target: 'http://127.0.0.1:5000',
+        target: 'http://127.0.0.1:5001',
         changeOrigin: true,
       },
-      // Only proxy API endpoints, not client-side routes
-      '^/admin/api': {
-        target: 'http://127.0.0.1:5000',
+      '/health': {
+        target: 'http://127.0.0.1:5001',
+        changeOrigin: true,
+      },
+
+      // Traffic interception API endpoints
+      '/api/traffic': {
+        target: 'http://127.0.0.1:5001',
+        changeOrigin: true,
+      },
+      // Admin API endpoints
+      '/admin/api': {
+        target: 'http://127.0.0.1:5001',
         changeOrigin: true,
       },
       '/interceptor': {
-        target: 'http://127.0.0.1:5000',
+        target: 'http://127.0.0.1:5001',
         changeOrigin: true,
       },
       '/analytics': {
-        target: 'http://127.0.0.1:5000',
+        target: 'http://127.0.0.1:5001',
         changeOrigin: true,
       },
       '/billing': {
-        target: 'http://127.0.0.1:5000',
+        target: 'http://127.0.0.1:5001',
         changeOrigin: true,
       },
     },

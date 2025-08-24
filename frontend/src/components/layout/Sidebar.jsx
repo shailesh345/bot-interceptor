@@ -27,6 +27,7 @@ const Sidebar = () => {
     { name: 'Dashboard', href: '/dashboard', icon: BarChart3, mvpKey: 'dashboard' },
     { name: 'Domains', href: '/domains', icon: Globe, mvpKey: 'domains' },
     { name: 'Rules', href: '/rules', icon: Shield, mvpKey: 'rules' },
+    { name: 'Traffic Interception', href: '/traffic-interception', icon: Shield, mvpKey: 'traffic_interception' },
     { name: 'Analytics', href: '/analytics', icon: BarChart3, mvpKey: 'analytics' },
     { name: 'Billing', href: '/billing', icon: CreditCard, mvpKey: 'billing' },
     { name: 'Profile', href: '/profile', icon: Users, mvpKey: 'profile' },

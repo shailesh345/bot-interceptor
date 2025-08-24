@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Auth</title>
+</head>
+<body>
+    <h1>Debug Authentication</h1>
+    <div id="output"></div>
+    
+    <script>
+        function log(message) {
+            document.getElementById('output').innerHTML += '<p>' + message + '</p>';
+        }
+        
+        // Check if token exists in localStorage
+        const token = localStorage.getItem('token');
+        log('Token in localStorage: ' + (token ? 'EXISTS' : 'NOT FOUND'));
+        
+        if (token) {
+            log('Token: ' + token.substring(0, 50) + '...');
+            
+            // Test API call
+            fetch('/api/v1/domains', {
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                log('API Response Status: ' + response.status);
+                return response.json();
+            })
+            .then(data => {
+                log('API Response Data: ' + JSON.stringify(data));
+            })
+            .catch(error => {
+                log('API Error: ' + error.message);
+            });
+        } else {
+            log('No token found. Please login first.');
+        }
+    </script>
+</body>
+</html>

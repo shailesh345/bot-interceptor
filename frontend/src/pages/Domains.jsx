@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { useDispatch, useSelector } from 'react-redux'
 import { motion, AnimatePresence } from 'framer-motion'
+import { safeFilter, ensureArray } from '../utils/safeArray'
 import { 
   fetchDomains, 
   createDomain, 
@@ -190,7 +191,7 @@ const DomainDetailsModal = ({ isOpen, onClose, domain }) => {
         className="bg-white rounded-lg p-6 w-full max-w-4xl mx-4 max-h-screen overflow-y-auto"
       >
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-semibold">{domain.name}</h2>
+          <h2 className="text-2xl font-semibold">{domain.domain_name}</h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600"
@@ -324,15 +325,31 @@ const Domains = () => {
     }
   }, [dispatch, isAuthenticated])
 
+  // Debug logging
+  useEffect(() => {
+    console.log('Domains state:', domains)
+    console.log('Domains type:', typeof domains)
+    console.log('Is array:', Array.isArray(domains))
+  }, [domains])
+
   // Filter domains based on search and status
-  const filteredDomains = domains.filter(domain => {
-    const matchesSearch = domain.name.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredDomains = safeFilter(domains, domain => {
+    const matchesSearch = domain.domain_name.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = statusFilter === 'all' || domain.status === statusFilter
     return matchesSearch && matchesStatus
   })
 
   const handleAddDomain = (formData) => {
-    dispatch(createDomain(formData))
+    // Transform the form data to match backend API expectations
+    const apiData = {
+      domain_name: formData.name,
+      verification_method: formData.verificationMethod,
+      ssl_enabled: formData.sslEnabled,
+      cdn_enabled: formData.cdnEnabled,
+      traffic_enabled: formData.trafficEnabled
+    }
+    
+    dispatch(createDomain(apiData))
       .unwrap()
       .then(() => {
         toast.success('Domain added successfully!')
@@ -351,7 +368,16 @@ const Domains = () => {
   const handleUpdateDomain = (formData) => {
     if (!editingDomain) return
     
-    dispatch(updateDomain({ id: editingDomain.id, data: formData }))
+    // Transform the form data to match backend API expectations
+    const apiData = {
+      domain_name: formData.name,
+      verification_method: formData.verificationMethod,
+      ssl_enabled: formData.sslEnabled,
+      cdn_enabled: formData.cdnEnabled,
+      traffic_enabled: formData.trafficEnabled
+    }
+    
+    dispatch(updateDomain({ id: editingDomain.id, data: apiData }))
       .unwrap()
       .then(() => {
         toast.success('Domain updated successfully!')
@@ -364,7 +390,7 @@ const Domains = () => {
   }
 
   const handleDeleteDomain = (domain) => {
-    if (window.confirm(`Are you sure you want to delete ${domain.name}?`)) {
+    if (window.confirm(`Are you sure you want to delete ${domain.domain_name}?`)) {
       dispatch(deleteDomain(domain.id))
         .unwrap()
         .then(() => {
@@ -412,10 +438,10 @@ const Domains = () => {
   }
 
   const getDomainStats = (domain) => ({
-    requests: domain.monthlyRequests || 0,
-    blocked: domain.monthlyBlocked || 0,
-    revenue: domain.monthlyRevenue || 0,
-    blockRate: domain.monthlyRequests ? ((domain.monthlyBlocked / domain.monthlyRequests) * 100).toFixed(1) : 0
+    requests: domain.monthly_requests || 0,
+    blocked: domain.monthly_blocked || 0,
+    revenue: domain.monthly_revenue || 0,
+    blockRate: domain.monthly_requests ? ((domain.monthly_blocked / domain.monthly_requests) * 100).toFixed(1) : 0
   })
 
   return (
@@ -520,7 +546,7 @@ const Domains = () => {
                       <div className="flex items-center">
                         <Globe className="h-5 w-5 text-blue-600 mr-2" />
                         <div>
-                          <h3 className="font-semibold text-gray-900">{domain.name}</h3>
+                          <h3 className="font-semibold text-gray-900">{domain.domain_name}</h3>
                           <div className="flex items-center mt-1">
                             {getStatusBadge(domain.status)}
                           </div>
@@ -553,19 +579,19 @@ const Domains = () => {
 
                     {/* Domain Features */}
                     <div className="flex items-center space-x-4 mb-4 text-sm">
-                      {domain.sslEnabled && (
+                      {domain.ssl_enabled && (
                         <div className="flex items-center text-green-600">
                           <Shield className="h-4 w-4 mr-1" />
                           SSL
                         </div>
                       )}
-                      {domain.cdnEnabled && (
+                      {domain.cdn_enabled && (
                         <div className="flex items-center text-blue-600">
                           <Zap className="h-4 w-4 mr-1" />
                           CDN
                         </div>
                       )}
-                      {domain.trafficEnabled && (
+                      {domain.traffic_enabled && (
                         <div className="flex items-center text-purple-600">
                           <Activity className="h-4 w-4 mr-1" />
                           Monitor
@@ -606,14 +632,14 @@ const Domains = () => {
                       {domain.status === 'verified' && (
                         <>
                           <button
-                            onClick={() => copyToClipboard(domain.name)}
+                            onClick={() => copyToClipboard(domain.domain_name)}
                             className="flex-1 px-3 py-2 bg-gray-50 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-100"
                           >
                             <Copy className="h-3 w-3 inline mr-1" />
                             Copy
                           </button>
                           <button
-                            onClick={() => window.open(`https://${domain.name}`, '_blank')}
+                            onClick={() => window.open(`https://${domain.domain_name}`, '_blank')}
                             className="flex-1 px-3 py-2 bg-gray-50 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-100"
                           >
                             <ExternalLink className="h-3 w-3 inline mr-1" />

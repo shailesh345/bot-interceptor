@@ -519,6 +519,40 @@ const Admin = () => {
           </div>
         </div>
       </div>
+    ),
+    'system-monitoring': (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900">System Monitoring</h2>
+          <p className="text-sm text-gray-600">Monitor system health and performance metrics</p>
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow border">
+          <p className="text-gray-600">System monitoring functionality is available in the dedicated System Monitoring section.</p>
+          <button 
+            onClick={() => window.location.href = '/admin/system-monitoring'}
+            className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+          >
+            Go to System Monitoring
+          </button>
+        </div>
+      </div>
+    ),
+    'security-operations': (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900">Security Operations</h2>
+          <p className="text-sm text-gray-600">Manage security threats, rules, and incidents</p>
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow border">
+          <p className="text-gray-600">Security operations functionality is available in the dedicated Security Operations section.</p>
+          <button 
+            onClick={() => window.location.href = '/admin/security-operations'}
+            className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+          >
+            Go to Security Operations
+          </button>
+        </div>
+      </div>
     )
   }
 
@@ -555,6 +589,8 @@ const Admin = () => {
               { id: 'overview', name: 'Overview', icon: Activity },
               { id: 'users', name: 'Users', icon: Users },
               { id: 'clients', name: 'Clients', icon: Building },
+              { id: 'system-monitoring', name: 'System Monitoring', icon: Server },
+              { id: 'security-operations', name: 'Security Operations', icon: Shield },
               { id: 'settings', name: 'Settings', icon: Settings }
             ].map((tab) => {
               const Icon = tab.icon

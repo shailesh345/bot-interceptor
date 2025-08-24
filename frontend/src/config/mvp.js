@@ -9,6 +9,7 @@ export const MVP_CONFIG = {
     dashboard: { enabled: true },
     domains: { enabled: true },
     rules: { enabled: true },
+    traffic_interception: { enabled: true },
     analytics: { enabled: true },
     billing: { enabled: true },
     profile: { enabled: true },

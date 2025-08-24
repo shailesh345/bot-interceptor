@@ -70,6 +70,8 @@ class Domain(db.Model):
     verification_token = db.Column(db.String(255))
     verification_method = db.Column(db.String(50), default='dns')  # dns, file, meta
     ssl_enabled = db.Column(db.Boolean, default=False)
+    cdn_enabled = db.Column(db.Boolean, default=False)
+    traffic_enabled = db.Column(db.Boolean, default=True)
     status = db.Column(db.String(20), default='active')  # active, suspended, pending
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -90,10 +92,16 @@ class Domain(db.Model):
             'verification_token': self.verification_token,
             'verification_method': self.verification_method,
             'ssl_enabled': self.ssl_enabled,
+            'cdn_enabled': self.cdn_enabled,
+            'traffic_enabled': self.traffic_enabled,
             'status': self.status,
             'tenant_id': self.tenant_id,
             'created_at': self.created_at.isoformat() if self.created_at else None,
-            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+            # Placeholder stats (in production, these would be calculated from traffic logs)
+            'monthly_requests': 0,
+            'monthly_blocked': 0,
+            'monthly_revenue': 0.0
         }
     
     def __repr__(self):

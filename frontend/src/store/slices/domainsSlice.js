@@ -119,8 +119,10 @@ const domainsSlice = createSlice({
       })
       .addCase(fetchDomains.fulfilled, (state, action) => {
         state.loading = false
-        state.domains = action.payload
-        state.pagination.total = action.payload.length
+        // Handle both direct array and wrapped response formats
+        const domainsData = action.payload.domains || action.payload
+        state.domains = Array.isArray(domainsData) ? domainsData : []
+        state.pagination.total = state.domains.length
       })
       .addCase(fetchDomains.rejected, (state, action) => {
         state.loading = false
@@ -148,8 +150,12 @@ const domainsSlice = createSlice({
       })
       .addCase(createDomain.fulfilled, (state, action) => {
         state.loading = false
-        state.domains.push(action.payload)
-        state.pagination.total += 1
+        // Handle both direct domain object and wrapped response formats
+        const domainData = action.payload.domain || action.payload
+        if (domainData) {
+          state.domains.push(domainData)
+          state.pagination.total += 1
+        }
       })
       .addCase(createDomain.rejected, (state, action) => {
         state.loading = false

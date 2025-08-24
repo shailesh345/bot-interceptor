@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { useDispatch, useSelector } from 'react-redux'
 import { motion, AnimatePresence } from 'framer-motion'
+import { safeFilter, safeLength } from '../utils/safeArray'
 import toast from 'react-hot-toast'
 import { 
   fetchRules, 
@@ -409,7 +410,7 @@ const Rules = () => {
   }, [dispatch])
 
   // Filter rules based on search and filters
-  const filteredRules = rules.filter(rule => {
+  const filteredRules = safeFilter(rules, rule => {
     const matchesSearch = rule.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          rule.description.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesType = filterType === 'all' || rule.type === filterType
@@ -605,7 +606,7 @@ const Rules = () => {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Active Rules</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {rules.filter(r => r.status === 'active').length}
+                  {safeLength(safeFilter(rules, r => r.status === 'active'))}
                 </p>
               </div>
             </div>
@@ -755,7 +756,7 @@ const Rules = () => {
                             if (e.target.checked) {
                               setSelectedRules([...selectedRules, rule.id])
                             } else {
-                              setSelectedRules(selectedRules.filter(id => id !== rule.id))
+                              setSelectedRules(safeFilter(selectedRules, id => id !== rule.id))
                             }
                           }}
                           className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mr-3"

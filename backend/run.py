@@ -51,6 +51,51 @@ def create_super_admin():
     print(f"Super admin user '{username}' created successfully!")
 
 @cli.command()
+def create_default_tenant():
+    """Create a default tenant and assign existing users to it."""
+    # Check if default tenant already exists
+    existing_tenant = Tenant.query.filter_by(slug='default').first()
+    if existing_tenant:
+        print("Default tenant already exists!")
+        return existing_tenant
+    
+    # Create default tenant
+    tenant = Tenant(
+        name='Default Organization',
+        slug='default',
+        domain='localhost',
+        status='active'
+    )
+    
+    db.session.add(tenant)
+    db.session.commit()
+    
+    print(f"Default tenant '{tenant.name}' created successfully!")
+    return tenant
+
+@cli.command()
+def assign_users_to_tenant():
+    """Assign existing users to the default tenant."""
+    tenant = Tenant.query.filter_by(slug='default').first()
+    if not tenant:
+        print("Default tenant not found! Run 'create_default_tenant' first.")
+        return
+    
+    # Get all users without a tenant
+    users_without_tenant = User.query.filter_by(tenant_id=None).all()
+    
+    if not users_without_tenant:
+        print("No users found without a tenant.")
+        return
+    
+    for user in users_without_tenant:
+        user.tenant_id = tenant.id
+        print(f"Assigned user '{user.username}' to tenant '{tenant.name}'")
+    
+    db.session.commit()
+    print(f"Assigned {len(users_without_tenant)} users to default tenant!")
+
+@cli.command()
 def seed_data():
     """Seed the database with sample data."""
     # Create sample bot profiles

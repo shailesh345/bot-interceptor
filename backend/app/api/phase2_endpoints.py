@@ -66,6 +66,8 @@ def create_domain():
             domain_name=domain_name,
             tenant_id=user.tenant_id,
             ssl_enabled=data.get('ssl_enabled', False),
+            cdn_enabled=data.get('cdn_enabled', False),
+            traffic_enabled=data.get('traffic_enabled', True),
             verification_method=data.get('verification_method', 'dns'),
             status='pending',
             created_at=datetime.utcnow()
@@ -81,6 +83,9 @@ def create_domain():
         
     except Exception as e:
         db.session.rollback()
+        current_app.logger.error(f"Error creating domain: {str(e)}")
+        current_app.logger.error(f"User tenant_id: {user.tenant_id}")
+        current_app.logger.error(f"Request data: {data}")
         return jsonify({'error': str(e)}), 500
 
 @domains_bp.route('/domains/<int:domain_id>', methods=['GET'])
@@ -125,6 +130,10 @@ def update_domain(domain_id):
         # Update allowed fields
         if 'ssl_enabled' in data:
             domain.ssl_enabled = data['ssl_enabled']
+        if 'cdn_enabled' in data:
+            domain.cdn_enabled = data['cdn_enabled']
+        if 'traffic_enabled' in data:
+            domain.traffic_enabled = data['traffic_enabled']
         if 'verification_method' in data:
             domain.verification_method = data['verification_method']
         
@@ -158,6 +167,38 @@ def delete_domain(domain_id):
         db.session.commit()
         
         return jsonify({'message': 'Domain deleted successfully'})
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@domains_bp.route('/domains/<int:domain_id>/verify', methods=['POST'])
+@jwt_required()
+def verify_domain(domain_id):
+    """Verify domain ownership"""
+    try:
+        user_uuid = get_jwt_identity()
+        user = User.query.filter_by(uuid=user_uuid).first()
+        
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        domain = Domain.query.filter_by(id=domain_id, tenant_id=user.tenant_id).first()
+        
+        if not domain:
+            return jsonify({'error': 'Domain not found'}), 404
+        
+        # For now, just mark as verified (in production, this would check DNS records, etc.)
+        domain.is_verified = True
+        domain.status = 'verified'
+        domain.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Domain verified successfully',
+            'domain': domain.to_dict()
+        })
         
     except Exception as e:
         db.session.rollback()
