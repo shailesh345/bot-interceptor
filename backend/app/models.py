@@ -175,18 +175,19 @@ class TrafficLog(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     uuid = db.Column(db.String(36), unique=True, nullable=False, default=lambda: str(uuid.uuid4()))
-    ip_address = db.Column(db.String(45), nullable=False)
+    client_ip = db.Column(db.String(45), nullable=False)  # Renamed from ip_address for consistency
     user_agent = db.Column(db.Text)
     request_method = db.Column(db.String(10))
     request_path = db.Column(db.String(255))
     request_headers = db.Column(db.JSON)
     response_status = db.Column(db.Integer)
     response_size = db.Column(db.BigInteger)
+    response_time = db.Column(db.Float)  # Added for performance metrics
     processing_time = db.Column(db.Float)
     is_bot = db.Column(db.Boolean, default=False)
     bot_type = db.Column(db.String(50))
-    country_code = db.Column(db.String(2))
-    city = db.Column(db.String(100))
+    geo_country = db.Column(db.String(2))  # Renamed from country_code for consistency
+    geo_city = db.Column(db.String(100))   # Renamed from city for consistency
     rule_matched = db.Column(db.String(255))
     action_taken = db.Column(db.String(50))
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
@@ -194,8 +195,28 @@ class TrafficLog(db.Model):
     # Foreign Keys
     domain_id = db.Column(db.Integer, db.ForeignKey('domains.id'), nullable=False)
     
+    def to_dict(self):
+        return {
+            'id': self.uuid,
+            'client_ip': self.client_ip,
+            'user_agent': self.user_agent,
+            'request_method': self.request_method,
+            'request_path': self.request_path,
+            'response_status': self.response_status,
+            'response_time': self.response_time,
+            'processing_time': self.processing_time,
+            'is_bot': self.is_bot,
+            'bot_type': self.bot_type,
+            'geo_country': self.geo_country,
+            'geo_city': self.geo_city,
+            'rule_matched': self.rule_matched,
+            'action_taken': self.action_taken,
+            'timestamp': self.timestamp.isoformat() if self.timestamp else None,
+            'domain_id': self.domain_id
+        }
+    
     def __repr__(self):
-        return f'<TrafficLog {self.ip_address}>'
+        return f'<TrafficLog {self.client_ip}>'
 
 class BotProfile(db.Model):
     __tablename__ = 'bot_profiles'
@@ -251,3 +272,38 @@ class ApiKey(db.Model):
     
     def __repr__(self):
         return f'<ApiKey {self.name}>'
+
+class Notification(db.Model):
+    __tablename__ = 'notifications'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    uuid = db.Column(db.String(36), unique=True, nullable=False, default=lambda: str(uuid.uuid4()))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    notification_type = db.Column(db.String(50), nullable=False)  # security, traffic, performance, bot_detection, system
+    title = db.Column(db.String(255), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    data = db.Column(db.JSON)  # Additional data for the notification
+    priority = db.Column(db.String(20), default='normal')  # low, normal, high, critical
+    is_read = db.Column(db.Boolean, default=False)
+    read_at = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    user = db.relationship('User', backref='notifications')
+    
+    def to_dict(self):
+        return {
+            'id': self.uuid,
+            'user_id': self.user_id,
+            'notification_type': self.notification_type,
+            'title': self.title,
+            'message': self.message,
+            'data': self.data or {},
+            'priority': self.priority,
+            'is_read': self.is_read,
+            'read_at': self.read_at.isoformat() if self.read_at else None,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
+    
+    def __repr__(self):
+        return f'<Notification {self.title}>'

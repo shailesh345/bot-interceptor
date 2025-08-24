@@ -21,6 +21,9 @@ limiter = Limiter(
     default_limits=["10000 per day", "5000 per hour"]
 )
 
+# Initialize WebSocket
+from .websocket import socketio
+
 def create_app(config_name=None):
     if config_name is None:
         config_name = os.environ.get('FLASK_CONFIG', 'default')
@@ -42,6 +45,9 @@ def create_app(config_name=None):
     app.redis = redis.from_url(app.config['REDIS_URL'])
     app.redis_client = app.redis  # Alias for compatibility
     
+    # Initialize WebSocket
+    socketio.init_app(app, cors_allowed_origins="*")
+    
     # Register blueprints
     from app.api import api as api_blueprint
     app.register_blueprint(api_blueprint, url_prefix='/api')
@@ -55,15 +61,14 @@ def create_app(config_name=None):
     from app.interceptor import interceptor as interceptor_blueprint
     app.register_blueprint(interceptor_blueprint, url_prefix='/interceptor')
     
-    from app.analytics import analytics as analytics_blueprint
-    app.register_blueprint(analytics_blueprint, url_prefix='/analytics')
-    
     from app.billing import billing as billing_blueprint
     app.register_blueprint(billing_blueprint, url_prefix='/billing')
     
     # Register traffic interception blueprint
     from app.api.traffic_interception import traffic_interception_bp
     app.register_blueprint(traffic_interception_bp)
+    
+
     
     # JWT token handlers
     @jwt.token_in_blocklist_loader

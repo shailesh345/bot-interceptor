@@ -11,10 +11,24 @@ import re
 # Import Phase 2 modules
 from .phase2_endpoints import domains_bp, rules_bp, traffic_bp
 
+# Import analytics and export modules
+from .analytics import analytics
+from .export import export
+from .notifications import notifications
+from .real_time import real_time
+from .ml_management import ml_management
+
 # Register Phase 2 blueprints
 api.register_blueprint(domains_bp, url_prefix='/v1')
 api.register_blueprint(rules_bp, url_prefix='/v1')
 api.register_blueprint(traffic_bp, url_prefix='/v1')
+
+# Register analytics, export, and notifications blueprints
+api.register_blueprint(analytics, url_prefix='/analytics')
+api.register_blueprint(export, url_prefix='/export')
+api.register_blueprint(notifications, url_prefix='/notifications')
+api.register_blueprint(real_time, url_prefix='/real-time')
+api.register_blueprint(ml_management, url_prefix='/ml')
 
 def get_current_user():
     """Helper function to get current user from JWT token"""

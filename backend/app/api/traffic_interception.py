@@ -16,9 +16,9 @@ from app.models import User, Domain, TrafficLog
 from app import db
 
 # Create blueprint
-traffic_interception_bp = Blueprint('traffic_interception', __name__, url_prefix='/api/traffic')
+traffic_interception_bp = Blueprint('traffic_interception', __name__)
 
-@traffic_interception_bp.route('/intercept', methods=['POST'])
+@traffic_interception_bp.route('/api/traffic/intercept', methods=['POST'])
 @jwt_required()
 def intercept_traffic():
     """Intercept and process incoming traffic"""
@@ -100,7 +100,7 @@ def intercept_traffic():
         current_app.logger.error(f"Traffic interception failed: {e}")
         return jsonify({'error': 'Internal server error'}), 500
 
-@traffic_interception_bp.route('/classify', methods=['POST'])
+@traffic_interception_bp.route('/api/traffic/classify', methods=['POST'])
 @jwt_required()
 def classify_bot():
     """Classify if a request is from a bot using ML"""
@@ -143,7 +143,7 @@ def classify_bot():
         current_app.logger.error(f"Bot classification failed: {e}")
         return jsonify({'error': 'Internal server error'}), 500
 
-@traffic_interception_bp.route('/protect', methods=['POST'])
+@traffic_interception_bp.route('/api/traffic/protect', methods=['POST'])
 @jwt_required()
 def protect_content():
     """Apply content protection measures"""
@@ -196,7 +196,7 @@ def protect_content():
         current_app.logger.error(f"Content protection failed: {e}")
         return jsonify({'error': 'Internal server error'}), 500
 
-@traffic_interception_bp.route('/metrics/realtime', methods=['GET'])
+@traffic_interception_bp.route('/api/traffic/metrics/realtime', methods=['GET'])
 @jwt_required()
 def get_real_time_metrics():
     """Get real-time traffic metrics"""
@@ -235,7 +235,7 @@ def get_real_time_metrics():
         current_app.logger.error(f"Failed to get real-time metrics: {e}")
         return jsonify({'error': 'Internal server error'}), 500
 
-@traffic_interception_bp.route('/metrics/domain/<domain_name>', methods=['GET'])
+@traffic_interception_bp.route('/api/traffic/metrics/domain/<domain_name>', methods=['GET'])
 @jwt_required()
 def get_domain_metrics(domain_name):
     """Get metrics for a specific domain"""
@@ -334,7 +334,7 @@ def get_domain_metrics(domain_name):
         current_app.logger.error(f"Failed to get domain metrics: {e}")
         return jsonify({'error': 'Internal server error'}), 500
 
-@traffic_interception_bp.route('/alerts', methods=['GET'])
+@traffic_interception_bp.route('/api/traffic/alerts', methods=['GET'])
 @jwt_required()
 def get_alerts():
     """Get current alerts"""
@@ -376,7 +376,7 @@ def get_alerts():
         current_app.logger.error(f"Failed to get alerts: {e}")
         return jsonify({'error': 'Internal server error'}), 500
 
-@traffic_interception_bp.route('/rules', methods=['GET'])
+@traffic_interception_bp.route('/api/traffic/rules', methods=['GET'])
 @jwt_required()
 def get_protection_rules():
     """Get content protection rules"""
@@ -415,7 +415,7 @@ def get_protection_rules():
         current_app.logger.error(f"Failed to get protection rules: {e}")
         return jsonify({'error': 'Internal server error'}), 500
 
-@traffic_interception_bp.route('/health', methods=['GET'])
+@traffic_interception_bp.route('/api/traffic/health', methods=['GET'])
 def health_check():
     """Health check endpoint for traffic interception system"""
     try:

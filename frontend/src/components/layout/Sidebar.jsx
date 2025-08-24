@@ -15,7 +15,8 @@ import {
   Monitor,
   Database,
   Heart,
-  Lock
+  Lock,
+  Cpu
 } from 'lucide-react'
 import { MVP_CONFIG } from '../../config/mvp'
 
@@ -29,6 +30,7 @@ const Sidebar = () => {
     { name: 'Rules', href: '/rules', icon: Shield, mvpKey: 'rules' },
     { name: 'Traffic Interception', href: '/traffic-interception', icon: Shield, mvpKey: 'traffic_interception' },
     { name: 'Analytics', href: '/analytics', icon: BarChart3, mvpKey: 'analytics' },
+    { name: 'ML Model Management', href: '/ml-management', icon: Cpu, mvpKey: 'ml_management' },
     { name: 'Billing', href: '/billing', icon: CreditCard, mvpKey: 'billing' },
     { name: 'Profile', href: '/profile', icon: Users, mvpKey: 'profile' },
     { name: 'Settings', href: '/settings', icon: Settings, mvpKey: 'settings' },

@@ -22,6 +22,7 @@ import Profile from './pages/Profile'
 import Admin from './pages/Admin'
 import Demo from './pages/Demo'
 import TrafficInterception from './pages/TrafficInterception'
+import MLModelManagement from './components/ml/MLModelManagement'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminUsers from './pages/admin/AdminUsers'
 import AdminSystemMonitoring from './pages/admin/AdminSystemMonitoring'
@@ -93,6 +94,7 @@ function App() {
           <Route path="profile" element={<Profile />} />
           <Route path="demo" element={<Demo />} />
           <Route path="traffic-interception" element={<TrafficInterception />} />
+          <Route path="ml-management" element={<MLModelManagement />} />
           
           {/* MVP Development Dashboard */}
           <Route path="mvp" element={

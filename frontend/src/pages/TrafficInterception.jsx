@@ -3,11 +3,15 @@ import {
   EyeIcon, 
   ShieldCheckIcon, 
   ChartBarIcon,
-  CogIcon
+  CogIcon,
+  DocumentArrowDownIcon
 } from '@heroicons/react/24/outline'
 import TrafficInterceptionDashboard from '../components/traffic/TrafficInterceptionDashboard'
 import ContentProtectionConfig from '../components/traffic/ContentProtectionConfig'
 import TrafficAnalyticsDashboard from '../components/analytics/TrafficAnalyticsDashboard'
+import TrafficMonitoringCenter from '../components/traffic/TrafficMonitoringCenter'
+import AdvancedAnalyticsDashboard from '../components/analytics/AdvancedAnalyticsDashboard'
+import DataExportPanel from '../components/analytics/DataExportPanel'
 
 const TrafficInterception = () => {
   const [activeTab, setActiveTab] = useState('dashboard')
@@ -18,6 +22,12 @@ const TrafficInterception = () => {
       name: 'Live Dashboard',
       icon: EyeIcon,
       description: 'Real-time traffic monitoring and interception'
+    },
+    {
+      id: 'monitoring',
+      name: 'Monitoring Center',
+      icon: EyeIcon,
+      description: 'Real-time traffic monitoring and alerting'
     },
     {
       id: 'protection',
@@ -32,6 +42,18 @@ const TrafficInterception = () => {
       description: 'Comprehensive traffic analysis and insights'
     },
     {
+      id: 'advanced-analytics',
+      name: 'Advanced Analytics',
+      icon: ChartBarIcon,
+      description: 'Deep insights and performance metrics'
+    },
+    {
+      id: 'export',
+      name: 'Data Export',
+      icon: DocumentArrowDownIcon,
+      description: 'Export analytics data in various formats'
+    },
+    {
       id: 'settings',
       name: 'Settings',
       icon: CogIcon,
@@ -43,10 +65,16 @@ const TrafficInterception = () => {
     switch (activeTab) {
       case 'dashboard':
         return <TrafficInterceptionDashboard />
+      case 'monitoring':
+        return <TrafficMonitoringCenter />
       case 'protection':
         return <ContentProtectionConfig />
       case 'analytics':
         return <TrafficAnalyticsDashboard />
+      case 'advanced-analytics':
+        return <AdvancedAnalyticsDashboard />
+      case 'export':
+        return <DataExportPanel />
       case 'settings':
         return (
           <div className="bg-white rounded-lg shadow p-6">

@@ -1,349 +1,358 @@
-# Real-time Analytics API
-from flask import request, jsonify, current_app
-from app.api import api
-from app.models import TrafficLog, Domain, Analytics, Tenant
-from app import db
+"""
+Analytics API Endpoints
+Provides comprehensive analytics for traffic patterns, bot detection, and performance metrics
+"""
+
+from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime, timedelta
 import json
-import redis
-from sqlalchemy import func, and_
+from sqlalchemy import func, desc, and_
+from ..models import User, Domain, TrafficLog, BotProfile, InterceptorRule
+from .. import db
 
-# Redis client for real-time data
-redis_client = redis.Redis(host='localhost', port=6379, db=0)
+analytics = Blueprint('analytics', __name__)
 
-def get_current_user():
-    """Helper function to get current user from JWT token"""
-    try:
-        from app.models import User
-        user_id = get_jwt_identity()
-        return User.query.filter_by(uuid=user_id).first()
-    except:
-        return None
-
-@api.route('/analytics/dashboard', methods=['GET'])
+@analytics.route('/dashboard', methods=['GET'])
 @jwt_required()
 def get_dashboard_analytics():
-    """Get dashboard analytics data"""
-    current_user = get_current_user()
-    if not current_user:
-        return jsonify({'message': 'User not found'}), 404
-    
+    """Get comprehensive dashboard analytics"""
     try:
-        # Get date range from query params
-        days = request.args.get('days', 7, type=int)
-        end_date = datetime.now()
+        user_uuid = get_jwt_identity()
+        user = User.query.filter_by(uuid=user_uuid).first()
+        
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        # Get time range (default: last 30 days)
+        days = request.args.get('days', 30, type=int)
+        end_date = datetime.utcnow()
         start_date = end_date - timedelta(days=days)
         
-        # Get tenant domains
-        domains = Domain.query.filter_by(tenant_id=current_user.tenant_id).all()
-        domain_ids = [domain.id for domain in domains]
+        # Base query for user's tenant
+        base_query = TrafficLog.query.join(Domain).filter(
+            Domain.tenant_id == user.tenant_id,
+            TrafficLog.timestamp >= start_date,
+            TrafficLog.timestamp <= end_date
+        )
         
-        if not domain_ids:
-            return jsonify({
-                'total_requests': 0,
-                'blocked_requests': 0,
-                'bot_requests': 0,
-                'allowed_requests': 0,
-                'top_domains': [],
-                'traffic_trends': [],
-                'bot_types': {},
-                'countries': {},
-                'real_time_metrics': {
-                    'active_requests': 0,
-                    'requests_per_second': 0,
-                    'active_bots': 0,
-                    'blocked_per_minute': 0
-                }
-            })
+        # Total requests
+        total_requests = base_query.count()
         
-        # Get traffic statistics
-        traffic_stats = db.session.query(
-            func.count(TrafficLog.id).label('total_requests'),
-            func.sum(func.case([(TrafficLog.action_taken == 'block', 1)], else_=0)).label('blocked_requests'),
-            func.sum(func.case([(TrafficLog.is_bot == True, 1)], else_=0)).label('bot_requests')
-        ).filter(
-            TrafficLog.domain_id.in_(domain_ids),
-            TrafficLog.timestamp >= start_date
-        ).first()
+        # Bot vs Human traffic
+        bot_requests = base_query.filter(TrafficLog.is_bot == True).count()
+        human_requests = total_requests - bot_requests
         
-        total_requests = traffic_stats.total_requests or 0
-        blocked_requests = traffic_stats.blocked_requests or 0
-        bot_requests = traffic_stats.bot_requests or 0
-        allowed_requests = total_requests - blocked_requests
+        # Blocked requests
+        blocked_requests = base_query.filter(TrafficLog.action_taken == 'block').count()
         
-        # Get traffic trends by day
-        traffic_trends = []
-        for i in range(days):
-            day_start = start_date + timedelta(days=i)
-            day_end = day_start + timedelta(days=1)
-            
-            day_stats = db.session.query(
-                func.count(TrafficLog.id).label('total'),
-                func.sum(func.case([(TrafficLog.action_taken == 'block', 1)], else_=0)).label('blocked'),
-                func.sum(func.case([(TrafficLog.is_bot == True, 1)], else_=0)).label('bots')
-            ).filter(
-                TrafficLog.domain_id.in_(domain_ids),
-                TrafficLog.timestamp >= day_start,
-                TrafficLog.timestamp < day_end
-            ).first()
-            
-            traffic_trends.append({
-                'date': day_start.strftime('%Y-%m-%d'),
-                'total_requests': day_stats.total or 0,
-                'blocked_requests': day_stats.blocked or 0,
-                'bot_requests': day_stats.bots or 0,
-                'allowed_requests': (day_stats.total or 0) - (day_stats.blocked or 0)
-            })
-        
-        # Get top domains by traffic
+        # Top domains by traffic
         top_domains = db.session.query(
             Domain.domain_name,
             func.count(TrafficLog.id).label('request_count')
-        ).join(
-            TrafficLog, Domain.id == TrafficLog.domain_id
-        ).filter(
-            TrafficLog.domain_id.in_(domain_ids),
+        ).join(TrafficLog).filter(
+            Domain.tenant_id == user.tenant_id,
             TrafficLog.timestamp >= start_date
-        ).group_by(Domain.domain_name).order_by(
-            func.count(TrafficLog.id).desc()
-        ).limit(10).all()
+        ).group_by(Domain.domain_name).order_by(desc('request_count')).limit(10).all()
         
-        # Get bot types distribution
+        # Top IP addresses
+        top_ips = db.session.query(
+            TrafficLog.client_ip,
+            func.count(TrafficLog.id).label('request_count')
+        ).join(Domain).filter(
+            Domain.tenant_id == user.tenant_id,
+            TrafficLog.timestamp >= start_date
+        ).group_by(TrafficLog.client_ip).order_by(desc('request_count')).limit(10).all()
+        
+        # Bot types distribution
         bot_types = db.session.query(
             TrafficLog.bot_type,
             func.count(TrafficLog.id).label('count')
-        ).filter(
-            TrafficLog.domain_id.in_(domain_ids),
+        ).join(Domain).filter(
+            Domain.tenant_id == user.tenant_id,
             TrafficLog.timestamp >= start_date,
-            TrafficLog.is_bot == True,
-            TrafficLog.bot_type.isnot(None)
+            TrafficLog.is_bot == True
         ).group_by(TrafficLog.bot_type).all()
         
-        # Get countries distribution
-        countries = db.session.query(
-            TrafficLog.country_code,
+        # Hourly traffic pattern
+        hourly_pattern = db.session.query(
+            func.extract('hour', TrafficLog.timestamp).label('hour'),
             func.count(TrafficLog.id).label('count')
-        ).filter(
-            TrafficLog.domain_id.in_(domain_ids),
+        ).join(Domain).filter(
+            Domain.tenant_id == user.tenant_id,
+            TrafficLog.timestamp >= start_date
+        ).group_by('hour').order_by('hour').all()
+        
+        # Response time statistics
+        response_stats = db.session.query(
+            func.avg(TrafficLog.response_time).label('avg_response_time'),
+            func.min(TrafficLog.response_time).label('min_response_time'),
+            func.max(TrafficLog.response_time).label('max_response_time')
+        ).join(Domain).filter(
+            Domain.tenant_id == user.tenant_id,
             TrafficLog.timestamp >= start_date,
-            TrafficLog.country_code.isnot(None)
-        ).group_by(TrafficLog.country_code).limit(10).all()
-        
-        # Get real-time metrics from Redis
-        real_time_metrics = get_real_time_metrics(domains)
+            TrafficLog.response_time.isnot(None)
+        ).first()
         
         return jsonify({
-            'total_requests': total_requests,
-            'blocked_requests': blocked_requests,
-            'bot_requests': bot_requests,
-            'allowed_requests': allowed_requests,
-            'top_domains': [{'domain': domain, 'requests': count} for domain, count in top_domains],
-            'traffic_trends': traffic_trends,
-            'bot_types': {bot_type: count for bot_type, count in bot_types},
-            'countries': {country: count for country, count in countries},
-            'real_time_metrics': real_time_metrics
-        })
-        
-    except Exception as e:
-        current_app.logger.error(f"Dashboard analytics error: {e}")
-        return jsonify({'message': 'Internal server error'}), 500
-
-@api.route('/analytics/traffic-logs', methods=['GET'])
-@jwt_required()
-def get_traffic_logs():
-    """Get paginated traffic logs"""
-    current_user = get_current_user()
-    if not current_user:
-        return jsonify({'message': 'User not found'}), 404
-    
-    try:
-        # Get pagination parameters
-        page = request.args.get('page', 1, type=int)
-        per_page = min(request.args.get('per_page', 50, type=int), 100)
-        
-        # Get filter parameters
-        domain_name = request.args.get('domain')
-        action_taken = request.args.get('action')
-        is_bot = request.args.get('is_bot')
-        start_date = request.args.get('start_date')
-        end_date = request.args.get('end_date')
-        
-        # Build query
-        query = TrafficLog.query.join(Domain).filter(
-            Domain.tenant_id == current_user.tenant_id
-        )
-        
-        # Apply filters
-        if domain_name:
-            query = query.filter(Domain.domain_name == domain_name)
-        
-        if action_taken:
-            query = query.filter(TrafficLog.action_taken == action_taken)
-        
-        if is_bot is not None:
-            query = query.filter(TrafficLog.is_bot == (is_bot.lower() == 'true'))
-        
-        if start_date:
-            start_dt = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
-            query = query.filter(TrafficLog.timestamp >= start_dt)
-        
-        if end_date:
-            end_dt = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
-            query = query.filter(TrafficLog.timestamp <= end_dt)
-        
-        # Order by timestamp descending
-        query = query.order_by(TrafficLog.timestamp.desc())
-        
-        # Paginate
-        logs = query.paginate(page=page, per_page=per_page, error_out=False)
-        
-        return jsonify({
-            'logs': [{
-                'id': log.uuid,
-                'domain': log.domain.domain_name,
-                'ip_address': log.ip_address,
-                'user_agent': log.user_agent,
-                'method': log.request_method,
-                'path': log.request_path,
-                'status': log.response_status,
-                'is_bot': log.is_bot,
-                'bot_type': log.bot_type,
-                'country': log.country_code,
-                'city': log.city,
-                'action_taken': log.action_taken,
-                'rule_matched': log.rule_matched,
-                'timestamp': log.timestamp.isoformat(),
-                'processing_time': log.processing_time
-            } for log in logs.items],
-            'pagination': {
-                'page': page,
-                'per_page': per_page,
-                'total': logs.total,
-                'pages': logs.pages,
-                'has_next': logs.has_next,
-                'has_prev': logs.has_prev
+            'success': True,
+            'analytics': {
+                'period': {
+                    'start_date': start_date.isoformat(),
+                    'end_date': end_date.isoformat(),
+                    'days': days
+                },
+                'overview': {
+                    'total_requests': total_requests,
+                    'bot_requests': bot_requests,
+                    'human_requests': human_requests,
+                    'blocked_requests': blocked_requests,
+                    'bot_percentage': (bot_requests / total_requests * 100) if total_requests > 0 else 0,
+                    'block_percentage': (blocked_requests / total_requests * 100) if total_requests > 0 else 0
+                },
+                'top_domains': [{'domain': d.domain_name, 'requests': d.request_count} for d in top_domains],
+                'top_ips': [{'ip': ip.client_ip, 'requests': ip.request_count} for ip in top_ips],
+                'bot_types': [{'type': bt.bot_type or 'unknown', 'count': bt.count} for bt in bot_types],
+                'hourly_pattern': [{'hour': int(h.hour), 'count': h.count} for h in hourly_pattern],
+                'performance': {
+                    'avg_response_time': float(response_stats.avg_response_time) if response_stats.avg_response_time else 0,
+                    'min_response_time': float(response_stats.min_response_time) if response_stats.min_response_time else 0,
+                    'max_response_time': float(response_stats.max_response_time) if response_stats.max_response_time else 0
+                }
             }
-        })
+        }), 200
         
     except Exception as e:
-        current_app.logger.error(f"Traffic logs error: {e}")
-        return jsonify({'message': 'Internal server error'}), 500
+        current_app.logger.error(f"Dashboard analytics error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
-@api.route('/analytics/hourly-stats', methods=['GET'])
+@analytics.route('/traffic-patterns', methods=['GET'])
 @jwt_required()
-def get_hourly_stats():
-    """Get hourly traffic statistics"""
-    current_user = get_current_user()
-    if not current_user:
-        return jsonify({'message': 'User not found'}), 404
-    
+def get_traffic_patterns():
+    """Get detailed traffic patterns analysis"""
     try:
-        # Get date range (last 24 hours by default)
-        hours = request.args.get('hours', 24, type=int)
-        end_time = datetime.now()
-        start_time = end_time - timedelta(hours=hours)
+        user_uuid = get_jwt_identity()
+        user = User.query.filter_by(uuid=user_uuid).first()
         
-        # Get tenant domains
-        domains = Domain.query.filter_by(tenant_id=current_user.tenant_id).all()
-        domain_ids = [domain.id for domain in domains]
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
         
-        if not domain_ids:
-            return jsonify({'hourly_stats': []})
+        # Get time range
+        days = request.args.get('days', 7, type=int)
+        end_date = datetime.utcnow()
+        start_date = end_date - timedelta(days=days)
         
-        # Get hourly statistics
-        hourly_stats = []
-        for i in range(hours):
-            hour_start = start_time + timedelta(hours=i)
-            hour_end = hour_start + timedelta(hours=1)
-            
-            stats = db.session.query(
-                func.count(TrafficLog.id).label('total'),
-                func.sum(func.case([(TrafficLog.action_taken == 'block', 1)], else_=0)).label('blocked'),
-                func.sum(func.case([(TrafficLog.is_bot == True, 1)], else_=0)).label('bots')
-            ).filter(
-                TrafficLog.domain_id.in_(domain_ids),
-                TrafficLog.timestamp >= hour_start,
-                TrafficLog.timestamp < hour_end
-            ).first()
-            
-            hourly_stats.append({
-                'hour': hour_start.strftime('%Y-%m-%d %H:00'),
-                'total_requests': stats.total or 0,
-                'blocked_requests': stats.blocked or 0,
-                'bot_requests': stats.bots or 0,
-                'allowed_requests': (stats.total or 0) - (stats.blocked or 0)
-            })
+        # Daily traffic pattern
+        daily_pattern = db.session.query(
+            func.date(TrafficLog.timestamp).label('date'),
+            func.count(TrafficLog.id).label('total_requests'),
+            func.sum(func.case([(TrafficLog.is_bot == True, 1)], else_=0)).label('bot_requests'),
+            func.sum(func.case([(TrafficLog.action_taken == 'block', 1)], else_=0)).label('blocked_requests')
+        ).join(Domain).filter(
+            Domain.tenant_id == user.tenant_id,
+            TrafficLog.timestamp >= start_date
+        ).group_by(func.date(TrafficLog.timestamp)).order_by('date').all()
         
-        return jsonify({'hourly_stats': hourly_stats})
+        # Geographic distribution
+        geo_distribution = db.session.query(
+            TrafficLog.geo_country,
+            func.count(TrafficLog.id).label('count')
+        ).join(Domain).filter(
+            Domain.tenant_id == user.tenant_id,
+            TrafficLog.timestamp >= start_date,
+            TrafficLog.geo_country.isnot(None)
+        ).group_by(TrafficLog.geo_country).order_by(desc('count')).limit(20).all()
         
-    except Exception as e:
-        current_app.logger.error(f"Hourly stats error: {e}")
-        return jsonify({'message': 'Internal server error'}), 500
-
-def get_real_time_metrics(domains):
-    """Get real-time metrics from Redis"""
-    try:
-        current_time = datetime.now()
-        current_minute = current_time.strftime('%Y-%m-%d:%H:%M')
-        
-        active_requests = 0
-        requests_per_second = 0
-        active_bots = 0
-        blocked_per_minute = 0
-        
-        for domain in domains:
-            # Get metrics for the last minute
-            minute_key = f"analytics:{domain.domain_name}:{current_minute}"
-            
-            minute_data = redis_client.hgetall(minute_key)
-            if minute_data:
-                active_requests += int(minute_data.get(b'total_requests', 0))
-                blocked_per_minute += int(minute_data.get(b'blocked_requests', 0))
-                active_bots += int(minute_data.get(b'bot_requests', 0))
-        
-        # Calculate requests per second (approximate)
-        requests_per_second = active_requests // 60 if active_requests > 0 else 0
-        
-        return {
-            'active_requests': active_requests,
-            'requests_per_second': requests_per_second,
-            'active_bots': active_bots,
-            'blocked_per_minute': blocked_per_minute
-        }
-        
-    except Exception as e:
-        current_app.logger.error(f"Real-time metrics error: {e}")
-        return {
-            'active_requests': 0,
-            'requests_per_second': 0,
-            'active_bots': 0,
-            'blocked_per_minute': 0
-        }
-
-@api.route('/analytics/export', methods=['POST'])
-@jwt_required()
-def export_analytics():
-    """Export analytics data"""
-    current_user = get_current_user()
-    if not current_user:
-        return jsonify({'message': 'User not found'}), 404
-    
-    try:
-        data = request.get_json()
-        export_type = data.get('type', 'csv')  # csv, json, pdf
-        date_range = data.get('date_range', 7)
-        
-        # This would implement the actual export logic
-        # For now, return a placeholder response
+        # User agent analysis
+        user_agent_analysis = db.session.query(
+            TrafficLog.user_agent,
+            func.count(TrafficLog.id).label('count')
+        ).join(Domain).filter(
+            Domain.tenant_id == user.tenant_id,
+            TrafficLog.timestamp >= start_date,
+            TrafficLog.user_agent.isnot(None)
+        ).group_by(TrafficLog.user_agent).order_by(desc('count')).limit(15).all()
         
         return jsonify({
-            'message': 'Export started',
-            'export_id': 'exp_' + str(int(datetime.now().timestamp())),
-            'status': 'processing',
-            'estimated_completion': (datetime.now() + timedelta(minutes=5)).isoformat()
-        })
+            'success': True,
+            'traffic_patterns': {
+                'daily_pattern': [{
+                    'date': str(d.date),
+                    'total_requests': d.total_requests,
+                    'bot_requests': d.bot_requests,
+                    'blocked_requests': d.blocked_requests,
+                    'human_requests': d.total_requests - d.bot_requests
+                } for d in daily_pattern],
+                'geographic_distribution': [{
+                    'country': geo.geo_country,
+                    'count': geo.count
+                } for geo in geo_distribution],
+                'user_agent_analysis': [{
+                    'user_agent': ua.user_agent,
+                    'count': ua.count
+                } for ua in user_agent_analysis]
+            }
+        }), 200
         
     except Exception as e:
-        current_app.logger.error(f"Export error: {e}")
-        return jsonify({'message': 'Internal server error'}), 500
+        current_app.logger.error(f"Traffic patterns error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@analytics.route('/bot-intelligence', methods=['GET'])
+@jwt_required()
+def get_bot_intelligence():
+    """Get bot intelligence and threat analysis"""
+    try:
+        user_uuid = get_jwt_identity()
+        user = User.query.filter_by(uuid=user_uuid).first()
+        
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        # Get time range
+        days = request.args.get('days', 30, type=int)
+        end_date = datetime.utcnow()
+        start_date = end_date - timedelta(days=days)
+        
+        # Bot behavior analysis
+        bot_behavior = db.session.query(
+            TrafficLog.bot_type,
+            TrafficLog.action_taken,
+            func.count(TrafficLog.id).label('count')
+        ).join(Domain).filter(
+            Domain.tenant_id == user.tenant_id,
+            TrafficLog.timestamp >= start_date,
+            TrafficLog.is_bot == True
+        ).group_by(TrafficLog.bot_type, TrafficLog.action_taken).all()
+        
+        # Threat indicators
+        threat_indicators = db.session.query(
+            TrafficLog.client_ip,
+            func.count(TrafficLog.id).label('request_count'),
+            func.sum(func.case([(TrafficLog.action_taken == 'block', 1)], else_=0)).label('blocked_count')
+        ).join(Domain).filter(
+            Domain.tenant_id == user.tenant_id,
+            TrafficLog.timestamp >= start_date
+        ).group_by(TrafficLog.client_ip).having(
+            func.count(TrafficLog.id) > 100  # High volume IPs
+        ).order_by(desc('request_count')).limit(20).all()
+        
+        # Bot evolution over time
+        bot_evolution = db.session.query(
+            func.date(TrafficLog.timestamp).label('date'),
+            func.count(TrafficLog.id).label('total_bots'),
+            func.sum(func.case([(TrafficLog.bot_type == 'scraper', 1)], else_=0)).label('scrapers'),
+            func.sum(func.case([(TrafficLog.bot_type == 'botnet', 1)], else_=0)).label('botnets'),
+            func.sum(func.case([(TrafficLog.bot_type == 'automation', 1)], else_=0)).label('automation')
+        ).join(Domain).filter(
+            Domain.tenant_id == user.tenant_id,
+            TrafficLog.timestamp >= start_date,
+            TrafficLog.is_bot == True
+        ).group_by(func.date(TrafficLog.timestamp)).order_by('date').all()
+        
+        return jsonify({
+            'success': True,
+            'bot_intelligence': {
+                'bot_behavior': [{
+                    'bot_type': bb.bot_type or 'unknown',
+                    'action_taken': bb.action_taken or 'none',
+                    'count': bb.count
+                } for bb in bot_behavior],
+                'threat_indicators': [{
+                    'ip': ti.client_ip,
+                    'total_requests': ti.request_count,
+                    'blocked_requests': ti.blocked_count,
+                    'threat_score': (ti.blocked_count / ti.request_count * 100) if ti.request_count > 0 else 0
+                } for ti in threat_indicators],
+                'bot_evolution': [{
+                    'date': str(be.date),
+                    'total_bots': be.total_bots,
+                    'scrapers': be.scrapers,
+                    'botnets': be.botnets,
+                    'automation': be.automation
+                } for be in bot_evolution]
+            }
+        }), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Bot intelligence error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@analytics.route('/performance-metrics', methods=['GET'])
+@jwt_required()
+def get_performance_metrics():
+    """Get system performance metrics"""
+    try:
+        user_uuid = get_jwt_identity()
+        user = User.query.filter_by(uuid=user_uuid).first()
+        
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        # Get time range
+        hours = request.args.get('hours', 24, type=int)
+        end_date = datetime.utcnow()
+        start_date = end_date - timedelta(hours=hours)
+        
+        # Response time percentiles
+        response_times = db.session.query(TrafficLog.response_time).join(Domain).filter(
+            Domain.tenant_id == user.tenant_id,
+            TrafficLog.timestamp >= start_date,
+            TrafficLog.response_time.isnot(None)
+        ).order_by(TrafficLog.response_time).all()
+        
+        response_times = [rt.response_time for rt in response_times if rt.response_time is not None]
+        
+        if response_times:
+            response_times.sort()
+            p50 = response_times[len(response_times) // 2]
+            p90 = response_times[int(len(response_times) * 0.9)]
+            p95 = response_times[int(len(response_times) * 0.95)]
+            p99 = response_times[int(len(response_times) * 0.99)]
+        else:
+            p50 = p90 = p95 = p99 = 0
+        
+        # Error rate
+        total_requests = db.session.query(func.count(TrafficLog.id)).join(Domain).filter(
+            Domain.tenant_id == user.tenant_id,
+            TrafficLog.timestamp >= start_date
+        ).scalar()
+        
+        error_requests = db.session.query(func.count(TrafficLog.id)).join(Domain).filter(
+            Domain.tenant_id == user.tenant_id,
+            TrafficLog.timestamp >= start_date,
+            TrafficLog.response_status >= 400
+        ).scalar()
+        
+        error_rate = (error_requests / total_requests * 100) if total_requests > 0 else 0
+        
+        # Throughput metrics
+        throughput_data = db.session.query(
+            func.date_trunc('hour', TrafficLog.timestamp).label('hour'),
+            func.count(TrafficLog.id).label('requests')
+        ).join(Domain).filter(
+            Domain.tenant_id == user.tenant_id,
+            TrafficLog.timestamp >= start_date
+        ).group_by('hour').order_by('hour').all()
+        
+        return jsonify({
+            'success': True,
+            'performance_metrics': {
+                'response_time': {
+                    'p50': float(p50),
+                    'p90': float(p90),
+                    'p95': float(p95),
+                    'p99': float(p99),
+                    'avg': float(sum(response_times) / len(response_times)) if response_times else 0
+                },
+                'error_rate': error_rate,
+                'throughput': [{
+                    'hour': th.hour.isoformat(),
+                    'requests': th.requests
+                } for th in throughput_data]
+            }
+        }), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Performance metrics error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
