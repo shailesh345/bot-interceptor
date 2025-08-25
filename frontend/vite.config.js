@@ -2,6 +2,10 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 
+// API Configuration Constants
+const API_BASE_URL = 'http://127.0.0.1:5002'
+const FRONTEND_PORT = 3000
+
 export default defineConfig({
   plugins: [react()],
   resolve: {
@@ -10,41 +14,41 @@ export default defineConfig({
     },
   },
   server: {
-    port: 3000,
+    port: FRONTEND_PORT,
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:5001',
+        target: API_BASE_URL,
         changeOrigin: true,
       },
       '/auth': {
-        target: 'http://127.0.0.1:5001',
+        target: API_BASE_URL,
         changeOrigin: true,
       },
       '/health': {
-        target: 'http://127.0.0.1:5001',
+        target: API_BASE_URL,
         changeOrigin: true,
       },
 
       // Traffic interception API endpoints
       '/api/traffic': {
-        target: 'http://127.0.0.1:5001',
+        target: API_BASE_URL,
         changeOrigin: true,
       },
       // Admin API endpoints
       '/admin/api': {
-        target: 'http://127.0.0.1:5001',
+        target: API_BASE_URL,
         changeOrigin: true,
       },
       '/interceptor': {
-        target: 'http://127.0.0.1:5001',
+        target: API_BASE_URL,
         changeOrigin: true,
       },
       '/analytics': {
-        target: 'http://127.0.0.1:5001',
+        target: API_BASE_URL,
         changeOrigin: true,
       },
       '/billing': {
-        target: 'http://127.0.0.1:5001',
+        target: API_BASE_URL,
         changeOrigin: true,
       },
     },

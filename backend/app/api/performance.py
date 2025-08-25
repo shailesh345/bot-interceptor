@@ -460,3 +460,36 @@ def get_request_rate():
         return 120  # requests per minute placeholder
     except:
         return 0
+
+@performance.route('/system-health', methods=['GET'])
+@jwt_required()
+def get_performance_system_health():
+    """Get system health metrics"""
+    try:
+        import psutil
+        
+        # Get system metrics
+        cpu_percent = psutil.cpu_percent(interval=1)
+        memory = psutil.virtual_memory()
+        disk = psutil.disk_usage('/')
+        
+        # Get network stats
+        network = psutil.net_io_counters()
+        
+        return jsonify({
+            'success': True,
+            'system_health': {
+                'cpu_usage': cpu_percent,
+                'memory_usage': memory.percent,
+                'memory_available': memory.available,
+                'disk_usage': disk.percent,
+                'disk_free': disk.free,
+                'network_bytes_sent': network.bytes_sent,
+                'network_bytes_recv': network.bytes_recv,
+                'timestamp': datetime.utcnow().isoformat()
+            }
+        }), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Get system health error: {str(e)}")
+        return jsonify({'error': str(e)}), 500

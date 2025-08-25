@@ -48,3 +48,4 @@ psutil>=5.9.0
 Faker>=19.3.0
 pyotp>=2.9.0
 qrcode[pil]>=7.4.0
+flask-restx>=1.1.0

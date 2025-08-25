@@ -10,6 +10,7 @@ from app.models import db, User, Domain, TrafficLog, BotProfile
 from datetime import datetime, timedelta
 import json
 from sqlalchemy import func, desc, and_
+from typing import Dict, Any
 
 business_intelligence = Blueprint('business_intelligence', __name__)
 
@@ -408,3 +409,82 @@ def analyze_customer_segmentation(tenant_id: int, segmentation_type: str) -> Dic
                 'Enterprises provide stable revenue stream'
             ]
         }
+
+@business_intelligence.route('/revenue', methods=['GET'])
+@jwt_required()
+def get_revenue():
+    """Get revenue analytics"""
+    try:
+        # Mock data for now
+        revenue = {
+            'monthly_revenue': 25000,
+            'growth_rate': 12.5,
+            'revenue_by_plan': {
+                'basic': 5000,
+                'pro': 15000,
+                'enterprise': 5000
+            }
+        }
+        
+        return jsonify({
+            'success': True,
+            'revenue': revenue
+        }), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Get revenue error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@business_intelligence.route('/customers', methods=['GET'])
+@jwt_required()
+def get_customers():
+    """Get customer analytics"""
+    try:
+        # Mock data for now
+        customers = {
+            'total_customers': 950,
+            'active_customers': 850,
+            'churn_rate': 2.1,
+            'avg_lifetime_value': 1250
+        }
+        
+        return jsonify({
+            'success': True,
+            'customers': customers
+        }), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Get customers error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@business_intelligence.route('/forecasting', methods=['GET'])
+@jwt_required()
+def get_forecasting():
+    """Get revenue forecasting data"""
+    try:
+        # Mock data for now
+        forecasts = [
+            {
+                'id': 1,
+                'period': 'Next Month',
+                'predicted_revenue': 28000,
+                'confidence': 85,
+                'trend': 'up'
+            },
+            {
+                'id': 2,
+                'period': 'Next Quarter',
+                'predicted_revenue': 85000,
+                'confidence': 78,
+                'trend': 'up'
+            }
+        ]
+        
+        return jsonify({
+            'success': True,
+            'forecasts': forecasts
+        }), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Get forecasting error: {str(e)}")
+        return jsonify({'error': str(e)}), 500

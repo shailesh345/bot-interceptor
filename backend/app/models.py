@@ -24,7 +24,7 @@ class Tenant(db.Model):
     # Relationships
     users = db.relationship('User', backref='tenant', lazy=True)
     domains = db.relationship('Domain', backref='tenant', lazy=True)
-    subscriptions = db.relationship('Subscription', backref='tenant', lazy=True)
+    subscriptions = db.relationship('Subscription', lazy=True)
     
     def __repr__(self):
         return f'<Tenant {self.name}>'
@@ -397,7 +397,7 @@ class BillingPlan(db.Model):
     
     # Relationships
     creator = db.relationship('User', backref='created_plans')
-    subscriptions = db.relationship('Subscription', backref='plan')
+    subscriptions = db.relationship('Subscription', lazy=True)
     
     def to_dict(self):
         return {
@@ -436,8 +436,8 @@ class Subscription(db.Model):
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     
     # Relationships
-    tenant = db.relationship('Tenant', backref='subscriptions')
-    plan = db.relationship('BillingPlan', backref='subscriptions')
+    tenant = db.relationship('Tenant', lazy=True, overlaps="subscriptions")
+    plan = db.relationship('BillingPlan', lazy=True, overlaps="subscriptions")
     creator = db.relationship('User', backref='created_subscriptions')
     
     def to_dict(self):
@@ -472,8 +472,8 @@ class UsageRecord(db.Model):
     domain_id = db.Column(db.Integer, db.ForeignKey('domains.id'), nullable=True)
     
     # Relationships
-    tenant = db.relationship('Tenant', backref='usage_records')
-    domain = db.relationship('Domain', backref='usage_records')
+    tenant = db.relationship('Tenant', lazy=True)
+    domain = db.relationship('Domain', lazy=True)
     
     def to_dict(self):
         return {
@@ -505,7 +505,7 @@ class Invoice(db.Model):
     tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False)
     
     # Relationships
-    tenant = db.relationship('Tenant', backref='invoices')
+    tenant = db.relationship('Tenant', lazy=True)
     
     def to_dict(self):
         return {
@@ -540,7 +540,7 @@ class Role(db.Model):
     
     # Relationships
     creator = db.relationship('User', backref='created_roles')
-    user_roles = db.relationship('UserRole', backref='role')
+    user_roles = db.relationship('UserRole', backref='role_ref', overlaps="role_ref,user_roles")
     
     def to_dict(self):
         return {
@@ -569,7 +569,7 @@ class UserRole(db.Model):
     
     # Relationships
     user = db.relationship('User', foreign_keys=[user_id], backref='user_roles')
-    role = db.relationship('Role', backref='user_roles')
+    role = db.relationship('Role', backref='user_roles_ref', overlaps="role_ref,user_roles")
     assigner = db.relationship('User', foreign_keys=[assigned_by], backref='assigned_roles')
     
     def to_dict(self):

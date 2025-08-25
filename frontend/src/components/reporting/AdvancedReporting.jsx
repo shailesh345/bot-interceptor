@@ -1,354 +1,646 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  Grid,
-  TextField,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Chip,
-  CircularProgress,
-  Alert
-} from '@mui/material';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  PieChart,
-  Pie,
-  Cell
-} from 'recharts';
-import { TrendingUp, BarChart as BarChartIcon, PieChart as PieChartIcon, Download } from '@mui/icons-material';
+import React, { useState, useEffect, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { 
+  Download, 
+  FileText, 
+  BarChart3, 
+  Calendar,
+  Clock,
+  Mail,
+  Settings,
+  Plus,
+  Edit,
+  Trash2,
+  Eye,
+  Share2,
+  Filter,
+  Search,
+  CheckCircle,
+  AlertTriangle,
+  Info,
+  Zap,
+  Globe,
+  Shield,
+  TrendingUp
+} from 'lucide-react'
+import Card from '../common/Card'
+import Button from '../common/Button'
+import Badge from '../common/Badge'
+import LoadingSpinner from '../common/LoadingSpinner'
+import AdvancedSearch from '../common/AdvancedSearch'
 
 const AdvancedReporting = () => {
-  const [customDashboard, setCustomDashboard] = useState(null);
-  const [trendData, setTrendData] = useState(null);
-  const [segmentationData, setSegmentationData] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [dashboardDialog, setDashboardDialog] = useState(false);
-  const [dashboardName, setDashboardName] = useState('');
+  const [reports, setReports] = useState([])
+  const [templates, setTemplates] = useState([])
+  const [scheduledReports, setScheduledReports] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [selectedReport, setSelectedReport] = useState(null)
+  const [exportFormats, setExportFormats] = useState(['pdf', 'excel', 'csv'])
+  const [selectedTimeframe, setSelectedTimeframe] = useState('7d')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [activeFilters, setActiveFilters] = useState({})
+  
+  const reportFormats = [
+    { value: 'pdf', label: 'PDF', icon: FileText, color: '#ef4444' },
+    { value: 'excel', label: 'Excel', icon: BarChart3, color: '#10b981' },
+    { value: 'csv', label: 'CSV', icon: FileText, color: '#3b82f6' },
+    { value: 'json', label: 'JSON', icon: FileText, color: '#8b5cf6' }
+  ]
+
+  const reportTemplates = [
+    {
+      id: 1,
+      name: 'Executive Summary',
+      description: 'High-level overview of traffic, security, and performance metrics',
+      category: 'executive',
+      frequency: 'weekly',
+      sections: ['overview', 'metrics', 'trends', 'recommendations'],
+      lastUsed: '2024-01-15T10:30:00Z',
+      usageCount: 45
+    },
+    {
+      id: 2,
+      name: 'Security Analysis',
+      description: 'Detailed security threat analysis and bot detection metrics',
+      category: 'security',
+      frequency: 'daily',
+      sections: ['threats', 'bots', 'blocked', 'anomalies'],
+      lastUsed: '2024-01-15T08:15:00Z',
+      usageCount: 128
+    },
+    {
+      id: 3,
+      name: 'Performance Report',
+      description: 'System performance metrics and optimization recommendations',
+      category: 'performance',
+      frequency: 'daily',
+      sections: ['response_time', 'uptime', 'throughput', 'optimization'],
+      lastUsed: '2024-01-15T09:45:00Z',
+      usageCount: 67
+    },
+    {
+      id: 4,
+      name: 'Revenue Analytics',
+      description: 'Traffic monetization and revenue optimization insights',
+      category: 'revenue',
+      frequency: 'weekly',
+      sections: ['traffic', 'conversion', 'revenue', 'optimization'],
+      lastUsed: '2024-01-14T16:20:00Z',
+      usageCount: 23
+    }
+  ]
 
   useEffect(() => {
-    fetchTrendAnalytics();
-    fetchSegmentationAnalytics();
-  }, []);
+    loadReportingData()
+  }, [])
 
-  const fetchTrendAnalytics = async () => {
+  const loadReportingData = async () => {
+    setLoading(true)
     try {
-      const response = await fetch('/api/reporting/analytics/trends?days=30', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
+      // Simulate API calls
+      await new Promise(resolve => setTimeout(resolve, 1000))
       
-      if (response.ok) {
-        const data = await response.json();
-        setTrendData(data);
-      }
-    } catch (error) {
-      console.error('Error fetching trend analytics:', error);
-    }
-  };
-
-  const fetchSegmentationAnalytics = async () => {
-    try {
-      const response = await fetch('/api/reporting/analytics/segmentation', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
+      setReports(generateMockReports())
+      setTemplates(reportTemplates)
+      setScheduledReports(generateMockScheduledReports())
       
-      if (response.ok) {
-        const data = await response.json();
-        setSegmentationData(data);
-      }
     } catch (error) {
-      console.error('Error fetching segmentation analytics:', error);
-    }
-  };
-
-  const createCustomDashboard = async () => {
-    if (!dashboardName.trim()) return;
-    
-    try {
-      setLoading(true);
-      const response = await fetch('/api/reporting/dashboard/custom', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ name: dashboardName })
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setCustomDashboard(data.dashboard);
-        setDashboardDialog(false);
-        setDashboardName('');
-      }
-    } catch (error) {
-      console.error('Error creating dashboard:', error);
+      console.error('Failed to load reporting data:', error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
+  const generateMockReports = () => {
+    return [
+      {
+        id: 1,
+        name: 'Weekly Executive Summary',
+        template: 'Executive Summary',
+        format: 'pdf',
+        status: 'completed',
+        createdAt: '2024-01-15T10:30:00Z',
+        completedAt: '2024-01-15T10:32:00Z',
+        size: '2.4 MB',
+        downloadUrl: '#',
+        sections: ['overview', 'metrics', 'trends'],
+        timeframe: '7d'
+      },
+      {
+        id: 2,
+        name: 'Security Threat Analysis',
+        template: 'Security Analysis',
+        format: 'excel',
+        status: 'completed',
+        createdAt: '2024-01-15T08:15:00Z',
+        completedAt: '2024-01-15T08:17:00Z',
+        size: '1.8 MB',
+        downloadUrl: '#',
+        sections: ['threats', 'bots', 'blocked'],
+        timeframe: '24h'
+      },
+      {
+        id: 3,
+        name: 'Performance Optimization Report',
+        template: 'Performance Report',
+        format: 'pdf',
+        status: 'processing',
+        createdAt: '2024-01-15T09:45:00Z',
+        completedAt: null,
+        size: null,
+        downloadUrl: null,
+        sections: ['response_time', 'uptime'],
+        timeframe: '7d'
+      }
+    ]
+  }
 
-  const renderTrendCharts = () => {
-    if (!trendData) return null;
+  const generateMockScheduledReports = () => {
+    return [
+      {
+        id: 1,
+        name: 'Daily Security Briefing',
+        template: 'Security Analysis',
+        frequency: 'daily',
+        recipients: ['security@company.com', 'admin@company.com'],
+        nextRun: '2024-01-16T08:00:00Z',
+        lastRun: '2024-01-15T08:00:00Z',
+        status: 'active',
+        format: 'pdf'
+      },
+      {
+        id: 2,
+        name: 'Weekly Executive Dashboard',
+        template: 'Executive Summary',
+        frequency: 'weekly',
+        recipients: ['ceo@company.com', 'cto@company.com'],
+        nextRun: '2024-01-22T09:00:00Z',
+        lastRun: '2024-01-15T09:00:00Z',
+        status: 'active',
+        format: 'pdf'
+      },
+      {
+        id: 3,
+        name: 'Monthly Performance Review',
+        template: 'Performance Report',
+        frequency: 'monthly',
+        recipients: ['operations@company.com'],
+        nextRun: '2024-02-01T10:00:00Z',
+        lastRun: '2024-01-01T10:00:00Z',
+        status: 'paused',
+        format: 'excel'
+      }
+    ]
+  }
 
-    const chartData = trendData.traffic_trends.dates.map((date, index) => ({
-      date,
-      total: trendData.traffic_trends.total_traffic[index],
-      bots: trendData.traffic_trends.bot_traffic[index]
-    }));
+  const handleCreateReport = () => {
+    setShowCreateModal(true)
+  }
 
+  const handleExportReport = (reportId, format) => {
+    // Simulate export process
+    console.log(`Exporting report ${reportId} in ${format} format`)
+    // In real implementation, this would trigger the export API
+  }
+
+  const handleScheduleReport = (report) => {
+    // Simulate scheduling
+    console.log('Scheduling report:', report)
+  }
+
+  const handleShareReport = (report) => {
+    // Simulate sharing
+    console.log('Sharing report:', report)
+  }
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'completed': return 'success'
+      case 'processing': return 'warning'
+      case 'failed': return 'danger'
+      case 'active': return 'success'
+      case 'paused': return 'warning'
+      default: return 'default'
+    }
+  }
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'completed': return <CheckCircle className="h-4 w-4" />
+      case 'processing': return <Clock className="h-4 w-4" />
+      case 'failed': return <AlertTriangle className="h-4 w-4" />
+      case 'active': return <CheckCircle className="h-4 w-4" />
+      case 'paused': return <Clock className="h-4 w-4" />
+      default: return <Info className="h-4 w-4" />
+    }
+  }
+
+  const getFrequencyColor = (frequency) => {
+    switch (frequency) {
+      case 'daily': return '#ef4444'
+      case 'weekly': return '#f59e0b'
+      case 'monthly': return '#3b82f6'
+      case 'quarterly': return '#8b5cf6'
+      default: return '#6b7280'
+    }
+  }
+
+  const formatFileSize = (bytes) => {
+    if (!bytes) return 'N/A'
+    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(1024))
+    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i]
+  }
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleString()
+  }
+
+  const getTimeframeLabel = (timeframe) => {
+    switch (timeframe) {
+      case '24h': return 'Last 24 Hours'
+      case '7d': return 'Last 7 Days'
+      case '30d': return 'Last 30 Days'
+      case '90d': return 'Last 90 Days'
+      default: return timeframe
+    }
+  }
+
+  if (loading) {
     return (
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                <TrendingUp sx={{ mr: 1, verticalAlign: 'middle' }} />
-                Traffic Trends (30 Days)
-              </Typography>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Line type="monotone" dataKey="total" stroke="#8884d8" name="Total Traffic" />
-                  <Line type="monotone" dataKey="bots" stroke="#82ca9d" name="Bot Traffic" />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                <BarChartIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-                Traffic Comparison
-              </Typography>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={chartData.slice(-7)}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="total" fill="#8884d8" name="Total Traffic" />
-                  <Bar dataKey="bots" fill="#82ca9d" name="Bot Traffic" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-    );
-  };
-
-  const renderSegmentationCharts = () => {
-    if (!segmentationData) return null;
-
-    return (
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                <PieChartIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-                User Segments
-              </Typography>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={segmentationData.user_segments.segments}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percentage }) => `${name}: ${percentage}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="count"
-                  >
-                    {segmentationData.user_segments.segments.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} md={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Traffic Segments
-              </Typography>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={segmentationData.traffic_segments.segments}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percentage }) => `${name}: ${percentage}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="percentage"
-                  >
-                    {segmentationData.traffic_segments.segments.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} md={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Summary Statistics
-              </Typography>
-              <Box>
-                <Typography variant="body2" gutterBottom>
-                  Total Users: {segmentationData.user_segments.total_users.toLocaleString()}
-                </Typography>
-                <Typography variant="body2" gutterBottom>
-                  Total Traffic: {segmentationData.traffic_segments.total_traffic.toLocaleString()}
-                </Typography>
-                <Box mt={2}>
-                  <Typography variant="subtitle2" gutterBottom>
-                    User Segments:
-                  </Typography>
-                  {segmentationData.user_segments.segments.map((segment, index) => (
-                    <Chip
-                      key={segment.name}
-                      label={`${segment.name}: ${segment.count}`}
-                      size="small"
-                      sx={{ mr: 1, mb: 1 }}
-                      color={index === 0 ? 'primary' : 'default'}
-                    />
-                  ))}
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-    );
-  };
+      <div className="flex items-center justify-center min-h-96">
+        <LoadingSpinner size="lg" text="Loading reporting dashboard..." />
+      </div>
+    )
+  }
 
   return (
-    <Box p={3}>
-      <Typography variant="h4" component="h1" gutterBottom>
-                        <BarChartIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-        Advanced Reporting & Analytics
-      </Typography>
-      
-      <Typography variant="body1" color="textSecondary" paragraph>
-        Create custom dashboards, analyze trends, and segment your data for deeper insights.
-      </Typography>
+    <div className="space-y-6">
+      {/* Header */}
+      <motion.div 
+        className="flex justify-between items-center"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
+        <div>
+          <h1 className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
+            Advanced Reporting
+          </h1>
+          <p className="mt-2 text-lg" style={{ color: 'var(--text-secondary)' }}>
+            Generate, schedule, and export comprehensive reports and analytics
+          </p>
+        </div>
+        <div className="flex items-center space-x-3">
+          <select
+            value={selectedTimeframe}
+            onChange={(e) => setSelectedTimeframe(e.target.value)}
+            className="px-4 py-2 rounded-lg border transition-all duration-200 focus:ring-2 focus:ring-offset-2"
+            style={{ 
+              borderColor: 'var(--border-primary)',
+              backgroundColor: 'var(--primary-bg)',
+              color: 'var(--text-primary)'
+            }}
+          >
+            <option value="24h">Last 24 Hours</option>
+            <option value="7d">Last 7 Days</option>
+            <option value="30d">Last 30 Days</option>
+            <option value="90d">Last 90 Days</option>
+          </select>
+          <Button onClick={handleCreateReport} icon={Plus} variant="primary">
+            Create Report
+          </Button>
+        </div>
+      </motion.div>
 
-      {/* Custom Dashboard Section */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-            <Typography variant="h6">
-              Custom Dashboard
-            </Typography>
-            <Button
-              variant="contained"
-              onClick={() => setDashboardDialog(true)}
+      {/* Quick Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <Card header="Total Reports" animation="fade-in-up" delay={0.1}>
+          <div className="text-center">
+            <div className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
+              {reports.length}
+            </div>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              Generated this month
+            </p>
+          </div>
+        </Card>
+        
+        <Card header="Active Templates" animation="fade-in-up" delay={0.2}>
+          <div className="text-center">
+            <div className="text-3xl font-bold" style={{ color: '#10b981' }}>
+              {templates.length}
+            </div>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              Available templates
+            </p>
+          </div>
+        </Card>
+        
+        <Card header="Scheduled Reports" animation="fade-in-up" delay={0.3}>
+          <div className="text-center">
+            <div className="text-3xl font-bold" style={{ color: '#3b82f6' }}>
+              {scheduledReports.filter(r => r.status === 'active').length}
+            </div>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              Currently active
+            </p>
+          </div>
+        </Card>
+        
+        <Card header="Export Formats" animation="fade-in-up" delay={0.4}>
+          <div className="text-center">
+            <div className="text-3xl font-bold" style={{ color: '#8b5cf6' }}>
+              {exportFormats.length}
+            </div>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              Supported formats
+            </p>
+          </div>
+        </Card>
+      </div>
+
+      {/* Report Templates */}
+      <Card header="Report Templates" animation="fade-in-up" delay={0.5}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {templates.map((template) => (
+            <motion.div
+              key={template.id}
+              className="p-4 rounded-lg border transition-all duration-200 hover:shadow-md cursor-pointer"
+              style={{ 
+                borderColor: 'var(--border-primary)',
+                backgroundColor: 'var(--primary-bg)'
+              }}
+              whileHover={{ y: -2 }}
+              onClick={() => setSelectedReport(template)}
             >
-              Create Dashboard
-            </Button>
-          </Box>
-          
-          {customDashboard ? (
-            <Box>
-              <Typography variant="subtitle1" gutterBottom>
-                Dashboard: {customDashboard.name}
-              </Typography>
-              <Typography variant="body2" color="textSecondary">
-                Created: {new Date(customDashboard.created_at).toLocaleDateString()}
-              </Typography>
-              <Chip label="Active" color="success" size="small" sx={{ mt: 1 }} />
-            </Box>
-          ) : (
-            <Typography variant="body2" color="textSecondary">
-              No custom dashboard created yet. Create one to get started.
-            </Typography>
-          )}
-        </CardContent>
+              <div className="text-center">
+                <div className="p-3 rounded-full mx-auto mb-3 w-16 h-16 flex items-center justify-center" style={{ backgroundColor: 'var(--accent-bg)' }}>
+                  <FileText className="h-8 w-8" style={{ color: 'var(--text-primary)' }} />
+                </div>
+                <h4 className="font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
+                  {template.name}
+                </h4>
+                <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>
+                  {template.description}
+                </p>
+                <div className="flex items-center justify-between text-xs" style={{ color: 'var(--text-muted)' }}>
+                  <span>{template.frequency}</span>
+                  <span>{template.usageCount} uses</span>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
       </Card>
 
-      {/* Trend Analytics */}
-      <Typography variant="h5" component="h2" gutterBottom sx={{ mt: 4, mb: 2 }}>
-        Trend Analytics
-      </Typography>
-      {renderTrendCharts()}
+      {/* Recent Reports */}
+      <Card header="Recent Reports" animation="fade-in-up" delay={0.6}>
+        <div className="space-y-3">
+          {reports.map((report) => (
+            <motion.div
+              key={report.id}
+              className="flex items-center justify-between p-4 rounded-lg border transition-all duration-200 hover:shadow-sm"
+              style={{ 
+                borderColor: 'var(--border-primary)',
+                backgroundColor: 'var(--primary-bg)'
+              }}
+              whileHover={{ y: -1 }}
+            >
+              <div className="flex items-center space-x-4">
+                <div className="p-2 rounded-full" style={{ backgroundColor: 'var(--accent-bg)' }}>
+                  <FileText className="h-5 w-5" style={{ color: 'var(--text-primary)' }} />
+                </div>
+                <div>
+                  <h4 className="font-medium" style={{ color: 'var(--text-primary)' }}>
+                    {report.name}
+                  </h4>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <Badge variant="outline" size="sm">
+                      {report.template}
+                    </Badge>
+                    <Badge variant="outline" size="sm">
+                      {report.format.toUpperCase()}
+                    </Badge>
+                    <Badge variant={getStatusColor(report.status)} size="sm">
+                      <div className="flex items-center space-x-1">
+                        {getStatusIcon(report.status)}
+                        <span>{report.status}</span>
+                      </div>
+                    </Badge>
+                  </div>
+                  <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                    Created: {formatDate(report.createdAt)} | Timeframe: {getTimeframeLabel(report.timeframe)}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                {report.status === 'completed' && (
+                  <>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      icon={Download}
+                      onClick={() => handleExportReport(report.id, report.format)}
+                    >
+                      Download
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      icon={Share2}
+                      onClick={() => handleShareReport(report)}
+                    >
+                      Share
+                    </Button>
+                  </>
+                )}
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  icon={Eye}
+                  onClick={() => setSelectedReport(report)}
+                >
+                  View
+                </Button>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </Card>
 
-      {/* Segmentation Analytics */}
-      <Typography variant="h5" component="h2" gutterBottom sx={{ mt: 4, mb: 2 }}>
-        Segmentation Analysis
-      </Typography>
-      {renderSegmentationCharts()}
+      {/* Scheduled Reports */}
+      <Card header="Scheduled Reports" animation="fade-in-up" delay={0.7}>
+        <div className="space-y-3">
+          {scheduledReports.map((scheduled) => (
+            <motion.div
+              key={scheduled.id}
+              className="flex items-center justify-between p-4 rounded-lg border transition-all duration-200 hover:shadow-sm"
+              style={{ 
+                borderColor: 'var(--border-primary)',
+                backgroundColor: 'var(--primary-bg)'
+              }}
+              whileHover={{ y: -1 }}
+            >
+              <div className="flex items-center space-x-4">
+                <div className="p-2 rounded-full" style={{ backgroundColor: 'var(--accent-bg)' }}>
+                  <Calendar className="h-5 w-5" style={{ color: 'var(--text-primary)' }} />
+                </div>
+                <div>
+                  <h4 className="font-medium" style={{ color: 'var(--text-primary)' }}>
+                    {scheduled.name}
+                  </h4>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <Badge variant="outline" size="sm">
+                      {scheduled.template}
+                    </Badge>
+                    <Badge 
+                      variant="outline" 
+                      size="sm"
+                      style={{ borderColor: getFrequencyColor(scheduled.frequency) }}
+                    >
+                      {scheduled.frequency}
+                    </Badge>
+                    <Badge variant={getStatusColor(scheduled.status)} size="sm">
+                      {scheduled.status}
+                    </Badge>
+                  </div>
+                  <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                    Next run: {formatDate(scheduled.nextRun)} | Recipients: {scheduled.recipients.length}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  icon={Edit}
+                  onClick={() => setSelectedReport(scheduled)}
+                >
+                  Edit
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  icon={Mail}
+                  onClick={() => handleScheduleReport(scheduled)}
+                >
+                  Test
+                </Button>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </Card>
 
-      {/* Create Dashboard Dialog */}
-      <Dialog open={dashboardDialog} onClose={() => setDashboardDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Create Custom Dashboard</DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Dashboard Name"
-            fullWidth
-            variant="outlined"
-            value={dashboardName}
-            onChange={(e) => setDashboardName(e.target.value)}
-            placeholder="Enter dashboard name..."
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDashboardDialog(false)}>Cancel</Button>
-          <Button 
-            onClick={createCustomDashboard} 
-            variant="contained"
-            disabled={loading || !dashboardName.trim()}
-          >
-            {loading ? <CircularProgress size={20} /> : 'Create Dashboard'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
-  );
-};
+      {/* Export Options */}
+      <Card header="Export Options" animation="fade-in-up" delay={0.8}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {reportFormats.map((format) => (
+            <motion.div
+              key={format.value}
+              className="p-4 rounded-lg border text-center transition-all duration-200 hover:shadow-md cursor-pointer"
+              style={{ 
+                borderColor: 'var(--border-primary)',
+                backgroundColor: 'var(--primary-bg)'
+              }}
+              whileHover={{ y: -2 }}
+              onClick={() => setExportFormats(prev => 
+                prev.includes(format.value) 
+                  ? prev.filter(f => f !== format.value)
+                  : [...prev, format.value]
+              )}
+            >
+              <div 
+                className="p-3 rounded-full mx-auto mb-3 w-16 h-16 flex items-center justify-center"
+                style={{ 
+                  backgroundColor: exportFormats.includes(format.value) 
+                    ? format.color + '20' 
+                    : 'var(--accent-bg)'
+                }}
+              >
+                <format.icon 
+                  className="h-8 w-8" 
+                  style={{ 
+                    color: exportFormats.includes(format.value) 
+                      ? format.color 
+                      : 'var(--text-primary)'
+                  }} 
+                />
+              </div>
+              <h4 className="font-medium" style={{ color: 'var(--text-primary)' }}>
+                {format.label}
+              </h4>
+              <div className="mt-2">
+                {exportFormats.includes(format.value) ? (
+                  <CheckCircle className="h-5 w-5 mx-auto" style={{ color: format.color }} />
+                ) : (
+                  <div className="h-5 w-5 mx-auto rounded-full border-2" style={{ borderColor: 'var(--border-primary)' }} />
+                )}
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </Card>
 
-export default AdvancedReporting;
+      {/* Advanced Search */}
+      <Card header="Search & Filter Reports" animation="fade-in-up" delay={0.9}>
+        <AdvancedSearch
+          onSearch={(query, filters, sort) => {
+            setSearchQuery(query)
+            setActiveFilters(filters)
+            console.log('Search:', { query, filters, sort })
+          }}
+          filters={[
+            {
+              key: 'template',
+              label: 'Template',
+              type: 'select',
+              options: templates.map(t => ({ value: t.id, label: t.name }))
+            },
+            {
+              key: 'format',
+              label: 'Format',
+              type: 'select',
+              options: reportFormats.map(f => ({ value: f.value, label: f.label }))
+            },
+            {
+              key: 'status',
+              label: 'Status',
+              type: 'select',
+              options: [
+                { value: 'completed', label: 'Completed' },
+                { value: 'processing', label: 'Processing' },
+                { value: 'failed', label: 'Failed' }
+              ]
+            },
+            {
+              key: 'timeframe',
+              label: 'Timeframe',
+              type: 'select',
+              options: [
+                { value: '24h', label: 'Last 24 Hours' },
+                { value: '7d', label: 'Last 7 Days' },
+                { value: '30d', label: 'Last 30 Days' },
+                { value: '90d', label: 'Last 90 Days' }
+              ]
+            }
+          ]}
+          sortOptions={[
+            { value: 'created_at', label: 'Created Date' },
+            { value: 'name', label: 'Name' },
+            { value: 'template', label: 'Template' },
+            { value: 'status', label: 'Status' }
+          ]}
+          showSaveFilters={true}
+          searchPlaceholder="Search reports by name, template, or content..."
+        />
+      </Card>
+    </div>
+  )
+}
+
+export default AdvancedReporting

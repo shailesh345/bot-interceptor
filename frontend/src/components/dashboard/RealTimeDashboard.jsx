@@ -1,366 +1,494 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Activity, 
-  Globe, 
-  Shield, 
   TrendingUp, 
+  TrendingDown, 
   AlertTriangle, 
-  CheckCircle, 
+  CheckCircle,
   Clock,
+  Globe,
+  Shield,
+  Bot,
   Users,
-  Server,
-  Database,
-  Wifi,
   Zap,
-  BarChart as BarChartIcon,
   Eye,
   EyeOff
 } from 'lucide-react'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts'
+import { Line, Bar, Doughnut } from 'react-chartjs-2'
+import Card from '../common/Card'
+import Badge from '../common/Badge'
+import Button from '../common/Button'
+import websocketService from '../../services/websocketService'
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+} from 'chart.js'
+
+// Register Chart.js components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+)
 
 const RealTimeDashboard = () => {
-  const [isLive, setIsLive] = useState(true)
-  const [metrics, setMetrics] = useState({
-    requestsPerSecond: 0,
-    activeConnections: 0,
-    blockedRequests: 0,
-    botTraffic: 0,
-    humanTraffic: 0,
-    systemLoad: 0,
-    memoryUsage: 0,
-    diskUsage: 0
-  })
-  const [recentEvents, setRecentEvents] = useState([])
-  const [alerts, setAlerts] = useState([])
-  const [timeRange, setTimeRange] = useState('1h')
+  const [isConnected, setIsConnected] = useState(false)
+  const [trafficData, setTrafficData] = useState([])
+  const [securityAlerts, setSecurityAlerts] = useState([])
+  const [performanceMetrics, setPerformanceMetrics] = useState({})
+  const [activeUsers, setActiveUsers] = useState(0)
+  const [showLiveData, setShowLiveData] = useState(true)
+  const [autoRefresh, setAutoRefresh] = useState(true)
+  const [selectedTimeframe, setSelectedTimeframe] = useState('1h')
+  const [isLoading, setIsLoading] = useState(false)
+  
+  const updateIntervalRef = useRef(null)
+  const chartRefs = useRef({})
 
   useEffect(() => {
-    if (isLive) {
-      const interval = setInterval(() => {
-        updateMetrics()
-        updateRecentEvents()
-        checkAlerts()
-      }, 1000)
-
-      return () => clearInterval(interval)
+    initializeWebSocket()
+    loadInitialData()
+    
+    if (autoRefresh) {
+      startAutoRefresh()
     }
-  }, [isLive])
 
-  const updateMetrics = () => {
-    setMetrics({
-      requestsPerSecond: Math.floor(Math.random() * 1000) + 100,
-      activeConnections: Math.floor(Math.random() * 500) + 50,
-      blockedRequests: Math.floor(Math.random() * 50) + 5,
-      botTraffic: Math.floor(Math.random() * 30) + 10,
-      humanTraffic: Math.floor(Math.random() * 70) + 20,
-      systemLoad: Math.random() * 100,
-      memoryUsage: Math.random() * 100,
-      diskUsage: Math.random() * 100
+    return () => {
+      cleanup()
+    }
+  }, [])
+
+  const initializeWebSocket = async () => {
+    try {
+      await websocketService.connect()
+      setIsConnected(true)
+      
+      // Subscribe to real-time updates
+      websocketService.on('traffic_update', handleTrafficUpdate)
+      websocketService.on('security_alert', handleSecurityAlert)
+      websocketService.on('performance_update', handlePerformanceUpdate)
+      websocketService.on('user_activity', handleUserActivity)
+      
+    } catch (error) {
+      console.error('Failed to connect to WebSocket:', error)
+      setIsConnected(false)
+    }
+  }
+
+  const loadInitialData = async () => {
+    setIsLoading(true)
+    try {
+      // Simulate API calls for initial data
+      const mockData = await Promise.all([
+        generateTrafficData(),
+        generateSecurityAlerts(),
+        generatePerformanceMetrics(),
+        generateUserData()
+      ])
+      
+      setTrafficData(mockData[0])
+      setSecurityAlerts(mockData[1])
+      setPerformanceMetrics(mockData[2])
+      setActiveUsers(mockData[3])
+      
+    } catch (error) {
+      console.error('Failed to load initial data:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleTrafficUpdate = (data) => {
+    setTrafficData(prev => {
+      const newData = [...prev, data]
+      // Keep only last 50 data points
+      return newData.slice(-50)
     })
   }
 
-  const updateRecentEvents = () => {
-    const eventTypes = ['request', 'block', 'alert', 'login', 'error']
-    const newEvent = {
-      id: Date.now(),
-      type: eventTypes[Math.floor(Math.random() * eventTypes.length)],
-      message: `New ${eventTypes[Math.floor(Math.random() * eventTypes.length)]} event`,
-      timestamp: new Date().toISOString(),
-      severity: Math.random() > 0.8 ? 'high' : Math.random() > 0.5 ? 'medium' : 'low'
-    }
-
-    setRecentEvents(prev => [newEvent, ...prev.slice(0, 9)])
+  const handleSecurityAlert = (data) => {
+    setSecurityAlerts(prev => [data, ...prev.slice(0, 9)])
   }
 
-  const checkAlerts = () => {
-    if (Math.random() > 0.95) {
-      const alertTypes = ['High CPU Usage', 'Memory Warning', 'Disk Space Low', 'Security Threat', 'Network Issue']
-      const newAlert = {
-        id: Date.now(),
-        type: alertTypes[Math.floor(Math.random() * alertTypes.length)],
-        message: `System alert: ${alertTypes[Math.floor(Math.random() * alertTypes.length)]}`,
-        timestamp: new Date().toISOString(),
-        severity: Math.random() > 0.7 ? 'critical' : 'warning'
+  const handlePerformanceUpdate = (data) => {
+    setPerformanceMetrics(data)
+  }
+
+  const handleUserActivity = (data) => {
+    setActiveUsers(data.activeUsers)
+  }
+
+  const startAutoRefresh = () => {
+    updateIntervalRef.current = setInterval(() => {
+      if (showLiveData) {
+        // Simulate real-time updates
+        const newTrafficPoint = {
+          timestamp: new Date().toISOString(),
+          requests: Math.floor(Math.random() * 1000) + 500,
+          bots: Math.floor(Math.random() * 100) + 10,
+          threats: Math.floor(Math.random() * 50) + 5
+        }
+        handleTrafficUpdate(newTrafficPoint)
       }
+    }, 5000) // Update every 5 seconds
+  }
 
-      setAlerts(prev => [newAlert, ...prev.slice(0, 4)])
+  const stopAutoRefresh = () => {
+    if (updateIntervalRef.current) {
+      clearInterval(updateIntervalRef.current)
+      updateIntervalRef.current = null
     }
   }
 
-  const getSeverityColor = (severity) => {
-    switch(severity) {
-      case 'critical': return 'text-red-600 bg-red-100'
-      case 'high': return 'text-orange-600 bg-orange-100'
-      case 'medium': return 'text-yellow-600 bg-yellow-100'
-      case 'low': return 'text-green-600 bg-green-100'
-      default: return 'text-gray-600 bg-gray-100'
+  const cleanup = () => {
+    stopAutoRefresh()
+    websocketService.disconnect()
+  }
+
+  const toggleLiveData = () => {
+    setShowLiveData(!showLiveData)
+    if (!showLiveData && autoRefresh) {
+      startAutoRefresh()
+    } else if (showLiveData) {
+      stopAutoRefresh()
     }
   }
 
-  const getSeverityIcon = (severity) => {
-    switch(severity) {
-      case 'critical': return <AlertTriangle className="w-4 h-4" />
-      case 'high': return <AlertTriangle className="w-4 h-4" />
-      case 'medium': return <Clock className="w-4 h-4" />
-      case 'low': return <CheckCircle className="w-4 h-4" />
-      default: return <Activity className="w-4 h-4" />
+  const toggleAutoRefresh = () => {
+    setAutoRefresh(!autoRefresh)
+    if (!autoRefresh) {
+      startAutoRefresh()
+    } else {
+      stopAutoRefresh()
     }
   }
 
-  const mockTimeSeriesData = [
-    { time: '00:00', requests: 150, blocked: 12, bots: 25 },
-    { time: '00:05', requests: 180, blocked: 15, bots: 30 },
-    { time: '00:10', requests: 220, blocked: 18, bots: 35 },
-    { time: '00:15', requests: 190, blocked: 14, bots: 28 },
-    { time: '00:20', requests: 250, blocked: 22, bots: 40 },
-    { time: '00:25', requests: 280, blocked: 25, bots: 45 },
-    { time: '00:30', requests: 320, blocked: 30, bots: 50 },
-    { time: '00:35', requests: 290, blocked: 26, bots: 42 },
-    { time: '00:40', requests: 260, blocked: 23, bots: 38 },
-    { time: '00:45', requests: 240, blocked: 20, bots: 35 },
-    { time: '00:50', requests: 200, blocked: 16, bots: 30 },
-    { time: '00:55', requests: 180, blocked: 14, bots: 25 }
-  ]
+  // Mock data generators
+  const generateTrafficData = async () => {
+    const data = []
+    const now = new Date()
+    for (let i = 59; i >= 0; i--) {
+      const time = new Date(now.getTime() - i * 60000)
+      data.push({
+        timestamp: time.toISOString(),
+        requests: Math.floor(Math.random() * 1000) + 500,
+        bots: Math.floor(Math.random() * 100) + 10,
+        threats: Math.floor(Math.random() * 50) + 5
+      })
+    }
+    return data
+  }
 
-  const trafficDistribution = [
-    { name: 'Human Traffic', value: metrics.humanTraffic, color: '#10B981' },
-    { name: 'Bot Traffic', value: metrics.botTraffic, color: '#F59E0B' },
-    { name: 'Blocked', value: metrics.blockedRequests, color: '#EF4444' }
-  ]
+  const generateSecurityAlerts = async () => {
+    return [
+      { id: 1, type: 'threat', severity: 'high', message: 'DDoS attack detected', time: '2 minutes ago' },
+      { id: 2, type: 'bot', severity: 'medium', message: 'Bot traffic spike', time: '5 minutes ago' },
+      { id: 3, type: 'security', severity: 'low', message: 'Suspicious IP blocked', time: '8 minutes ago' }
+    ]
+  }
+
+  const generatePerformanceMetrics = async () => {
+    return {
+      responseTime: Math.floor(Math.random() * 100) + 50,
+      uptime: 99.99,
+      cpuUsage: Math.floor(Math.random() * 30) + 20,
+      memoryUsage: Math.floor(Math.random() * 40) + 30
+    }
+  }
+
+  const generateUserData = async () => {
+    return Math.floor(Math.random() * 1000) + 500
+  }
+
+  // Chart configurations
+  const trafficChartData = {
+    labels: trafficData.map(d => new Date(d.timestamp).toLocaleTimeString()),
+    datasets: [
+      {
+        label: 'Total Requests',
+        data: trafficData.map(d => d.requests),
+        borderColor: 'rgb(59, 130, 246)',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        fill: true,
+        tension: 0.4
+      },
+      {
+        label: 'Bot Traffic',
+        data: trafficData.map(d => d.bots),
+        borderColor: 'rgb(239, 68, 68)',
+        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+        fill: true,
+        tension: 0.4
+      }
+    ]
+  }
+
+  const threatsChartData = {
+    labels: ['DDoS', 'Bot Traffic', 'SQL Injection', 'XSS', 'Brute Force'],
+    datasets: [{
+      data: [25, 30, 15, 20, 10],
+      backgroundColor: [
+        '#ef4444',
+        '#f59e0b',
+        '#3b82f6',
+        '#8b5cf6',
+        '#10b981'
+      ]
+    }]
+  }
+
+  const performanceChartData = {
+    labels: ['Response Time', 'CPU Usage', 'Memory Usage', 'Network'],
+    datasets: [{
+      label: 'Current Usage',
+      data: [
+        performanceMetrics.responseTime || 0,
+        performanceMetrics.cpuUsage || 0,
+        performanceMetrics.memoryUsage || 0,
+        45
+      ],
+      backgroundColor: 'rgba(59, 130, 246, 0.8)',
+      borderColor: 'rgb(59, 130, 246)',
+      borderWidth: 1
+    }]
+  }
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top',
+        labels: {
+          color: 'var(--text-primary)',
+          font: {
+            family: 'Yandex Sans Display'
+          }
+        }
+      },
+      tooltip: {
+        backgroundColor: 'var(--primary-bg)',
+        titleColor: 'var(--text-primary)',
+        bodyColor: 'var(--text-secondary)',
+        borderColor: 'var(--border-primary)',
+        borderWidth: 1
+      }
+    },
+    scales: {
+      x: {
+        ticks: { color: 'var(--text-secondary)' },
+        grid: { color: 'var(--border-secondary)' }
+      },
+      y: {
+        ticks: { color: 'var(--text-secondary)' },
+        grid: { color: 'var(--border-secondary)' }
+      }
+    }
+  }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Real-Time Dashboard</h1>
-          <p className="text-gray-600">Live monitoring of traffic and system metrics</p>
-        </div>
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
-            <div className={`w-3 h-3 rounded-full ${isLive ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
-            <span className="text-sm font-medium text-gray-700">
-              {isLive ? 'Live' : 'Paused'}
-            </span>
+      {/* Header Controls */}
+      <Card header="Real-Time Controls" animation="fade-in-up" delay={0.1}>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
+              <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                {isConnected ? 'Connected' : 'Disconnected'}
+              </span>
+            </div>
+            
+            <Badge variant={isConnected ? 'success' : 'danger'}>
+              {isConnected ? 'Live' : 'Offline'}
+            </Badge>
           </div>
-          <button
-            onClick={() => setIsLive(!isLive)}
-            className={`flex items-center px-4 py-2 rounded-md text-sm font-medium ${
-              isLive 
-                ? 'bg-red-600 text-white hover:bg-red-700' 
-                : 'bg-green-600 text-white hover:bg-green-700'
-            }`}
-          >
-            {isLive ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
-            {isLive ? 'Pause' : 'Resume'}
-          </button>
+          
+          <div className="flex items-center space-x-3">
+            <Button
+              size="sm"
+              variant={showLiveData ? 'primary' : 'secondary'}
+              icon={showLiveData ? Eye : EyeOff}
+              onClick={toggleLiveData}
+            >
+              {showLiveData ? 'Live Data' : 'Paused'}
+            </Button>
+            
+            <Button
+              size="sm"
+              variant={autoRefresh ? 'primary' : 'secondary'}
+              icon={Activity}
+              onClick={toggleAutoRefresh}
+            >
+              Auto Refresh
+            </Button>
+            
+            <select
+              value={selectedTimeframe}
+              onChange={(e) => setSelectedTimeframe(e.target.value)}
+              className="px-3 py-2 rounded-lg border text-sm"
+              style={{ 
+                borderColor: 'var(--border-primary)',
+                backgroundColor: 'var(--primary-bg)',
+                color: 'var(--text-primary)'
+              }}
+            >
+              <option value="1h">Last Hour</option>
+              <option value="6h">Last 6 Hours</option>
+              <option value="24h">Last 24 Hours</option>
+            </select>
+          </div>
         </div>
-      </div>
+      </Card>
 
-      {/* Key Metrics */}
+      {/* Live Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <Zap className="h-6 w-6 text-blue-400" />
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Requests/sec</dt>
-                  <dd className="text-lg font-medium text-gray-900">{metrics.requestsPerSecond}</dd>
-                </dl>
-              </div>
+        <Card header="Active Users" animation="fade-in-up" delay={0.2}>
+          <div className="text-center">
+            <div className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
+              {activeUsers.toLocaleString()}
+            </div>
+            <div className="flex items-center justify-center mt-2">
+              <Users className="h-4 w-4 mr-1" style={{ color: 'var(--text-secondary)' }} />
+              <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                Currently online
+              </span>
             </div>
           </div>
-        </div>
-
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <Users className="h-6 w-6 text-green-400" />
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Active Connections</dt>
-                  <dd className="text-lg font-medium text-gray-900">{metrics.activeConnections}</dd>
-                </dl>
-              </div>
+        </Card>
+        
+        <Card header="Response Time" animation="fade-in-up" delay={0.3}>
+          <div className="text-center">
+            <div className="text-3xl font-bold" style={{ color: '#10b981' }}>
+              {performanceMetrics.responseTime || 0}ms
+            </div>
+            <div className="flex items-center justify-center mt-2">
+              <Zap className="h-4 w-4 mr-1" style={{ color: 'var(--text-secondary)' }} />
+              <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                Average
+              </span>
             </div>
           </div>
-        </div>
-
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <Shield className="h-6 w-6 text-red-400" />
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Blocked Requests</dt>
-                  <dd className="text-lg font-medium text-gray-900">{metrics.blockedRequests}</dd>
-                </dl>
-              </div>
+        </Card>
+        
+        <Card header="Uptime" animation="fade-in-up" delay={0.4}>
+          <div className="text-center">
+            <div className="text-3xl font-bold" style={{ color: '#3b82f6' }}>
+              {performanceMetrics.uptime || 99.99}%
+            </div>
+            <div className="flex items-center justify-center mt-2">
+              <CheckCircle className="h-4 w-4 mr-1" style={{ color: 'var(--text-secondary)' }} />
+              <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                System health
+              </span>
             </div>
           </div>
-        </div>
-
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <Server className="h-6 w-6 text-purple-400" />
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">System Load</dt>
-                  <dd className="text-lg font-medium text-gray-900">{metrics.systemLoad.toFixed(1)}%</dd>
-                </dl>
-              </div>
+        </Card>
+        
+        <Card header="Threats Blocked" animation="fade-in-up" delay={0.5}>
+          <div className="text-center">
+            <div className="text-3xl font-bold" style={{ color: '#ef4444' }}>
+              {trafficData.reduce((acc, d) => acc + d.threats, 0).toLocaleString()}
+            </div>
+            <div className="flex items-center justify-center mt-2">
+              <Shield className="h-4 w-4 mr-1" style={{ color: 'var(--text-secondary)' }} />
+              <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                This session
+              </span>
             </div>
           </div>
-        </div>
+        </Card>
       </div>
 
-      {/* Charts Row */}
+      {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Traffic Over Time */}
-        <div className="bg-white shadow rounded-lg p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Traffic Over Time</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={mockTimeSeriesData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="time" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="requests" stroke="#3B82F6" strokeWidth={2} />
-              <Line type="monotone" dataKey="blocked" stroke="#EF4444" strokeWidth={2} />
-              <Line type="monotone" dataKey="bots" stroke="#F59E0B" strokeWidth={2} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Traffic Distribution */}
-        <div className="bg-white shadow rounded-lg p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Traffic Distribution</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={trafficDistribution}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {trafficDistribution.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
+        {/* Traffic Chart */}
+        <Card header="Real-Time Traffic" animation="fade-in-up" delay={0.6}>
+          <div className="h-80">
+            <Line data={trafficChartData} options={chartOptions} ref={(ref) => chartRefs.current.traffic = ref} />
+          </div>
+        </Card>
+        
+        {/* Threats Distribution */}
+        <Card header="Threat Distribution" animation="fade-in-up" delay={0.7}>
+          <div className="h-80">
+            <Doughnut data={threatsChartData} options={chartOptions} ref={(ref) => chartRefs.current.threats = ref} />
+          </div>
+        </Card>
       </div>
 
-      {/* System Metrics */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* System Resources */}
-        <div className="bg-white shadow rounded-lg p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">System Resources</h3>
-          <div className="space-y-4">
-            <div>
-              <div className="flex justify-between text-sm text-gray-600 mb-1">
-                <span>CPU Usage</span>
-                <span>{metrics.systemLoad.toFixed(1)}%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className={`h-2 rounded-full ${metrics.systemLoad > 80 ? 'bg-red-500' : metrics.systemLoad > 60 ? 'bg-yellow-500' : 'bg-green-500'}`}
-                  style={{ width: `${metrics.systemLoad}%` }}
-                />
-              </div>
-            </div>
-            
-            <div>
-              <div className="flex justify-between text-sm text-gray-600 mb-1">
-                <span>Memory Usage</span>
-                <span>{metrics.memoryUsage.toFixed(1)}%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className={`h-2 rounded-full ${metrics.memoryUsage > 80 ? 'bg-red-500' : metrics.memoryUsage > 60 ? 'bg-yellow-500' : 'bg-green-500'}`}
-                  style={{ width: `${metrics.memoryUsage}%` }}
-                />
-              </div>
-            </div>
-            
-            <div>
-              <div className="flex justify-between text-sm text-gray-600 mb-1">
-                <span>Disk Usage</span>
-                <span>{metrics.diskUsage.toFixed(1)}%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className={`h-2 rounded-full ${metrics.diskUsage > 80 ? 'bg-red-500' : metrics.diskUsage > 60 ? 'bg-yellow-500' : 'bg-green-500'}`}
-                  style={{ width: `${metrics.diskUsage}%` }}
-                />
-              </div>
-            </div>
-          </div>
+      {/* Performance Metrics */}
+      <Card header="System Performance" animation="fade-in-up" delay={0.8}>
+        <div className="h-80">
+          <Bar data={performanceChartData} options={chartOptions} ref={(ref) => chartRefs.current.performance = ref} />
         </div>
+      </Card>
 
-        {/* Recent Events */}
-        <div className="bg-white shadow rounded-lg p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Events</h3>
-          <div className="space-y-3 max-h-64 overflow-y-auto">
-            {recentEvents.map((event) => (
-              <div key={event.id} className="flex items-start space-x-3">
-                <div className={`flex-shrink-0 w-2 h-2 rounded-full mt-2 ${
-                  event.severity === 'high' ? 'bg-red-500' : 
-                  event.severity === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
-                }`} />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-900">{event.message}</p>
-                  <p className="text-xs text-gray-500">
-                    {new Date(event.timestamp).toLocaleTimeString()}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Active Alerts */}
-        <div className="bg-white shadow rounded-lg p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Active Alerts</h3>
-          <div className="space-y-3 max-h-64 overflow-y-auto">
-            {alerts.length === 0 ? (
-              <p className="text-sm text-gray-500">No active alerts</p>
-            ) : (
-              alerts.map((alert) => (
-                <div key={alert.id} className={`p-3 rounded-md ${getSeverityColor(alert.severity)}`}>
-                  <div className="flex items-start">
-                    {getSeverityIcon(alert.severity)}
-                    <div className="ml-2">
-                      <p className="text-sm font-medium">{alert.type}</p>
-                      <p className="text-xs mt-1">{alert.message}</p>
-                      <p className="text-xs mt-1">
-                        {new Date(alert.timestamp).toLocaleTimeString()}
-                      </p>
-                    </div>
+      {/* Live Security Alerts */}
+      <Card header="Live Security Alerts" animation="fade-in-up" delay={0.9}>
+        <div className="space-y-3">
+          <AnimatePresence>
+            {securityAlerts.map((alert, index) => (
+              <motion.div
+                key={alert.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
+                className="flex items-center justify-between p-4 rounded-lg border transition-all duration-200"
+                style={{ 
+                  borderColor: 'var(--border-primary)',
+                  backgroundColor: 'var(--primary-bg)'
+                }}
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 rounded-full" style={{ backgroundColor: 'var(--accent-bg)' }}>
+                    {alert.type === 'threat' && <AlertTriangle className="h-4 w-4" style={{ color: '#ef4444' }} />}
+                    {alert.type === 'bot' && <Bot className="h-4 w-4" style={{ color: '#f59e0b' }} />}
+                    {alert.type === 'security' && <Shield className="h-4 w-4" style={{ color: '#3b82f6' }} />}
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                      {alert.message}
+                    </p>
+                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                      {alert.time}
+                    </p>
                   </div>
                 </div>
-              ))
-            )}
-          </div>
+                <Badge variant={alert.severity === 'high' ? 'danger' : alert.severity === 'medium' ? 'warning' : 'info'}>
+                  {alert.severity}
+                </Badge>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+          
+          {securityAlerts.length === 0 && (
+            <div className="text-center py-8" style={{ color: 'var(--text-muted)' }}>
+              <CheckCircle className="h-12 w-12 mx-auto mb-4" />
+              <p>No security alerts at the moment</p>
+              <p className="text-sm">All systems are operating normally</p>
+            </div>
+          )}
         </div>
-      </div>
+      </Card>
     </div>
   )
 }

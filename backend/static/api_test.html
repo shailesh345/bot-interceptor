@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traffic Interceptor API - Real-time Testing</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'YS Display Regular Regular', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 16px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+            height: calc(100vh - 200px);
+        }
+
+        .sidebar {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e0e0e0;
+            overflow-y: auto;
+        }
+
+        .endpoint-group {
+            margin-bottom: 20px;
+        }
+
+        .endpoint-group h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #3498db;
+        }
+
+        .endpoint-item {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid #ecf0f1;
+        }
+
+        .endpoint-item:hover {
+            background: #f8f9fa;
+            border-color: #3498db;
+        }
+
+        .endpoint-item.active {
+            background: #3498db;
+            color: white;
+        }
+
+        .method {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .method.get { background: #27ae60; color: white; }
+        .method.post { background: #3498db; color: white; }
+        .method.put { background: #f39c12; color: white; }
+        .method.delete { background: #e74c3c; color: white; }
+
+        .test-panel {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .endpoint-header {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .endpoint-header h2 {
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .endpoint-url {
+            font-family: 'Courier New', monospace;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #e0e0e0;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            height: 120px;
+            resize: vertical;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+
+        .response-panel {
+            margin-top: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .response-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .response-header h3 {
+            color: #2c3e50;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status-success { background: #d5f4e6; color: #27ae60; }
+        .status-error { background: #fadbd8; color: #e74c3c; }
+        .status-info { background: #d6eaf8; color: #3498db; }
+
+        .response-content {
+            flex: 1;
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            padding: 15px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+        }
+
+        .auth-section {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .auth-section h4 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            border-bottom-color: #3498db;
+            color: #3498db;
+            font-weight: 600;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Traffic Interceptor API - Real-time Testing</h1>
+            <p>Interactive API testing interface with live documentation and real-time responses</p>
+        </div>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="endpoint-group">
+                    <h3>🔐 Authentication</h3>
+                    <div class="endpoint-item" data-endpoint="auth-login">
+                        <span class="method post">POST</span>
+                        /auth/login
+                    </div>
+                    <div class="endpoint-item" data-endpoint="auth-register">
+                        <span class="method post">POST</span>
+                        /auth/register
+                    </div>
+                </div>
+
+                <div class="endpoint-group">
+                    <h3>🌐 Domains</h3>
+                    <div class="endpoint-item" data-endpoint="domains-list">
+                        <span class="method get">GET</span>
+                        /domains
+                    </div>
+                    <div class="endpoint-item" data-endpoint="domains-create">
+                        <span class="method post">POST</span>
+                        /domains
+                    </div>
+                </div>
+
+                <div class="endpoint-group">
+                    <h3>📊 Traffic</h3>
+                    <div class="endpoint-item" data-endpoint="traffic-logs">
+                        <span class="method get">GET</span>
+                        /traffic/logs
+                    </div>
+                </div>
+
+                <div class="endpoint-group">
+                    <h3>📈 Analytics</h3>
+                    <div class="endpoint-item" data-endpoint="analytics-dashboard">
+                        <span class="method get">GET</span>
+                        /analytics/dashboard
+                    </div>
+                </div>
+
+                <div class="endpoint-group">
+                    <h3>💳 Billing</h3>
+                    <div class="endpoint-item" data-endpoint="billing-plans">
+                        <span class="method get">GET</span>
+                        /billing/plans
+                    </div>
+                </div>
+
+                <div class="endpoint-group">
+                    <h3>👥 Admin</h3>
+                    <div class="endpoint-item" data-endpoint="admin-users">
+                        <span class="method get">GET</span>
+                        /admin/users
+                    </div>
+                </div>
+
+                <div class="endpoint-group">
+                    <h3>🧪 Testing</h3>
+                    <div class="endpoint-item" data-endpoint="api-test">
+                        <span class="method get">GET</span>
+                        /test
+                    </div>
+                    <div class="endpoint-item" data-endpoint="api-test-post">
+                        <span class="method post">POST</span>
+                        /test
+                    </div>
+                </div>
+            </div>
+
+            <div class="test-panel">
+                <div class="endpoint-header">
+                    <h2>Select an endpoint to test</h2>
+                </div>
+
+                <div class="auth-section">
+                    <h4>🔑 Authentication</h4>
+                    <div class="form-group">
+                        <label for="auth-token">JWT Token (Bearer)</label>
+                        <input type="text" id="auth-token" placeholder="Enter your JWT token here...">
+                    </div>
+                    <button class="btn btn-secondary" onclick="login()">Quick Login (admin/admin123)</button>
+                </div>
+
+                <div class="tabs">
+                    <div class="tab active" data-tab="params">Parameters</div>
+                    <div class="tab" data-tab="headers">Headers</div>
+                    <div class="tab" data-tab="body">Body</div>
+                </div>
+
+                <div class="tab-content active" id="params-tab">
+                    <div class="form-group">
+                        <label for="query-params">Query Parameters (JSON)</label>
+                        <textarea id="query-params" placeholder='{"page": 1, "per_page": 20}'></textarea>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="headers-tab">
+                    <div class="form-group">
+                        <label for="custom-headers">Custom Headers (JSON)</label>
+                        <textarea id="custom-headers" placeholder='{"Content-Type": "application/json"}'></textarea>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="body-tab">
+                    <div class="form-group">
+                        <label for="request-body">Request Body (JSON)</label>
+                        <textarea id="request-body" placeholder='{"key": "value"}'></textarea>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <button class="btn btn-primary" onclick="sendRequest()">Send Request</button>
+                    <button class="btn btn-secondary" onclick="clearResponse()">Clear Response</button>
+                </div>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Sending request...</p>
+                </div>
+
+                <div class="response-panel">
+                    <div class="response-header">
+                        <h3>Response</h3>
+                        <span class="status-badge" id="status-badge">Ready</span>
+                    </div>
+                    <div class="response-content" id="response-content">
+                        Select an endpoint and click "Send Request" to test the API.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5002';
+        let currentEndpoint = null;
+        let authToken = '';
+
+        // Endpoint configurations
+        const endpoints = {
+            'auth-login': {
+                method: 'POST',
+                url: '/auth/login',
+                description: 'User login endpoint',
+                requiresAuth: false
+            },
+            'auth-register': {
+                method: 'POST',
+                url: '/auth/register',
+                description: 'User registration endpoint',
+                requiresAuth: false
+            },
+            'domains-list': {
+                method: 'GET',
+                url: '/domains',
+                description: 'Get all domains for current user',
+                requiresAuth: true
+            },
+            'domains-create': {
+                method: 'POST',
+                url: '/domains',
+                description: 'Create a new domain',
+                requiresAuth: true
+            },
+            'traffic-logs': {
+                method: 'GET',
+                url: '/traffic/logs',
+                description: 'Get traffic logs',
+                requiresAuth: true
+            },
+            'analytics-dashboard': {
+                method: 'GET',
+                url: '/analytics/dashboard',
+                description: 'Get analytics dashboard data',
+                requiresAuth: true
+            },
+            'billing-plans': {
+                method: 'GET',
+                url: '/billing/plans',
+                description: 'Get available billing plans',
+                requiresAuth: true
+            },
+            'admin-users': {
+                method: 'GET',
+                url: '/admin/users',
+                description: 'Get all users (admin only)',
+                requiresAuth: true
+            },
+            'api-test': {
+                method: 'GET',
+                url: '/test',
+                description: 'Test API connectivity',
+                requiresAuth: false
+            },
+            'api-test-post': {
+                method: 'POST',
+                url: '/test',
+                description: 'Test POST endpoint',
+                requiresAuth: false
+            }
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tab switching
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabName = this.dataset.tab;
+                    
+                    // Update active tab
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Update active content
+                    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                    document.getElementById(tabName + '-tab').classList.add('active');
+                });
+            });
+
+            // Endpoint selection
+            document.querySelectorAll('.endpoint-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const endpointId = this.dataset.endpoint;
+                    selectEndpoint(endpointId);
+                });
+            });
+
+            // Load saved token
+            const savedToken = localStorage.getItem('api_token');
+            if (savedToken) {
+                document.getElementById('auth-token').value = savedToken;
+                authToken = savedToken;
+            }
+        });
+
+        function selectEndpoint(endpointId) {
+            currentEndpoint = endpointId;
+            
+            // Update active endpoint
+            document.querySelectorAll('.endpoint-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelector(`[data-endpoint="${endpointId}"]`).classList.add('active');
+            
+            // Update endpoint header
+            const endpoint = endpoints[endpointId];
+            document.querySelector('.endpoint-header h2').textContent = endpoint.description;
+            document.querySelector('.endpoint-url').textContent = API_BASE + endpoint.url;
+            
+            // Set default body for certain endpoints
+            if (endpointId === 'auth-login') {
+                document.getElementById('request-body').value = JSON.stringify({
+                    username: 'admin',
+                    password: 'admin123'
+                }, null, 2);
+            } else if (endpointId === 'auth-register') {
+                document.getElementById('request-body').value = JSON.stringify({
+                    username: 'testuser',
+                    email: 'test@example.com',
+                    password: 'password123',
+                    first_name: 'Test',
+                    last_name: 'User'
+                }, null, 2);
+            } else if (endpointId === 'domains-create') {
+                document.getElementById('request-body').value = JSON.stringify({
+                    domain_name: 'example.com'
+                }, null, 2);
+            } else {
+                document.getElementById('request-body').value = '';
+            }
+            
+            // Clear response
+            clearResponse();
+        }
+
+        async function sendRequest() {
+            if (!currentEndpoint) {
+                showResponse('Please select an endpoint first.', 'error');
+                return;
+            }
+
+            const endpoint = endpoints[currentEndpoint];
+            const url = API_BASE + endpoint.url;
+            
+            // Show loading
+            document.getElementById('loading').style.display = 'block';
+            
+            try {
+                // Prepare headers
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                
+                // Add auth token if required
+                if (endpoint.requiresAuth && authToken) {
+                    headers['Authorization'] = `Bearer ${authToken}`;
+                }
+                
+                // Add custom headers
+                const customHeaders = document.getElementById('custom-headers').value;
+                if (customHeaders) {
+                    try {
+                        const parsedHeaders = JSON.parse(customHeaders);
+                        Object.assign(headers, parsedHeaders);
+                    } catch (e) {
+                        console.warn('Invalid custom headers JSON');
+                    }
+                }
+                
+                // Prepare request options
+                const options = {
+                    method: endpoint.method,
+                    headers: headers
+                };
+                
+                // Add body for POST/PUT requests
+                const body = document.getElementById('request-body').value;
+                if (body && ['POST', 'PUT', 'PATCH'].includes(endpoint.method)) {
+                    try {
+                        options.body = body;
+                    } catch (e) {
+                        showResponse('Invalid JSON in request body', 'error');
+                        return;
+                    }
+                }
+                
+                // Add query parameters for GET requests
+                let finalUrl = url;
+                if (endpoint.method === 'GET') {
+                    const queryParams = document.getElementById('query-params').value;
+                    if (queryParams) {
+                        try {
+                            const params = JSON.parse(queryParams);
+                            const searchParams = new URLSearchParams();
+                            Object.entries(params).forEach(([key, value]) => {
+                                searchParams.append(key, value);
+                            });
+                            finalUrl += '?' + searchParams.toString();
+                        } catch (e) {
+                            console.warn('Invalid query parameters JSON');
+                        }
+                    }
+                }
+                
+                // Send request
+                const response = await fetch(finalUrl, options);
+                const responseText = await response.text();
+                
+                // Parse response
+                let responseData;
+                try {
+                    responseData = JSON.parse(responseText);
+                } catch (e) {
+                    responseData = responseText;
+                }
+                
+                // Show response
+                const statusClass = response.ok ? 'success' : 'error';
+                showResponse(JSON.stringify(responseData, null, 2), statusClass, response.status);
+                
+                // Save token if login successful
+                if (currentEndpoint === 'auth-login' && response.ok && responseData.access_token) {
+                    authToken = responseData.access_token;
+                    document.getElementById('auth-token').value = authToken;
+                    localStorage.setItem('api_token', authToken);
+                }
+                
+            } catch (error) {
+                showResponse(`Request failed: ${error.message}`, 'error');
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        function showResponse(content, type = 'info', status = null) {
+            const responseContent = document.getElementById('response-content');
+            const statusBadge = document.getElementById('status-badge');
+            
+            responseContent.textContent = content;
+            
+            // Update status badge
+            statusBadge.className = 'status-badge status-' + type;
+            if (status) {
+                statusBadge.textContent = `${status} ${type.toUpperCase()}`;
+            } else {
+                statusBadge.textContent = type.toUpperCase();
+            }
+        }
+
+        function clearResponse() {
+            document.getElementById('response-content').textContent = 'Select an endpoint and click "Send Request" to test the API.';
+            document.getElementById('status-badge').textContent = 'Ready';
+            document.getElementById('status-badge').className = 'status-badge';
+        }
+
+        async function login() {
+            // Quick login with admin credentials
+            const loginData = {
+                username: 'admin',
+                password: 'admin123'
+            };
+            
+            try {
+                const response = await fetch(API_BASE + '/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(loginData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.access_token) {
+                    authToken = data.access_token;
+                    document.getElementById('auth-token').value = authToken;
+                    localStorage.setItem('api_token', authToken);
+                    showResponse('Login successful! Token saved.', 'success');
+                } else {
+                    showResponse('Login failed: ' + (data.message || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                showResponse('Login failed: ' + error.message, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -112,3 +112,79 @@ def analyze_traffic_segments(tenant_id):
         ],
         'total_traffic': 100000
     }
+
+@reporting.route('/dashboards', methods=['GET'])
+@jwt_required()
+def get_dashboards():
+    """Get available dashboards"""
+    try:
+        # Mock data for now
+        dashboards = [
+            {
+                'id': 1,
+                'name': 'Traffic Overview',
+                'type': 'traffic',
+                'status': 'active',
+                'last_updated': datetime.utcnow().isoformat()
+            },
+            {
+                'id': 2,
+                'name': 'Bot Detection',
+                'type': 'security',
+                'status': 'active',
+                'last_updated': datetime.utcnow().isoformat()
+            }
+        ]
+        
+        return jsonify({
+            'success': True,
+            'dashboards': dashboards
+        }), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Get dashboards error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@reporting.route('/trends', methods=['GET'])
+@jwt_required()
+def get_trends():
+    """Get trend analysis data"""
+    try:
+        # Mock data for now
+        trends = {
+            'total_trends': 5,
+            'traffic_trends': [
+                {'period': 'Last 7 days', 'change': '+15%'},
+                {'period': 'Last 30 days', 'change': '+8%'}
+            ]
+        }
+        
+        return jsonify({
+            'success': True,
+            'trends': trends
+        }), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Get trends error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@reporting.route('/segmentation', methods=['GET'])
+@jwt_required()
+def get_segmentation():
+    """Get user segmentation data"""
+    try:
+        # Mock data for now
+        segments = [
+            {'id': 1, 'name': 'High Value', 'count': 150},
+            {'id': 2, 'name': 'Medium Value', 'count': 300},
+            {'id': 3, 'name': 'Low Value', 'count': 500}
+        ]
+        
+        return jsonify({
+            'success': True,
+            'segments': segments
+        }), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Get segmentation error: {str(e)}")
+        return jsonify({'error': str(e)}), 500

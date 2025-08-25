@@ -562,3 +562,27 @@ def export_security_logs():
         }), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@security.route('/mfa/status', methods=['GET'])
+@jwt_required()
+def get_mfa_status():
+    """Get MFA status for current user"""
+    try:
+        user_uuid = get_jwt_identity()
+        user = User.query.filter_by(uuid=user_uuid).first()
+        
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        return jsonify({
+            'success': True,
+            'mfa_status': {
+                'enabled': user.mfa_enabled,
+                'setup_complete': bool(user.mfa_secret),
+                'last_used': user.last_login.isoformat() if user.last_login else None
+            }
+        }), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Get MFA status error: {str(e)}")
+        return jsonify({'error': str(e)}), 500

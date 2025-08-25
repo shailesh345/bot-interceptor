@@ -134,7 +134,7 @@ const ClientManagement = () => {
       }
     ]
 
-    setCliients(mockClients)
+    setClients(mockClients)
     setFilteredClients(mockClients)
   }, [])
 

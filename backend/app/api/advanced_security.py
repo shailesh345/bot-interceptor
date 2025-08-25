@@ -5,7 +5,8 @@ Integrates threat intelligence and security controls
 """
 
 from flask import Blueprint, request, jsonify, current_app
-from flask_jwt_extended import jwt_required, get_jwt_identity, admin_required
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from app.api.security import admin_required
 from app.models import db, User, Domain, TrafficLog
 from datetime import datetime, timedelta
 import json

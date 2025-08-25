@@ -24,6 +24,9 @@ limiter = Limiter(
 # Initialize WebSocket
 from .websocket import socketio
 
+# Import API documentation
+from .api_docs import api_doc
+
 def create_app(config_name=None):
     if config_name is None:
         config_name = os.environ.get('FLASK_CONFIG', 'default')
@@ -68,6 +71,9 @@ def create_app(config_name=None):
     from app.api.traffic_interception import traffic_interception_bp
     app.register_blueprint(traffic_interception_bp)
     
+    # Register API documentation
+    api_doc.init_app(app)
+    
 
     
     # JWT token handlers
@@ -93,5 +99,10 @@ def create_app(config_name=None):
     @app.route('/health')
     def health_check():
         return {'status': 'healthy', 'service': 'traffic-interceptor-api'}
+    
+    # API Testing Interface
+    @app.route('/test-api')
+    def api_test_interface():
+        return app.send_static_file('api_test.html')
     
     return app

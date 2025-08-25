@@ -27,6 +27,8 @@ from .collaboration import collaboration
 from .white_label import white_label
 from .advanced_security import advanced_security
 from .business_intelligence import business_intelligence
+from .webhook_management import webhook_management
+from .edge_computing import edge_computing
 
 # Register Phase 2 blueprints
 api.register_blueprint(domains_bp, url_prefix='/v1')
@@ -49,6 +51,12 @@ api.register_blueprint(collaboration, url_prefix='/collaboration')
 api.register_blueprint(white_label, url_prefix='/white-label')
 api.register_blueprint(advanced_security, url_prefix='/advanced-security')
 api.register_blueprint(business_intelligence, url_prefix='/business-intelligence')
+api.register_blueprint(webhook_management, url_prefix='/webhook-management')
+api.register_blueprint(edge_computing, url_prefix='/edge-computing')
+
+@api.route('/health')
+def health_check():
+    return {'status': 'healthy', 'timestamp': datetime.utcnow().isoformat()}
 
 def get_current_user():
     """Helper function to get current user from JWT token"""

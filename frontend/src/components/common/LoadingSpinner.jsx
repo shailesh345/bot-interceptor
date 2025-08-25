@@ -1,6 +1,6 @@
 import React from 'react'
 
-const LoadingSpinner = ({ size = 'md', color = 'primary' }) => {
+const LoadingSpinner = ({ size = 'md', color = 'primary', text = '' }) => {
   const sizeClasses = {
     sm: 'h-4 w-4',
     md: 'h-6 w-6',
@@ -8,17 +8,28 @@ const LoadingSpinner = ({ size = 'md', color = 'primary' }) => {
     xl: 'h-12 w-12',
   }
 
-  const colorClasses = {
-    primary: 'border-primary-600',
-    secondary: 'border-secondary-600',
-    white: 'border-white',
-  }
-
   return (
-    <div className="flex items-center justify-center" data-testid="loading-spinner">
-      <div
-        className={`animate-spin rounded-full border-b-2 ${sizeClasses[size]} ${colorClasses[color]}`}
-      />
+    <div className="flex flex-col items-center justify-center space-y-3" data-testid="loading-spinner">
+      <div className="relative">
+        <div
+          className={`animate-spin rounded-full border-2 ${sizeClasses[size]} border-transparent`}
+          style={{
+            borderTopColor: 'var(--text-primary)',
+            borderRightColor: 'var(--text-secondary)',
+            borderBottomColor: 'var(--text-muted)',
+            borderLeftColor: 'var(--border-primary)',
+          }}
+        />
+        <div
+          className={`absolute inset-0 rounded-full ${sizeClasses[size]} animate-ping opacity-20`}
+          style={{ backgroundColor: 'var(--text-primary)' }}
+        />
+      </div>
+      {text && (
+        <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
+          {text}
+        </p>
+      )}
     </div>
   )
 }
