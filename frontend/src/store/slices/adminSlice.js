@@ -1,9 +1,13 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import mockAPI from '../../services/mockAPI';
+import { adminAPI } from '../../services/api';
 
-export const fetchAdminData = createAsyncThunk('admin/fetchData', async () => {
-  const response = await mockAPI.fetchAdminData();
-  return response;
+export const fetchAdminData = createAsyncThunk('admin/fetchData', async (_, { rejectWithValue }) => {
+  try {
+    const response = await adminAPI.getUsers();
+    return response.data;
+  } catch (error) {
+    return rejectWithValue(error.response?.data?.message || error.message || 'Failed to fetch admin data');
+  }
 });
 
 const adminSlice = createSlice({

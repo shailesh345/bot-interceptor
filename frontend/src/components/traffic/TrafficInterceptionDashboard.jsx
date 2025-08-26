@@ -65,7 +65,8 @@ const TrafficInterceptionDashboard = () => {
       const response = await trafficAPI.getRealTimeMetrics()
       setRealTimeMetrics(response.data)
     } catch (error) {
-      console.error('Failed to fetch real-time metrics:', error)
+      // console.error('Failed to fetch real-time metrics:', error) // Commented to prevent console errors
+      toast.error('Failed to fetch real-time metrics. Please refresh.')
       // Use mock data if API fails
       setRealTimeMetrics({
         total_requests: 156,
@@ -171,7 +172,8 @@ const TrafficInterceptionDashboard = () => {
       
     } catch (error) {
       toast.error('Failed to test traffic interception')
-      console.error('Traffic interception test failed:', error)
+      // console.error('Traffic interception test failed:', error) // Commented to prevent console errors
+      toast.error('Traffic interception test failed. Please try again.')
     } finally {
       setIsLoading(false)
     }

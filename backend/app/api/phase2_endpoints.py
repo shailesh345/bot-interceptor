@@ -64,7 +64,7 @@ def create_domain():
         # Create new domain
         domain = Domain(
             domain_name=domain_name,
-            tenant_id=user.tenant_id,
+            tenant_id=user.tenant_id or 1,  # Default to tenant 1 if None
             ssl_enabled=data.get('ssl_enabled', False),
             cdn_enabled=data.get('cdn_enabled', False),
             traffic_enabled=data.get('traffic_enabled', True),
@@ -250,13 +250,16 @@ def create_rule():
         
         # Create new rule
         rule = InterceptorRule(
+            name=data.get('name', f"Rule {data['rule_type']}"),
+            description=data.get('description', ''),
             tenant_id=user.tenant_id,
             domain_id=data['domain_id'],
+            user_id=user.id,
             rule_type=data['rule_type'],
-            conditions=json.dumps(data['conditions']),
-            actions=json.dumps(data.get('actions', {})),
+            conditions=data['conditions'],
+            actions=data.get('actions', []),
             priority=data.get('priority', 100),
-            enabled=data.get('enabled', True),
+            is_active=data.get('is_active', data.get('enabled', True)),
             created_at=datetime.utcnow()
         )
         

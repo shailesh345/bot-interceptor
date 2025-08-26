@@ -111,7 +111,7 @@ const PredictiveAnalyticsEngine = () => {
       })
       
     } catch (error) {
-      console.error('Failed to load predictive data:', error)
+      // console.error('Failed to load predictive data:', error)
     } finally {
       setLoading(false)
     }
@@ -382,12 +382,12 @@ const PredictiveAnalyticsEngine = () => {
   }
 
   const handleForecastAction = (forecastId, action) => {
-    console.log(`Forecast ${action}:`, forecastId)
+    // console.log(`Forecast ${action}:`, forecastId)
     // In real implementation, this would trigger the appropriate action
   }
 
   const handleAnomalyAction = (anomalyId, action) => {
-    console.log(`Anomaly ${action}:`, anomalyId)
+    // console.log(`Anomaly ${action}:`, anomalyId)
     // In real implementation, this would trigger the appropriate action
   }
 

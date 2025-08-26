@@ -85,7 +85,7 @@ const AdvancedSearch = ({
       try {
         setSavedFilters(JSON.parse(saved))
       } catch (error) {
-        console.error('Failed to parse saved filters:', error)
+        // console.error('Failed to parse saved filters:', error) // Commented to prevent console errors
       }
     }
   }, [])

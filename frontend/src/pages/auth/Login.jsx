@@ -44,24 +44,20 @@ const Login = () => {
 
       <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-            Email address
+          <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+            Email or Username
           </label>
           <div className="mt-1">
             <input
-              {...register('email', {
-                required: 'Email is required',
-                pattern: {
-                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                  message: 'Invalid email address',
-                },
+              {...register('username', {
+                required: 'Email or username is required',
               })}
-              type="email"
+              type="text"
               className="input"
-              placeholder="Enter your email"
+              placeholder="Enter your email or username"
             />
-            {errors.email && (
-              <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+            {errors.username && (
+              <p className="mt-1 text-sm text-red-600">{errors.username.message}</p>
             )}
           </div>
         </div>

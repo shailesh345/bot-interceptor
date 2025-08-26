@@ -24,14 +24,19 @@ limiter = Limiter(
 # Initialize WebSocket
 from .websocket import socketio
 
-# Import API documentation
-from .api_docs import api_doc
+# Import API documentation (optional)
+try:
+    from .api_docs import api_doc
+    API_DOCS_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: API documentation not available: {e}")
+    API_DOCS_AVAILABLE = False
 
 def create_app(config_name=None):
     if config_name is None:
         config_name = os.environ.get('FLASK_CONFIG', 'default')
     
-    app = Flask(__name__)
+    app = Flask(__name__, static_folder='../static', static_url_path='/static')
     app.config.from_object(config[config_name])
     
     # Initialize extensions
@@ -72,7 +77,8 @@ def create_app(config_name=None):
     app.register_blueprint(traffic_interception_bp)
     
     # Register API documentation
-    api_doc.init_app(app)
+    if API_DOCS_AVAILABLE:
+        api_doc.init_app(app)
     
 
     
@@ -103,6 +109,14 @@ def create_app(config_name=None):
     # API Testing Interface
     @app.route('/test-api')
     def api_test_interface():
-        return app.send_static_file('api_test.html')
+        try:
+            return app.send_static_file('api_test.html')
+        except Exception as e:
+            return f"Error loading test interface: {str(e)}", 500
+    
+    # Alternative static file serving
+    @app.route('/static/<path:filename>')
+    def serve_static(filename):
+        return app.send_static_file(filename)
     
     return app

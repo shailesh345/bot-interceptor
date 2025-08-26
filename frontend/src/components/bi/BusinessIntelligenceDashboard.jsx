@@ -86,7 +86,7 @@ const BusinessIntelligenceDashboard = () => {
       setKpis(kpisRes)
       
     } catch (error) {
-      console.error('Failed to load BI data:', error)
+      // console.error('Failed to load BI data:', error)
     } finally {
       setLoading(false)
     }
@@ -370,7 +370,7 @@ const BusinessIntelligenceDashboard = () => {
         position: 'top',
         labels: {
           color: 'var(--text-primary)',
-          font: { family: 'Yandex Sans Display' }
+          font: { family: 'Inter' }
         }
       },
       tooltip: {

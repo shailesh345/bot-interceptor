@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-import mockAPI from '../../services/mockAPI'
+import { billingAPI } from '../../services/api'
 
 const initialState = {
   subscription: null,
@@ -12,10 +12,10 @@ export const fetchBilling = createAsyncThunk(
   'billing/fetchBilling',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await mockAPI.getBilling()
+      const response = await billingAPI.getSubscription()
       return response.data
     } catch (error) {
-      return rejectWithValue(error.message || 'Failed to fetch billing')
+      return rejectWithValue(error.response?.data?.message || error.message || 'Failed to fetch billing')
     }
   }
 )

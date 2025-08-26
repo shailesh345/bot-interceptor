@@ -10,8 +10,4 @@
 [33mPress CTRL+C to quit[0m
  * Restarting with stat
  * Debugger is active!
- * Debugger PIN: 107-314-695
-/opt/homebrew/Cellar/python@3.13/3.13.3/Frameworks/Python.framework/Versions/3.13/lib/python3.13/multiprocessing/resource_tracker.py:301: UserWarning: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown: {'/mp-60m4z4bw'}
-  warnings.warn(
-/opt/homebrew/Cellar/python@3.13/3.13.3/Frameworks/Python.framework/Versions/3.13/lib/python3.13/multiprocessing/resource_tracker.py:301: UserWarning: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown: {'/mp-1z0mue5a'}
-  warnings.warn(
+ * Debugger PIN: 996-137-813

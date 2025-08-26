@@ -95,7 +95,7 @@ const WorkflowAutomationEngine = () => {
       setPerformance(performanceData)
       
     } catch (error) {
-      console.error('Failed to load workflow data:', error)
+      // console.error('Failed to load workflow data:', error)
     } finally {
       setLoading(false)
     }
@@ -385,12 +385,12 @@ const WorkflowAutomationEngine = () => {
   }
 
   const handleWorkflowAction = (workflowId, action) => {
-    console.log(`Workflow ${action}:`, workflowId)
+    // console.log(`Workflow ${action}:`, workflowId)
     // In real implementation, this would trigger the appropriate action
   }
 
   const handleScheduleAction = (scheduleId, action) => {
-    console.log(`Schedule ${action}:`, scheduleId)
+    // console.log(`Schedule ${action}:`, scheduleId)
     // In real implementation, this would trigger the appropriate action
   }
 
@@ -724,13 +724,17 @@ const WorkflowAutomationEngine = () => {
             {
               label: 'View Details',
               icon: Eye,
-              onClick: (execution) => console.log('Execution details:', execution),
+              onClick: (execution) => {
+                // console.log('Execution details:', execution) // Commented for production
+              },
               variant: 'ghost'
             },
             {
               label: 'Download Logs',
               icon: Download,
-              onClick: (execution) => console.log('Download logs:', execution.id),
+              onClick: (execution) => {
+                // console.log('Download logs:', execution.id) // Commented for production
+              },
               variant: 'ghost'
             }
           ]}

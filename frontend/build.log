@@ -1,0 +1,18 @@
+
+> traffic-interceptor-frontend@1.0.0 build
+> vite build
+
+vite v4.5.14 building for production...
+transforming...
+✓ 14940 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                     0.92 kB │ gzip:   0.50 kB
+dist/assets/index-db436191.css     70.50 kB │ gzip:  11.48 kB
+dist/assets/index-8a735021.js   3,573.34 kB │ gzip: 722.41 kB │ map: 10,432.04 kB
+
+(!) Some chunks are larger than 500 kBs after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 14.72s

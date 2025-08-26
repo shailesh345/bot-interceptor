@@ -8,6 +8,11 @@ const FRONTEND_PORT = 3000
 
 export default defineConfig({
   plugins: [react()],
+  define: {
+    // Make sure environment variables are available
+    'import.meta.env.VITE_AI_ENABLED': JSON.stringify(process.env.VITE_AI_ENABLED || 'false'),
+    'import.meta.env.VITE_WS_URL': JSON.stringify(process.env.VITE_WS_URL || 'ws://127.0.0.1:5002'),
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -15,6 +20,11 @@ export default defineConfig({
   },
   server: {
     port: FRONTEND_PORT,
+    host: '127.0.0.1',
+    hmr: {
+      port: 24678, // Use a different port for HMR
+      host: '127.0.0.1'
+    },
     proxy: {
       '/api': {
         target: API_BASE_URL,

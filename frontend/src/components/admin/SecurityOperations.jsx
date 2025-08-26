@@ -221,7 +221,8 @@ const SecurityOperations = () => {
       // Simulate API delay
       setTimeout(() => setIsLoading(false), 500)
     } catch (error) {
-      console.error('Failed to update threat status:', error)
+      // console.error('Failed to update threat status:', error) // Commented to prevent console errors
+      toast.error('Failed to update threat status. Please try again.')
       setIsLoading(false)
     }
   }
@@ -239,7 +240,8 @@ const SecurityOperations = () => {
       // Simulate API delay
       setTimeout(() => setIsLoading(false), 500)
     } catch (error) {
-      console.error('Failed to toggle rule status:', error)
+      // console.error('Failed to toggle rule status:', error) // Commented to prevent console errors
+      toast.error('Failed to toggle rule status. Please try again.')
       setIsLoading(false)
     }
   }

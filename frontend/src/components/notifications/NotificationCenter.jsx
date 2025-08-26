@@ -125,7 +125,7 @@ const NotificationCenter = ({ isOpen, onClose }) => {
     loadPreferences()
     
     return () => {
-      if (wsRef.current) {
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
         wsRef.current.close()
       }
     }
@@ -136,32 +136,71 @@ const NotificationCenter = ({ isOpen, onClose }) => {
   }, [notifications, filter, searchTerm])
 
   const initializeWebSocket = () => {
-    // Simulate WebSocket connection for real-time notifications
-    const mockWebSocket = {
-      onmessage: (event) => {
-        const newNotification = JSON.parse(event.data)
-        handleNewNotification(newNotification)
-      },
-      close: () => {}
+    try {
+      // Try to connect to real WebSocket endpoint
+      const wsUrl = import.meta.env.VITE_WS_URL || 'ws://127.0.0.1:5002'
+      const fullWsUrl = `${wsUrl}/ws/notifications`
+      
+      const ws = new WebSocket(fullWsUrl)
+      
+      ws.onopen = () => {
+        // console.log('WebSocket connected for notifications')
+        // Send authentication token if available
+        const token = localStorage.getItem('token')
+        if (token) {
+          ws.send(JSON.stringify({ type: 'auth', token }))
+        }
+      }
+      
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data)
+          if (data.type === 'notification') {
+            handleNewNotification(data.notification)
+          }
+        } catch (error) {
+          // console.error('Error parsing WebSocket message:', error)
+        }
+      }
+      
+      ws.onclose = () => {
+        // console.log('WebSocket disconnected, attempting to reconnect...')
+        // Attempt to reconnect after 5 seconds
+        setTimeout(() => {
+          initializeWebSocket()
+        }, 5000)
+      }
+      
+      ws.onerror = (error) => {
+        // console.error('WebSocket error:', error)
+        // Fall back to polling or show connection status
+        fallbackToPolling()
+      }
+      
+      wsRef.current = ws
+      
+    } catch (error) {
+      // console.error('Failed to initialize WebSocket:', error)
+      fallbackToPolling()
     }
-    
-    wsRef.current = mockWebSocket
-    
-    // Simulate incoming notifications
+  }
+  
+  const fallbackToPolling = () => {
+    // console.log('Falling back to simulated notifications')
+    // Simulate incoming notifications as fallback
     setTimeout(() => {
       const newNotification = {
         id: Date.now(),
-        type: 'warning',
-        title: 'API Rate Limit Warning',
-        message: 'API calls approaching rate limit threshold',
+        type: 'info',
+        title: 'Real-time Updates Unavailable',
+        message: 'Using simulated notifications. Check WebSocket connection.',
         timestamp: new Date(),
         read: false,
-        priority: 'medium',
-        category: 'api',
+        priority: 'low',
+        category: 'system',
         action: 'view',
         metadata: {
-          currentUsage: '85%',
-          limit: '1000 requests/hour'
+          fallback: true
         }
       }
       handleNewNotification(newNotification)

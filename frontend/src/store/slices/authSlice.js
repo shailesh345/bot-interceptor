@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { authAPI } from '../../services/api'
-import mockAPI from '../../services/mockAPI'
+// mockAPI import removed - using real API integration
 import toast from 'react-hot-toast'
 
 // Async thunks
@@ -10,15 +10,19 @@ export const loginUser = createAsyncThunk(
     try {
       const response = await authAPI.login(credentials)
       
+      // Handle response data - axios wraps response in data property
+      const data = response.data || response
+      
       // Store tokens and user data in localStorage
-      localStorage.setItem('token', response.data.access_token)
-      localStorage.setItem('refreshToken', response.data.refresh_token)
-      localStorage.setItem('user', JSON.stringify(response.data.user))
+      localStorage.setItem('token', data.access_token)
+      localStorage.setItem('refreshToken', data.refresh_token)
+      localStorage.setItem('user', JSON.stringify(data.user))
       
       toast.success('Login successful!')
-      return response.data
+      return data
     } catch (error) {
-      const message = error.response?.data?.message || 'Login failed'
+      console.error('Login error:', error)
+      const message = error.response?.data?.message || error.message || 'Login failed'
       toast.error(message)
       return rejectWithValue(message)
     }

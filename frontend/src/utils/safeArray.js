@@ -11,7 +11,7 @@
  */
 export const safeFilter = (array, predicate) => {
   if (!Array.isArray(array)) {
-    console.warn('safeFilter: Input is not an array:', array)
+    // console.warn('safeFilter: Input is not an array:', array) // Commented to prevent console warnings
     return []
   }
   return array.filter(predicate)
@@ -25,7 +25,7 @@ export const safeFilter = (array, predicate) => {
  */
 export const safeMap = (array, mapper) => {
   if (!Array.isArray(array)) {
-    console.warn('safeMap: Input is not an array:', array)
+    // console.warn('safeMap: Input is not an array:', array) // Commented to prevent console warnings
     return []
   }
   return array.map(mapper)

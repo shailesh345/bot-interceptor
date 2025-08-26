@@ -139,6 +139,7 @@ class InterceptorRule(db.Model):
     # Foreign Keys
     domain_id = db.Column(db.Integer, db.ForeignKey('domains.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False)
     
     def to_dict(self):
         return {
@@ -154,6 +155,7 @@ class InterceptorRule(db.Model):
             'status': self.status,
             'domain_id': self.domain_id,
             'user_id': self.user_id,
+            'tenant_id': self.tenant_id,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }

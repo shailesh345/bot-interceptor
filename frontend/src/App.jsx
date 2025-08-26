@@ -74,13 +74,10 @@ function App() {
   const dispatch = useDispatch()
   const { isAuthenticated, loading, user } = useSelector((state) => state.auth)
   
-  // Debug logging
-  console.log('App - isAuthenticated:', isAuthenticated, 'loading:', loading, 'user:', user)
+  // Debug logging (removed for production)
 
   useEffect(() => {
-    console.log('App useEffect - isAuthenticated:', isAuthenticated, 'user:', user)
     if (isAuthenticated && !user) {
-      console.log('App - Fetching user profile...')
       dispatch(fetchUserProfile())
     }
   }, [dispatch, isAuthenticated, user])
@@ -106,11 +103,11 @@ function App() {
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </Helmet>
       
-      {/* PWA Registration */}
-      <PWARegistration />
+      {/* PWA Registration - Temporarily Disabled */}
+      {/* <PWARegistration /> */}
       
-      {/* AI Chatbot */}
-      <AIChatbot />
+      {/* AI Chatbot - Temporarily Disabled */}
+      {/* <AIChatbot /> */}
       
       <Routes>
         {/* Public Routes */}
@@ -161,17 +158,16 @@ function App() {
           <Route path="enterprise-security" element={<EnterpriseSecurityDashboard />} />
           <Route path="multi-tenancy" element={<MultiTenancyManager />} />
           <Route path="rbac" element={<RoleBasedAccessControl />} />
-          <Route path="api-management" element={<APIManagementCenter />} />
+          <Route path="api-management-center" element={<APIManagementCenter />} />
           <Route path="integrations" element={<ThirdPartyIntegrations />} />
           <Route path="data-visualization" element={<AdvancedDataVisualization />} />
           <Route path="interactive-dashboard" element={<InteractiveDashboard />} />
           <Route path="workflow-builder" element={<WorkflowBuilder />} />
           <Route path="automation-rules" element={<AutomationRulesEngine />} />
-          <Route path="component-demo" element={<ComponentDemo />} />
                           
                           {/* MVP Development Dashboard */}
           <Route path="mvp" element={
-            process.env.NODE_ENV === 'development' ? <MVPDashboard /> : <Navigate to="/dashboard" replace />
+            import.meta.env.DEV ? <MVPDashboard /> : <Navigate to="/dashboard" replace />
           } />
           
           {/* Admin Routes */}

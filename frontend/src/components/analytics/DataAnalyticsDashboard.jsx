@@ -84,7 +84,7 @@ const DataAnalyticsDashboard = () => {
       initializeChartConfigs(chartData)
       
     } catch (error) {
-      console.error('Failed to load analytics data:', error)
+      // console.error('Failed to load analytics data:', error)
     } finally {
       setLoading(false)
     }
@@ -286,20 +286,20 @@ const DataAnalyticsDashboard = () => {
   }
 
   const handleChartExport = (chartKey, data) => {
-    console.log(`Exporting ${chartKey}:`, data)
+    // console.log(`Exporting ${chartKey}:`, data)
     // In real implementation, this would trigger export functionality
   }
 
   const handleChartClick = (event, elements, data) => {
-    console.log('Chart clicked:', { event, elements, data })
+    // console.log('Chart clicked:', { event, elements, data })
   }
 
   const handleDataPointClick = (datasetIndex, index, data) => {
-    console.log('Data point clicked:', { datasetIndex, index, data })
+    // console.log('Data point clicked:', { datasetIndex, index, data })
   }
 
   const handleLegendClick = (index, visible) => {
-    console.log('Legend clicked:', { index, visible })
+    // console.log('Legend clicked:', { index, visible })
   }
 
   if (loading) {

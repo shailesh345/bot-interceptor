@@ -325,7 +325,7 @@ const IntelligentAnalytics = () => {
         position: 'top',
         labels: {
           color: 'var(--text-primary)',
-          font: { family: 'Yandex Sans Display' }
+          font: { family: 'Inter' }
         }
       },
       tooltip: {

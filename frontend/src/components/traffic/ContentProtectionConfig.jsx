@@ -119,7 +119,8 @@ const ContentProtectionConfig = () => {
       toast.success(`Protection test successful! Action: ${response.data.action_taken}`)
     } catch (error) {
       toast.error('Protection test failed')
-      console.error('Protection test error:', error)
+      // console.error('Protection test error:', error) // Commented to prevent console errors
+      toast.error('Protection test failed. Please try again.')
     } finally {
       setIsLoading(false)
     }

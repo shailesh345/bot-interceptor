@@ -85,7 +85,8 @@ const TrafficMonitoringCenter = () => {
         updateTrafficData(data);
       }
     } catch (error) {
-      console.error('Error fetching traffic data:', error);
+      // console.error('Error fetching traffic data:', error); // Commented to prevent console errors
+      toast.error('Failed to fetch traffic data. Please refresh.');
     }
   };
 

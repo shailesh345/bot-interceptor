@@ -1040,7 +1040,7 @@ pytest -v tests/unit/          # Run specific test suite
 python run.py seed-data        # Seed initial data
 python run.py create-super-admin # Create admin user
 flask shell                    # Interactive shell
-
+ok@
 # Production
 gunicorn run:app              # Production server
 supervisorctl restart all     # Restart all services

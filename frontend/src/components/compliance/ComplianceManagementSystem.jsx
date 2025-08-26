@@ -45,7 +45,7 @@ import {
   Trash2,
   Play,
   Pause,
-  Stop,
+  Square,
   RotateCcw,
   ShieldCheck,
   ShieldAlert,
@@ -119,7 +119,8 @@ const ComplianceManagementSystem = () => {
       })
       
     } catch (error) {
-      console.error('Failed to load compliance data:', error)
+      // console.error('Failed to load compliance data:', error) // Commented to prevent console errors
+      toast.error('Failed to load compliance data. Please refresh.')
     } finally {
       setLoading(false)
     }
@@ -487,12 +488,12 @@ const ComplianceManagementSystem = () => {
   }
 
   const handleFrameworkAction = (frameworkId, action) => {
-    console.log(`Framework ${action}:`, frameworkId)
+    // console.log(`Framework ${action}:`, frameworkId) // Commented to prevent console logs
     // In real implementation, this would trigger the appropriate action
   }
 
   const handleAuditAction = (auditId, action) => {
-    console.log(`Audit ${action}:`, auditId)
+    // console.log(`Audit ${action}:`, auditId) // Commented to prevent console logs
     // In real implementation, this would trigger the appropriate action
   }
 

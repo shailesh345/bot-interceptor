@@ -114,7 +114,7 @@ const AdvancedAIInsights = () => {
       })
       
     } catch (error) {
-      console.error('Failed to load AI data:', error)
+      // console.error('Failed to load AI data:', error)
     } finally {
       setLoading(false)
     }
@@ -466,17 +466,17 @@ const AdvancedAIInsights = () => {
   }
 
   const handleInsightAction = (insightId, action) => {
-    console.log(`Insight ${action}:`, insightId)
+    // console.log(`Insight ${action}:`, insightId)
     // In real implementation, this would trigger the appropriate action
   }
 
   const handleRecommendationAction = (recId, action) => {
-    console.log(`Recommendation ${action}:`, recId)
+    // console.log(`Recommendation ${action}:`, recId)
     // In real implementation, this would trigger the appropriate action
   }
 
   const handleAutomationAction = (autoId, action) => {
-    console.log(`Automation ${action}:`, autoId)
+    // console.log(`Automation ${action}:`, autoId)
     // In real implementation, this would trigger the appropriate action
   }
 

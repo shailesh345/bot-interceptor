@@ -40,39 +40,39 @@ const theme = createTheme({
     },
   },
   typography: {
-    fontFamily: '"Yandex Sans Display", "Roboto", "Helvetica", "Arial", sans-serif',
+    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
     h1: {
-      fontFamily: '"Yandex Sans Display", "Roboto", "Helvetica", "Arial", sans-serif',
+      fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
       fontWeight: 700,
     },
     h2: {
-      fontFamily: '"Yandex Sans Display", "Roboto", "Helvetica", "Arial", sans-serif',
+      fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
       fontWeight: 600,
     },
     h3: {
-      fontFamily: '"Yandex Sans Display", "Roboto", "Helvetica", "Arial", sans-serif',
+      fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
       fontWeight: 600,
     },
     h4: {
-      fontFamily: '"Yandex Sans Display", "Roboto", "Helvetica", "Arial", sans-serif',
+      fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
       fontWeight: 500,
     },
     h5: {
-      fontFamily: '"Yandex Sans Display", "Roboto", "Helvetica", "Arial", sans-serif',
+      fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
       fontWeight: 500,
     },
     h6: {
-      fontFamily: '"Yandex Sans Display", "Roboto", "Helvetica", "Arial", sans-serif',
+      fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
       fontWeight: 500,
     },
     body1: {
-      fontFamily: '"Yandex Sans Display", "Roboto", "Helvetica", "Arial", sans-serif',
+      fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
     },
     body2: {
-      fontFamily: '"Yandex Sans Display", "Roboto", "Helvetica", "Arial", sans-serif',
+      fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
     },
     button: {
-      fontFamily: '"Yandex Sans Display", "Roboto", "Helvetica", "Arial", sans-serif',
+      fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
       fontWeight: 500,
     },
   },
@@ -80,7 +80,7 @@ const theme = createTheme({
     MuiCssBaseline: {
       styleOverrides: {
         body: {
-          fontFamily: '"Yandex Sans Display", "Roboto", "Helvetica", "Arial", sans-serif',
+          fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
         },
       },
     },

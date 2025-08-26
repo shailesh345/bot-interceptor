@@ -112,7 +112,8 @@ const EnterpriseSecurityDashboard = () => {
       })
       
     } catch (error) {
-      console.error('Failed to load security data:', error)
+      // console.error('Failed to load security data:', error) // Commented to prevent console errors
+      toast.error('Failed to load security data. Please refresh.')
     } finally {
       setLoading(false)
     }
@@ -396,12 +397,12 @@ const EnterpriseSecurityDashboard = () => {
   }
 
   const handleThreatAction = (threatId, action) => {
-    console.log(`Threat ${action}:`, threatId)
+    // console.log(`Threat ${action}:`, threatId) // Commented to prevent console logs
     // In real implementation, this would trigger the appropriate action
   }
 
   const handleIncidentAction = (incidentId, action) => {
-    console.log(`Incident ${action}:`, incidentId)
+    // console.log(`Incident ${action}:`, incidentId) // Commented to prevent console logs
     // In real implementation, this would trigger the appropriate action
   }
 

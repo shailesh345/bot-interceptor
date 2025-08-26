@@ -106,7 +106,8 @@ const AdvancedReporting = () => {
       setScheduledReports(generateMockScheduledReports())
       
     } catch (error) {
-      console.error('Failed to load reporting data:', error)
+      // console.error('Failed to load reporting data:', error) // Commented to prevent console errors
+      toast.error('Failed to load reporting data. Please refresh.')
     } finally {
       setLoading(false)
     }
@@ -200,18 +201,18 @@ const AdvancedReporting = () => {
 
   const handleExportReport = (reportId, format) => {
     // Simulate export process
-    console.log(`Exporting report ${reportId} in ${format} format`)
+    // console.log(`Exporting report ${reportId} in ${format} format`) // Commented to prevent console logs
     // In real implementation, this would trigger the export API
   }
 
   const handleScheduleReport = (report) => {
     // Simulate scheduling
-    console.log('Scheduling report:', report)
+    // console.log('Scheduling report:', report) // Commented to prevent console logs
   }
 
   const handleShareReport = (report) => {
     // Simulate sharing
-    console.log('Sharing report:', report)
+    // console.log('Sharing report:', report) // Commented to prevent console logs
   }
 
   const getStatusColor = (status) => {
@@ -592,7 +593,7 @@ const AdvancedReporting = () => {
           onSearch={(query, filters, sort) => {
             setSearchQuery(query)
             setActiveFilters(filters)
-            console.log('Search:', { query, filters, sort })
+            // console.log('Search:', { query, filters, sort }) // Commented to prevent console logs
           }}
           filters={[
             {

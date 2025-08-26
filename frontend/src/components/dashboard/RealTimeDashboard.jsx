@@ -87,7 +87,8 @@ const RealTimeDashboard = () => {
       websocketService.on('user_activity', handleUserActivity)
       
     } catch (error) {
-      console.error('Failed to connect to WebSocket:', error)
+      // console.error('Failed to connect to WebSocket:', error) // Commented to prevent console errors
+      toast.error('Failed to connect to real-time updates.')
       setIsConnected(false)
     }
   }
@@ -109,7 +110,8 @@ const RealTimeDashboard = () => {
       setActiveUsers(mockData[3])
       
     } catch (error) {
-      console.error('Failed to load initial data:', error)
+      // console.error('Failed to load initial data:', error) // Commented to prevent console errors
+      toast.error('Failed to load dashboard data. Please refresh.')
     } finally {
       setIsLoading(false)
     }
@@ -279,7 +281,7 @@ const RealTimeDashboard = () => {
         labels: {
           color: 'var(--text-primary)',
           font: {
-            family: 'Yandex Sans Display'
+            family: 'Inter'
           }
         }
       },

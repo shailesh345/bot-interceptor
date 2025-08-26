@@ -143,7 +143,7 @@ const IconShowcase = () => {
           🎨 Enhanced Icon Showcase
         </h1>
         <p className="text-gray-600 font-yandex">
-          Beautiful icon selection with Yandex Sans Display font family
+          Beautiful icon selection with Inter font family
         </p>
       </div>
 
@@ -174,7 +174,7 @@ const IconShowcase = () => {
 
       <div className="mt-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
         <h3 className="text-lg font-semibold text-blue-900 font-yandex mb-3">
-          ✨ Font Family: Yandex Sans Display
+          ✨ Font Family: Inter
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="text-center">

@@ -80,7 +80,8 @@ const AdminDashboard = () => {
         setIsLoading(false)
       }, 1000)
     } catch (error) {
-      console.error('Failed to fetch admin data:', error)
+      // console.error('Failed to fetch admin data:', error) // Commented to prevent console errors
+      toast.error('Failed to fetch admin data. Please refresh.')
       setIsLoading(false)
     }
   }

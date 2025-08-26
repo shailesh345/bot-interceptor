@@ -16,6 +16,9 @@ import {
 import { toast } from 'react-hot-toast'
 
 const AIChatbot = () => {
+  // Check if AI features are enabled (can be controlled via environment variable)
+  const isAIEnabled = import.meta.env.VITE_AI_ENABLED === 'true' || false
+  
   const [isOpen, setIsOpen] = useState(false)
   const [isMinimized, setIsMinimized] = useState(false)
   const [messages, setMessages] = useState([])
@@ -52,15 +55,22 @@ const AIChatbot = () => {
 
   useEffect(() => {
     // Add welcome message
-    if (messages.length === 0) {
+    if (messages.length === 0 && isAIEnabled) {
       addMessage({
         id: Date.now(),
         text: "Hello! I'm your AI assistant. I can help you with traffic optimization, security insights, performance analysis, and more. How can I assist you today?",
         sender: 'bot',
         timestamp: new Date()
       })
+    } else if (messages.length === 0 && !isAIEnabled) {
+      addMessage({
+        id: Date.now(),
+        text: "AI Assistant is currently disabled. This feature will be available once an AI backend service is configured.",
+        sender: 'bot',
+        timestamp: new Date()
+      })
     }
-  }, [])
+  }, [isAIEnabled])
 
   useEffect(() => {
     scrollToBottom()
@@ -75,7 +85,7 @@ const AIChatbot = () => {
   }
 
   const handleSendMessage = async () => {
-    if (!inputMessage.trim()) return
+    if (!inputMessage.trim() || !isAIEnabled) return
 
     const userMessage = {
       id: Date.now(),
@@ -88,7 +98,7 @@ const AIChatbot = () => {
     setInputMessage('')
     setIsTyping(true)
 
-    // Simulate AI processing
+    // Simulate AI processing (this would be replaced with real API call when AI is enabled)
     setTimeout(() => {
       const response = generateAIResponse(inputMessage.toLowerCase())
       addMessage({
@@ -237,7 +247,7 @@ const AIChatbot = () => {
             </div>
 
             {/* Quick Suggestions */}
-            {messages.length <= 1 && (
+            {messages.length <= 1 && isAIEnabled && (
               <div className="px-4 pb-2">
                 <p className="text-xs text-gray-500 mb-2">Quick suggestions:</p>
                 <div className="flex flex-wrap gap-2">
@@ -262,12 +272,13 @@ const AIChatbot = () => {
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                  placeholder="Ask me anything..."
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder={isAIEnabled ? "Ask me anything..." : "AI Assistant is disabled"}
+                  disabled={!isAIEnabled}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 />
                 <button
                   onClick={handleSendMessage}
-                  disabled={!inputMessage.trim() || isTyping}
+                  disabled={!inputMessage.trim() || isTyping || !isAIEnabled}
                   className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Send className="w-4 h-4" />

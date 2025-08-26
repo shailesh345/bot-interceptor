@@ -33,8 +33,8 @@ const PWARegistration = () => {
     const handleOnline = () => setIsOnline(true)
     const handleOffline = () => setIsOnline(false)
 
-    // Register service worker
-    if ('serviceWorker' in navigator) {
+    // Register service worker only in production to prevent refresh loops
+    if ('serviceWorker' in navigator && import.meta.env.PROD) {
       registerServiceWorker()
     }
 
@@ -55,7 +55,7 @@ const PWARegistration = () => {
   const registerServiceWorker = async () => {
     try {
       const registration = await navigator.serviceWorker.register('/sw.js')
-      console.log('Service Worker registered:', registration)
+      // console.log('Service Worker registered:', registration) // Commented for production
 
       // Check for updates
       registration.addEventListener('updatefound', () => {
@@ -68,7 +68,7 @@ const PWARegistration = () => {
         })
       })
     } catch (error) {
-      console.error('Service Worker registration failed:', error)
+      // console.error('Service Worker registration failed:', error) // Commented for production
     }
   }
 
@@ -115,9 +115,9 @@ const PWARegistration = () => {
     const { outcome } = await deferredPrompt.userChoice
 
     if (outcome === 'accepted') {
-      console.log('User accepted the install prompt')
+      // console.log('User accepted the install prompt') // Commented for production
     } else {
-      console.log('User dismissed the install prompt')
+      // console.log('User dismissed the install prompt') // Commented for production
     }
 
     setDeferredPrompt(null)

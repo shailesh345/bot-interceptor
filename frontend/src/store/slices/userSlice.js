@@ -1,14 +1,22 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import mockAPI from '../../services/mockAPI';
+import { authAPI } from '../../services/api';
 
-export const fetchUserProfile = createAsyncThunk('user/fetchProfile', async () => {
-  const response = await mockAPI.fetchUserProfile();
-  return response;
+export const fetchUserProfile = createAsyncThunk('user/fetchProfile', async (_, { rejectWithValue }) => {
+  try {
+    const response = await authAPI.getProfile();
+    return response.data;
+  } catch (error) {
+    return rejectWithValue(error.response?.data?.message || error.message || 'Failed to fetch user profile');
+  }
 });
 
-export const updateUserProfile = createAsyncThunk('user/updateProfile', async (profileData) => {
-  const response = await mockAPI.updateUserProfile(profileData);
-  return response;
+export const updateUserProfile = createAsyncThunk('user/updateProfile', async (profileData, { rejectWithValue }) => {
+  try {
+    const response = await authAPI.updateProfile(profileData);
+    return response.data;
+  } catch (error) {
+    return rejectWithValue(error.response?.data?.message || error.message || 'Failed to update user profile');
+  }
 });
 
 const userSlice = createSlice({

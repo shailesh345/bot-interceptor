@@ -15,7 +15,7 @@ const ErrorFallback = ({ error, resetErrorBoundary }) => {
             An unexpected error has occurred. Please try refreshing the page or contact support if the problem persists.
           </p>
           
-          {process.env.NODE_ENV === 'development' && (
+          {import.meta.env.DEV && (
             <details className="mt-4 text-left">
               <summary className="cursor-pointer text-sm font-medium text-gray-700">
                 Error Details

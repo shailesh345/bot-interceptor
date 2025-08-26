@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-import mockAPI from '../../services/mockAPI'
+import { analyticsAPI } from '../../services/api'
 
 const initialState = {
   metrics: [],
@@ -11,10 +11,10 @@ export const fetchAnalytics = createAsyncThunk(
   'analytics/fetchAnalytics',
   async (params = {}, { rejectWithValue }) => {
     try {
-      const response = await mockAPI.getAnalytics(params)
+      const response = await analyticsAPI.getDashboardStats(params.timeRange || '7d')
       return response.data
     } catch (error) {
-      return rejectWithValue(error.message || 'Failed to fetch analytics')
+      return rejectWithValue(error.response?.data?.message || error.message || 'Failed to fetch analytics')
     }
   }
 )

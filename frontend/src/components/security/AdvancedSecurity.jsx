@@ -71,7 +71,8 @@ const AdvancedSecurity = () => {
 
     } catch (err) {
       setError('Failed to fetch security data');
-      console.error('Error fetching security data:', err);
+      // console.error('Error fetching security data:', err); // Commented to prevent console errors
+      toast.error('Failed to load security data. Please refresh.');
     } finally {
       setLoading(false);
     }

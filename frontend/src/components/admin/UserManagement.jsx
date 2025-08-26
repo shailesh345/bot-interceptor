@@ -121,7 +121,8 @@ const UserManagement = () => {
       // Simulate API delay
       setTimeout(() => setIsLoading(false), 500)
     } catch (error) {
-      console.error('Failed to update user status:', error)
+      // console.error('Failed to update user status:', error) // Commented to prevent console errors
+      toast.error('Failed to update user status. Please try again.')
       setIsLoading(false)
     }
   }
@@ -139,7 +140,8 @@ const UserManagement = () => {
       // Simulate API delay
       setTimeout(() => setIsLoading(false), 500)
     } catch (error) {
-      console.error('Failed to update user plan:', error)
+      // console.error('Failed to update user plan:', error) // Commented to prevent console errors
+      toast.error('Failed to update user plan. Please try again.')
       setIsLoading(false)
     }
   }
@@ -159,7 +161,8 @@ const UserManagement = () => {
       // Simulate API delay
       setTimeout(() => setIsLoading(false), 500)
     } catch (error) {
-      console.error('Failed to delete user:', error)
+      // console.error('Failed to delete user:', error) // Commented to prevent console errors
+      toast.error('Failed to delete user. Please try again.')
       setIsLoading(false)
     }
   }

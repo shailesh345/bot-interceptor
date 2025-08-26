@@ -11,7 +11,7 @@ import {
   deleteRule, 
   testRule 
 } from '../store/slices/rulesSlice'
-import { mockAPI } from '../services/comprehensiveMockAPI'
+// mockAPI import removed - using real API integration
 import { 
   Plus, Search, Filter, Edit, Trash2, Copy, Play, Pause, 
   Shield, Bot, Globe, Clock, AlertTriangle, CheckCircle,

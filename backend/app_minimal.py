@@ -18,7 +18,7 @@ app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(hours=24)
 
 # Initialize extensions
 jwt = JWTManager(app)
-CORS(app, origins=['http://localhost:3000'])
+CORS(app, origins=['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002'])
 
 # In-memory user storage (replace with database in production)
 USERS = {

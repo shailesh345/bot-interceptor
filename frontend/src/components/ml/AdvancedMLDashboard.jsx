@@ -109,7 +109,7 @@ const AdvancedMLDashboard = () => {
       })
       
     } catch (error) {
-      console.error('Failed to load ML data:', error)
+      // console.error('Failed to load ML data:', error)
     } finally {
       setLoading(false)
     }
@@ -399,17 +399,17 @@ const AdvancedMLDashboard = () => {
   }
 
   const handleModelAction = (modelId, action) => {
-    console.log(`Model ${action}:`, modelId)
+    // console.log(`Model ${action}:`, modelId)
     // In real implementation, this would trigger the appropriate action
   }
 
   const handlePredictionClick = (prediction) => {
-    console.log('Prediction clicked:', prediction)
+    // console.log('Prediction clicked:', prediction)
     // In real implementation, this would show detailed prediction information
   }
 
   const handleInsightAction = (insightId, action) => {
-    console.log(`Insight ${action}:`, insightId)
+    // console.log(`Insight ${action}:`, insightId)
     // In real implementation, this would trigger the appropriate action
   }
 

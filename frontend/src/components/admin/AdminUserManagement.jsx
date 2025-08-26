@@ -135,7 +135,7 @@ const AdminUserManagement = () => {
   })
 
   const handleUserAction = (action, userId) => {
-    console.log(`${action} user ${userId}`)
+    // console.log(`${action} user ${userId}`) // Commented to prevent console logs
     // Implement user actions
   }
 

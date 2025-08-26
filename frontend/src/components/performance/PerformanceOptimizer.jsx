@@ -223,7 +223,7 @@ const PerformanceOptimizer = () => {
     
     for (const optimization of optimizations) {
       await new Promise(resolve => setTimeout(resolve, 300))
-      console.log(optimization)
+      // console.log(optimization)
     }
   }
 

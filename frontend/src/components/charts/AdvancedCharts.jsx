@@ -131,7 +131,7 @@ const AdvancedCharts = ({
         position: 'top',
         labels: {
           color: 'var(--text-primary)',
-          font: { family: 'Yandex Sans Display' },
+          font: { family: 'Inter' },
           usePointStyle: true,
           padding: 20
         },
@@ -174,7 +174,7 @@ const AdvancedCharts = ({
         },
         ticks: {
           color: 'var(--text-secondary)',
-          font: { family: 'Yandex Sans Display' }
+          font: { family: 'Inter' }
         }
       },
       y: {
@@ -186,7 +186,7 @@ const AdvancedCharts = ({
         },
         ticks: {
           color: 'var(--text-secondary)',
-          font: { family: 'Yandex Sans Display' }
+          font: { family: 'Inter' }
         }
       }
     } : {},

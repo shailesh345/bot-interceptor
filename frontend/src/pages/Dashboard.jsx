@@ -13,7 +13,7 @@ import {
   Globe, RefreshCw, ArrowUp, Eye, Server, CheckCircle,
   Clock, Settings, Bell, X, BarChart3, ShieldCheck
 } from 'lucide-react'
-import { mockAPI } from '../services/comprehensiveMockAPI'
+import { analyticsAPI, domainsAPI, rulesAPI } from '../services/api'
 import RealTimeDashboard from '../components/dashboard/RealTimeDashboard'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
@@ -39,16 +39,63 @@ const Dashboard = () => {
     setLoading(true)
     setError(null)
     try {
-      const days = timeRange === '24h' ? 1 : timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90
-      const [analytics, domains, rules] = await Promise.all([
-        mockAPI.getAnalytics(days),
-        mockAPI.getDomains(),
-        mockAPI.getRules()
+      const [analyticsResponse, domainsResponse, rulesResponse] = await Promise.all([
+        analyticsAPI.getDashboardStats(timeRange),
+        domainsAPI.getDomains(),
+        rulesAPI.getRules()
       ])
-      setDashboardData({ ...analytics, domains, rules })
+      
+      // Transform analytics data from backend format
+      const responseData = analyticsResponse.data
+      const analytics = responseData.analytics || {}
+      const overview = analytics.overview || {}
+      
+      const domains = domainsResponse.data.domains || domainsResponse.data || []
+      const rules = rulesResponse.data.rules || rulesResponse.data || []
+      
+      // Transform to expected dashboard format
+      const transformedData = {
+        summary: {
+          totalRequests: overview.total_requests || 0,
+          totalBlocked: overview.blocked_requests || 0,
+          botTraffic: overview.bot_requests || 0,
+          revenue: 0 // Calculate from blocked requests if needed
+        },
+        trafficData: analytics.hourly_pattern || [],
+        botDistribution: analytics.bot_types || [],
+        recentActivity: [
+          {
+            id: 1,
+            type: 'traffic',
+            description: 'Traffic monitoring active',
+            time: new Date().toLocaleTimeString(),
+            severity: 'info'
+          }
+        ],
+        domains,
+        rules
+      }
+      
+      setDashboardData(transformedData)
     } catch (error) {
+      console.error('Dashboard loading error:', error)
       setError('Failed to load dashboard data')
       toast.error('Failed to load dashboard data')
+      
+      // Fallback data to prevent crashes
+      setDashboardData({
+        summary: {
+          totalRequests: 0,
+          totalBlocked: 0,
+          botTraffic: 0,
+          revenue: 0
+        },
+        trafficData: [],
+        botDistribution: [],
+        recentActivity: [],
+        domains: [],
+        rules: []
+      })
     } finally {
       setLoading(false)
     }

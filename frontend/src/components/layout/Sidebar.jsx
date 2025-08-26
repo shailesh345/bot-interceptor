@@ -34,7 +34,9 @@ import {
   Brain,
   Target,
   Sparkles,
-  Workflow
+  Workflow,
+  Link,
+  Layout
 } from 'lucide-react'
 import { MVP_CONFIG } from '../../config/mvp'
 
@@ -198,7 +200,7 @@ const Sidebar = () => {
             <button
               onClick={() => {
                 // This would typically update user preferences
-                console.log('Toggle advanced features')
+                // console.log('Toggle advanced features') // Commented to prevent console logs
               }}
               className="w-full px-2 py-2 text-xs text-left transition-all duration-200 interactive"
               style={{ color: 'var(--text-muted)' }}
@@ -209,7 +211,7 @@ const Sidebar = () => {
         )}
 
         {/* MVP Dashboard Link (Development Only) */}
-        {process.env.NODE_ENV === 'development' && (
+        {import.meta.env.DEV && (
           <div className="border-t mt-4 pt-4" style={{ borderColor: 'var(--border-primary)' }}>
             <NavLink
               to="/mvp"

@@ -69,7 +69,8 @@ const WebhookManagement = () => {
         setNewWebhook({ name: '', url: '', events: [], secret: '' });
       }
     } catch (err) {
-      console.error('Error creating webhook:', err);
+      // console.error('Error creating webhook:', err); // Commented to prevent console errors
+      toast.error('Failed to create webhook. Please try again.');
     }
   };
 

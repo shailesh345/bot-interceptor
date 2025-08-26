@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-import { mockAPI } from '../../services/comprehensiveMockAPI'
+import { rulesAPI } from '../../services/api'
 
 const initialState = {
   rules: [],
@@ -17,12 +17,12 @@ const initialState = {
 // Async thunks
 export const fetchRules = createAsyncThunk(
   'rules/fetchRules',
-  async (_, { rejectWithValue }) => {
+  async (params = {}, { rejectWithValue }) => {
     try {
-      const rules = await mockAPI.getRules()
-      return rules
+      const response = await rulesAPI.getRules(params)
+      return response.data
     } catch (error) {
-      return rejectWithValue(error.message || 'Failed to fetch rules')
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch rules')
     }
   }
 )
@@ -31,10 +31,10 @@ export const fetchRule = createAsyncThunk(
   'rules/fetchRule',
   async (id, { rejectWithValue }) => {
     try {
-      const rule = await mockAPI.getRule(id)
-      return rule
+      const response = await rulesAPI.getRule(id)
+      return response.data
     } catch (error) {
-      return rejectWithValue(error.message || 'Failed to fetch rule')
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch rule')
     }
   }
 )
@@ -43,10 +43,10 @@ export const createRule = createAsyncThunk(
   'rules/createRule',
   async (ruleData, { rejectWithValue }) => {
     try {
-      const rule = await mockAPI.createRule(ruleData)
-      return rule
+      const response = await rulesAPI.createRule(ruleData)
+      return response.data
     } catch (error) {
-      return rejectWithValue(error.message || 'Failed to create rule')
+      return rejectWithValue(error.response?.data?.message || 'Failed to create rule')
     }
   }
 )
@@ -55,10 +55,10 @@ export const updateRule = createAsyncThunk(
   'rules/updateRule',
   async ({ id, data }, { rejectWithValue }) => {
     try {
-      const rule = await mockAPI.updateRule(id, data)
-      return rule
+      const response = await rulesAPI.updateRule(id, data)
+      return response.data
     } catch (error) {
-      return rejectWithValue(error.message || 'Failed to update rule')
+      return rejectWithValue(error.response?.data?.message || 'Failed to update rule')
     }
   }
 )
@@ -67,22 +67,22 @@ export const deleteRule = createAsyncThunk(
   'rules/deleteRule',
   async (id, { rejectWithValue }) => {
     try {
-      await mockAPI.deleteRule(id)
+      await rulesAPI.deleteRule(id)
       return id
     } catch (error) {
-      return rejectWithValue(error.message || 'Failed to delete rule')
+      return rejectWithValue(error.response?.data?.message || 'Failed to delete rule')
     }
   }
 )
 
 export const testRule = createAsyncThunk(
   'rules/testRule',
-  async (ruleData, { rejectWithValue }) => {
+  async ({ ruleId, sampleRequests }, { rejectWithValue }) => {
     try {
-      const result = await mockAPI.testRule(ruleData)
-      return result
+      const response = await rulesAPI.testRule(ruleId, sampleRequests)
+      return response.data
     } catch (error) {
-      return rejectWithValue(error.message || 'Failed to test rule')
+      return rejectWithValue(error.response?.data?.message || 'Failed to test rule')
     }
   }
 )
@@ -116,7 +116,9 @@ const rulesSlice = createSlice({
       })
       .addCase(fetchRules.fulfilled, (state, action) => {
         state.loading = false
-        state.rules = action.payload
+        // Handle both direct array and wrapped response formats
+        const rulesData = action.payload.rules || action.payload
+        state.rules = Array.isArray(rulesData) ? rulesData : []
       })
       .addCase(fetchRules.rejected, (state, action) => {
         state.loading = false
@@ -144,7 +146,11 @@ const rulesSlice = createSlice({
       })
       .addCase(createRule.fulfilled, (state, action) => {
         state.loading = false
-        state.rules.push(action.payload)
+        // Handle both direct rule object and wrapped response formats
+        const ruleData = action.payload.rule || action.payload
+        if (ruleData) {
+          state.rules.push(ruleData)
+        }
       })
       .addCase(createRule.rejected, (state, action) => {
         state.loading = false

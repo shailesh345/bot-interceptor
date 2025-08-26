@@ -108,7 +108,26 @@ def get_domains():
         query = query.order_by(Domain.created_at.desc())
         
         # Paginate
-        domains = query.paginate(page=page, per_page=per_page, error_out=False)
+        try:
+            domains = query.paginate(page=page, per_page=per_page, error_out=False)
+        except TypeError:
+            # Handle newer SQLAlchemy versions
+            from sqlalchemy import func
+            total = query.count()
+            domains_items = query.offset((page - 1) * per_page).limit(per_page).all()
+            
+            # Create a simple pagination-like object
+            class SimplePagination:
+                def __init__(self, items, page, per_page, total):
+                    self.items = items
+                    self.page = page
+                    self.per_page = per_page
+                    self.total = total
+                    self.pages = (total + per_page - 1) // per_page
+                    self.has_next = page < self.pages
+                    self.has_prev = page > 1
+            
+            domains = SimplePagination(domains_items, page, per_page, total)
         
         # Get traffic statistics for each domain
         domain_stats = {}
@@ -117,8 +136,8 @@ def get_domains():
             thirty_days_ago = datetime.now() - timedelta(days=30)
             stats = db.session.query(
                 db.func.count(TrafficLog.id).label('total_requests'),
-                db.func.sum(db.case([(TrafficLog.action_taken == 'block', 1)], else_=0)).label('blocked_requests'),
-                db.func.sum(db.case([(TrafficLog.is_bot == True, 1)], else_=0)).label('bot_requests')
+                db.func.sum(db.case((TrafficLog.action_taken == 'block', 1), else_=0)).label('blocked_requests'),
+                db.func.sum(db.case((TrafficLog.is_bot == True, 1), else_=0)).label('bot_requests')
             ).filter(
                 TrafficLog.domain_id == domain.id,
                 TrafficLog.timestamp >= thirty_days_ago
@@ -155,7 +174,10 @@ def get_domains():
         }), 200
         
     except Exception as e:
-        return jsonify({'message': 'Internal server error'}), 500
+        print(f"ERROR in get_domains: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'message': f'Internal server error: {str(e)}'}), 500
 
 @api.route('/domains', methods=['POST'])
 @jwt_required()
@@ -250,8 +272,8 @@ def get_domain(domain_id):
         thirty_days_ago = datetime.now() - timedelta(days=30)
         stats = db.session.query(
             db.func.count(TrafficLog.id).label('total_requests'),
-            db.func.sum(db.case([(TrafficLog.action_taken == 'block', 1)], else_=0)).label('blocked_requests'),
-            db.func.sum(db.case([(TrafficLog.is_bot == True, 1)], else_=0)).label('bot_requests')
+            db.func.sum(db.case((TrafficLog.action_taken == 'block', 1), else_=0)).label('blocked_requests'),
+            db.func.sum(db.case((TrafficLog.is_bot == True, 1), else_=0)).label('bot_requests')
         ).filter(
             TrafficLog.domain_id == domain.id,
             TrafficLog.timestamp >= thirty_days_ago
@@ -408,6 +430,149 @@ def delete_domain(domain_id):
             'status': domain.status
         }
     }), 201
+
+@api.route('/traffic/logs', methods=['GET'])
+@jwt_required()
+def get_traffic_logs():
+    """Get traffic logs for current user's domains"""
+    current_user = get_current_user()
+    if not current_user:
+        return jsonify({'message': 'User not found'}), 404
+    
+    try:
+        # Get pagination parameters
+        page = request.args.get('page', 1, type=int)
+        per_page = min(request.args.get('per_page', 50, type=int), 100)
+        
+        # Get filter parameters
+        domain_id = request.args.get('domain_id', type=int)
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        
+        # Build query - join with domains to filter by tenant
+        query = db.session.query(TrafficLog).join(Domain).filter(
+            Domain.tenant_id == current_user.tenant_id
+        )
+        
+        # Apply filters
+        if domain_id:
+            query = query.filter(TrafficLog.domain_id == domain_id)
+        
+        if start_date:
+            try:
+                start_dt = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
+                query = query.filter(TrafficLog.timestamp >= start_dt)
+            except ValueError:
+                return jsonify({'message': 'Invalid start_date format'}), 400
+        
+        if end_date:
+            try:
+                end_dt = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
+                query = query.filter(TrafficLog.timestamp <= end_dt)
+            except ValueError:
+                return jsonify({'message': 'Invalid end_date format'}), 400
+        
+        # Order by timestamp descending
+        query = query.order_by(TrafficLog.timestamp.desc())
+        
+        # Paginate
+        logs = query.paginate(page=page, per_page=per_page, error_out=False)
+        
+        return jsonify({
+            'traffic_logs': [log.to_dict() for log in logs.items],
+            'pagination': {
+                'page': page,
+                'per_page': per_page,
+                'total': logs.total,
+                'pages': logs.pages,
+                'has_next': logs.has_next,
+                'has_prev': logs.has_prev
+            }
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'message': f'Internal server error: {str(e)}'}), 500
+
+@api.route('/admin/users', methods=['GET'])
+@jwt_required()
+def get_admin_users():
+    """Get all users (admin only)"""
+    current_user = get_current_user()
+    if not current_user:
+        return jsonify({'message': 'User not found'}), 404
+    
+    # Check if user has admin privileges
+    if current_user.role not in ['super_admin', 'admin']:
+        return jsonify({'message': 'Insufficient permissions'}), 403
+    
+    try:
+        # Get pagination parameters
+        page = request.args.get('page', 1, type=int)
+        per_page = min(request.args.get('per_page', 20, type=int), 100)
+        
+        # Get filter parameters
+        role = request.args.get('role')
+        status = request.args.get('status')
+        search = request.args.get('search')
+        
+        # Build query - super_admin can see all users, admin can see users in their tenant
+        if current_user.role == 'super_admin':
+            query = User.query
+        else:
+            query = User.query.filter_by(tenant_id=current_user.tenant_id)
+        
+        # Apply filters
+        if role:
+            query = query.filter(User.role == role)
+        
+        if status == 'active':
+            query = query.filter(User.is_active == True)
+        elif status == 'inactive':
+            query = query.filter(User.is_active == False)
+        
+        if search:
+            search_filter = f'%{search}%'
+            query = query.filter(
+                db.or_(
+                    User.username.ilike(search_filter),
+                    User.email.ilike(search_filter),
+                    User.first_name.ilike(search_filter),
+                    User.last_name.ilike(search_filter)
+                )
+            )
+        
+        # Order by created_at descending
+        query = query.order_by(User.created_at.desc())
+        
+        # Paginate
+        users = query.paginate(page=page, per_page=per_page, error_out=False)
+        
+        return jsonify({
+            'users': [{
+                'id': user.uuid,
+                'email': user.email,
+                'username': user.username,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'role': user.role,
+                'is_active': user.is_active,
+                'is_verified': user.is_verified,
+                'tenant_id': user.tenant_id,
+                'last_login': user.last_login.isoformat() if user.last_login else None,
+                'created_at': user.created_at.isoformat() if user.created_at else None
+            } for user in users.items],
+            'pagination': {
+                'page': page,
+                'per_page': per_page,
+                'total': users.total,
+                'pages': users.pages,
+                'has_next': users.has_next,
+                'has_prev': users.has_prev
+            }
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'message': f'Internal server error: {str(e)}'}), 500
 
 @api.route('/bot-profiles', methods=['GET'])
 @jwt_required()
