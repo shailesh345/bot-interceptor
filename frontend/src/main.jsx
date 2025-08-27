@@ -93,7 +93,12 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <Provider store={store}>
         <PersistGate loading={<LoadingSpinner />} persistor={persistor}>
           <QueryClientProvider client={queryClient}>
-            <BrowserRouter>
+            <BrowserRouter
+              future={{
+                v7_startTransition: true,
+                v7_relativeSplatPath: true,
+              }}
+            >
               <HelmetProvider>
                 <ThemeProvider theme={theme}>
                   <CssBaseline />

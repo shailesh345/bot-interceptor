@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useMemo, useCallback } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { useDispatch, useSelector } from 'react-redux'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -18,7 +18,7 @@ import {
   Edit, Trash2, Settings, ExternalLink, Copy, CheckCircle,
   AlertTriangle, Clock, Zap, Target, BarChart3, Eye,
   Download, Filter, RefreshCw, Calendar, DollarSign,
-  Server, X
+  Server, X, FileText, Code, Database
 } from 'lucide-react'
 
 // Domain Form Modal Component
@@ -39,7 +39,25 @@ const DomainFormModal = ({ isOpen, onClose, domain = null, onSubmit }) => {
       return false
     }
     
-    const domainRegex = /^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]?\.[a-zA-Z]{2,}$/
+    // More flexible domain regex that handles various cases
+    const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/
+    
+    // Additional checks for edge cases
+    if (domainName.includes('..')) {
+      setValidationError('Domain cannot contain consecutive dots')
+      return false
+    }
+    
+    if (domainName.startsWith('-') || domainName.endsWith('-')) {
+      setValidationError('Domain cannot start or end with a hyphen')
+      return false
+    }
+    
+    if (domainName.length > 253) {
+      setValidationError('Domain name is too long (maximum 253 characters)')
+      return false
+    }
+    
     if (!domainRegex.test(domainName)) {
       setValidationError('Please enter a valid domain name (e.g., example.com)')
       return false
@@ -72,7 +90,7 @@ const DomainFormModal = ({ isOpen, onClose, domain = null, onSubmit }) => {
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.9 }}
-        className="bg-white rounded-lg p-6 w-full max-w-md mx-4"
+        className="bg-white rounded-lg p-6 w-full max-w-md mx-4 shadow-lg"
       >
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">
@@ -188,7 +206,7 @@ const DomainDetailsModal = ({ isOpen, onClose, domain }) => {
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.9 }}
-        className="bg-white rounded-lg p-6 w-full max-w-4xl mx-4 max-h-screen overflow-y-auto"
+        className="bg-white rounded-lg p-6 w-full max-w-4xl mx-4 max-h-screen overflow-y-auto shadow-lg"
       >
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-semibold">{domain.domain_name}</h2>
@@ -306,6 +324,664 @@ const DomainDetailsModal = ({ isOpen, onClose, domain }) => {
   )
 }
 
+// Domain Verification Modal Component
+const DomainVerificationModal = ({ isOpen, onClose, domain }) => {
+  const [verificationData, setVerificationData] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [selectedMethod, setSelectedMethod] = useState('dns')
+  const [verifying, setVerifying] = useState(false)
+
+  useEffect(() => {
+    if (isOpen && domain) {
+      fetchVerificationData()
+    }
+  }, [isOpen, domain])
+
+  const fetchVerificationData = async () => {
+    setLoading(true)
+    try {
+      // Fallback to mock data for demo - you can uncomment the real API call when backend is ready
+      setVerificationData({
+        domain: domain,
+        verification_methods: {
+          dns: {
+            method: 'DNS TXT Record',
+            description: 'Add this TXT record to your domain\'s DNS settings',
+            instructions: [
+              '1. Go to your hosting provider\'s DNS management page (cPanel, Cloudflare, etc.)',
+              '2. Find the DNS Zone Editor or DNS Records section',
+              '3. Add a new TXT record with these exact details:',
+              '   • Record Type: TXT',
+              `   • Name/Host: _botinterceptor.${domain.domain_name}`,
+              `   • Value/Content: botinterceptor-verification=abc123def456`,
+              '   • TTL: 300 (or leave default)',
+              '4. Save the DNS record',
+              '5. Wait 5-30 minutes for DNS propagation',
+              '6. Click "Verify Domain" below to complete verification'
+            ],
+            copy_values: {
+              record_name: `_botinterceptor.${domain.domain_name}`,
+              record_value: `botinterceptor-verification=abc123def456`,
+              record_type: 'TXT',
+              ttl: '300'
+            }
+          },
+          html_file: {
+            method: 'HTML File Upload',
+            description: 'Upload a verification file to your website',
+            file_info: {
+              filename: `botinterceptor-abc123def456.txt`,
+              content: `botinterceptor-domain-verification=abc123def456`,
+              upload_path: `/.well-known/botinterceptor-abc123def456.txt`,
+              verification_url: `http://${domain.domain_name}/.well-known/botinterceptor-abc123def456.txt`
+            }
+          },
+          meta_tag: {
+            method: 'HTML Meta Tag',
+            description: 'Add a meta tag to your website\'s homepage',
+            tag_info: {
+              tag: `<meta name="botinterceptor-domain-verification" content="abc123def456" />`,
+              placement: 'Add to <head> section of your homepage'
+            }
+          }
+        }
+      })
+    } catch (error) {
+      console.error('Error fetching verification data:', error)
+      toast.error('Failed to load verification data')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleCopyToClipboard = async (text, label) => {
+    try {
+      if (!text) {
+        toast.error('Nothing to copy')
+        return
+      }
+      
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text)
+        toast.success(`${label} copied to clipboard!`)
+      } else {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea')
+        textArea.value = text
+        textArea.style.position = 'fixed'
+        textArea.style.left = '-999999px'
+        textArea.style.top = '-999999px'
+        document.body.appendChild(textArea)
+        textArea.focus()
+        textArea.select()
+        try {
+          document.execCommand('copy')
+          toast.success(`${label} copied to clipboard!`)
+        } catch (err) {
+          toast.error('Failed to copy to clipboard')
+        }
+        document.body.removeChild(textArea)
+      }
+    } catch (error) {
+      console.error('Copy to clipboard failed:', error)
+      toast.error('Failed to copy to clipboard')
+    }
+  }
+
+  const handleVerifyDomain = async () => {
+    if (!domain?.id) {
+      toast.error('Invalid domain. Please refresh and try again.')
+      return
+    }
+
+    setVerifying(true)
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        toast.error('Please log in to verify domains.')
+        return
+      }
+
+      const result = await fetch(`/api/v1/domains/${domain.id}/verify`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ method: selectedMethod })
+      })
+
+      if (!result.ok) {
+        if (result.status === 404) {
+          toast.error('Verification endpoint not found. Please contact support.')
+        } else if (result.status === 401) {
+          toast.error('Authentication failed. Please log in again.')
+        } else if (result.status === 500) {
+          toast.error('Server error. Please try again later.')
+        } else {
+          throw new Error(`HTTP ${result.status}: ${result.statusText}`)
+        }
+        return
+      }
+
+      const data = await result.json()
+      
+      if (data.success) {
+        toast.success(data.message || 'Domain verified successfully!')
+        onClose()
+        // Trigger a refresh of the domains list
+        if (window.dispatchEvent) {
+          window.dispatchEvent(new CustomEvent('refreshDomains'))
+        }
+      } else {
+        const errorMsg = data.error || data.message || 'Verification failed'
+        toast.error(errorMsg)
+        console.warn('Verification failed:', data)
+      }
+    } catch (error) {
+      console.error('Verification error:', error)
+      if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+        toast.error('Cannot connect to server. Please check if the backend is running.')
+      } else if (error.message.includes('CORS')) {
+        toast.error('CORS error. Please check server configuration.')
+      } else {
+        toast.error(`Verification failed: ${error.message}`)
+      }
+    } finally {
+      setVerifying(false)
+    }
+  }
+
+  const handleDownloadFile = async () => {
+    try {
+      const response = await fetch(`/api/v1/domains/${domain.id}/verification/download`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+
+      if (response.ok) {
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.style.display = 'none'
+        a.href = url
+        const filename = verificationData?.verification_methods?.html_file?.file_info?.filename || `botinterceptor-verification-${domain.domain_name}.txt`
+        a.download = filename
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+        toast.success('Verification file downloaded!')
+      } else {
+        toast.error('Failed to download verification file')
+      }
+    } catch (error) {
+      console.error('Download error:', error)
+      toast.error('Failed to download verification file')
+    }
+  }
+
+  if (!isOpen || !domain) return null
+
+  const dnsData = verificationData?.verification_methods?.dns
+  const fileData = verificationData?.verification_methods?.html_file
+  const metaData = verificationData?.verification_methods?.meta_tag
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+      >
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Get TXT String for Hosting</h2>
+              <p className="text-sm text-gray-600 mt-1">
+                Domain: <span className="font-medium">{domain.domain_name}</span>
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <span className="ml-3 text-gray-600">Loading verification options...</span>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Verification Method Tabs */}
+              <div className="border-b border-gray-200">
+                <nav className="-mb-px flex space-x-8">
+                  {[
+                    { id: 'dns', name: 'DNS TXT Record', icon: Database, recommended: true },
+                    { id: 'html_file', name: 'HTML File Upload', icon: FileText },
+                    { id: 'meta_tag', name: 'Meta Tag', icon: Code }
+                  ].map((method) => (
+                    <button
+                      key={method.id}
+                      onClick={() => setSelectedMethod(method.id)}
+                      className={`flex items-center space-x-2 py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
+                        selectedMethod === method.id
+                          ? 'border-blue-500 text-blue-600'
+                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      <method.icon className="h-4 w-4" />
+                      <span>{method.name}</span>
+                      {method.recommended && (
+                        <span className="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full">
+                          Recommended
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </nav>
+              </div>
+
+              {/* DNS TXT Record Method */}
+              {selectedMethod === 'dns' && dnsData && (
+                <div className="space-y-6">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h3 className="font-semibold text-blue-900 mb-2">📋 Copy These Values to Your Hosting Provider</h3>
+                    <p className="text-sm text-blue-800">
+                      Add the following TXT record to your domain's DNS settings through your hosting provider.
+                    </p>
+                    {process.env.NODE_ENV === 'development' && (
+                      <div className="mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-xs">
+                        <strong>Dev Mode:</strong> Domain: {domain?.domain_name}, ID: {domain?.id}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Copy-friendly TXT Record Info */}
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Record Type</label>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="text"
+                            value={dnsData.copy_values?.record_type || 'TXT'}
+                            readOnly
+                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-900 font-semibold"
+                          />
+                          <button
+                            onClick={() => handleCopyToClipboard(dnsData.copy_values?.record_type || 'TXT', 'Record type')}
+                            className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors"
+                          >
+                            <Copy className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Name/Host 
+                          <span className="text-red-500 ml-1">*</span>
+                        </label>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="text"
+                            value={dnsData.copy_values?.record_name || ''}
+                            readOnly
+                            className="flex-1 px-3 py-2 border-2 border-blue-300 rounded-md bg-blue-50 text-gray-900 font-mono text-sm font-semibold"
+                          />
+                          <button
+                            onClick={() => handleCopyToClipboard(dnsData.copy_values?.record_name || '', 'Record name')}
+                            className="px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-md transition-colors font-semibold"
+                          >
+                            <Copy className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Value/Content 
+                          <span className="text-red-500 ml-1">*</span>
+                        </label>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="text"
+                            value={dnsData.copy_values?.record_value || ''}
+                            readOnly
+                            className="flex-1 px-3 py-2 border-2 border-blue-300 rounded-md bg-blue-50 text-gray-900 font-mono text-sm font-semibold"
+                          />
+                          <button
+                            onClick={() => handleCopyToClipboard(dnsData.copy_values?.record_value || '', 'Record value')}
+                            className="px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-md transition-colors font-semibold"
+                          >
+                            <Copy className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">TTL (optional)</label>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="text"
+                            value={dnsData.copy_values?.ttl || '300'}
+                            readOnly
+                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-900"
+                          />
+                          <button
+                            onClick={() => handleCopyToClipboard(dnsData.copy_values?.ttl || '300', 'TTL')}
+                            className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors"
+                          >
+                            <Copy className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Instructions */}
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <h4 className="font-medium text-gray-900 mb-3">📝 Step-by-Step Instructions</h4>
+                      <ol className="space-y-2 text-sm text-gray-700">
+                        {dnsData.instructions?.map((instruction, index) => (
+                          <li key={index} className="flex items-start">
+                            <span className="flex-shrink-0 w-5 h-5 bg-blue-100 text-blue-600 rounded-full text-xs flex items-center justify-center mr-2 mt-0.5 font-semibold">
+                              {index + 1}
+                            </span>
+                            <span>{instruction}</span>
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  </div>
+
+                  {/* Common Hosting Providers Quick Guide */}
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <h4 className="font-medium text-yellow-900 mb-2">🏗️ Popular Hosting Providers</h4>
+                    <div className="text-sm text-yellow-800 space-y-1">
+                      <p><strong>cPanel:</strong> Zone Editor → Add TXT Record</p>
+                      <p><strong>Cloudflare:</strong> DNS Tab → Add Record → TXT</p>
+                      <p><strong>GoDaddy:</strong> DNS Management → Add TXT Record</p>
+                      <p><strong>Namecheap:</strong> Advanced DNS → Add New Record → TXT</p>
+                      <p><strong>AWS Route 53:</strong> Hosted Zones → Create Record → TXT</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* HTML File Method */}
+              {selectedMethod === 'html_file' && fileData && (
+                <div className="space-y-6">
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <h3 className="font-semibold text-green-900 mb-2">📄 HTML File Upload Verification</h3>
+                    <p className="text-sm text-green-800">
+                      Upload a verification file to your website's root directory or /.well-known/ folder.
+                    </p>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Filename</label>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="text"
+                            value={fileData.file_info?.filename || ''}
+                            readOnly
+                            className="flex-1 px-3 py-2 border-2 border-green-300 rounded-md bg-green-50 text-gray-900 font-mono text-sm font-semibold"
+                          />
+                          <button
+                            onClick={() => handleCopyToClipboard(fileData.file_info?.filename || '', 'Filename')}
+                            className="px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-md transition-colors"
+                          >
+                            <Copy className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          File Content 
+                          <span className="text-red-500 ml-1">*</span>
+                        </label>
+                        <div className="flex items-center space-x-2">
+                          <textarea
+                            value={fileData.file_info?.content || ''}
+                            readOnly
+                            rows={2}
+                            className="flex-1 px-3 py-2 border-2 border-green-300 rounded-md bg-green-50 text-gray-900 font-mono text-sm resize-none font-semibold"
+                          />
+                          <button
+                            onClick={() => handleCopyToClipboard(fileData.file_info?.content || '', 'File content')}
+                            className="px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-md transition-colors font-semibold"
+                          >
+                            <Copy className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Upload Path</label>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="text"
+                            value={fileData.file_info?.upload_path || ''}
+                            readOnly
+                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-900 font-mono text-sm"
+                          />
+                          <button
+                            onClick={() => handleCopyToClipboard(fileData.file_info?.upload_path || '', 'Upload path')}
+                            className="px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-md transition-colors"
+                          >
+                            <Copy className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Download File Button */}
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <h4 className="font-medium text-blue-900 mb-2">📥 Quick Download</h4>
+                        <p className="text-sm text-blue-800 mb-3">
+                          Download the verification file ready to upload to your server.
+                        </p>
+                        <button
+                          onClick={handleDownloadFile}
+                          className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors flex items-center justify-center"
+                        >
+                          <Download className="h-4 w-4 mr-2" />
+                          Download Verification File
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <h4 className="font-medium text-gray-900 mb-3">📝 Step-by-Step Instructions</h4>
+                      <ol className="space-y-2 text-sm text-gray-700">
+                        <li className="flex items-start">
+                          <span className="flex-shrink-0 w-5 h-5 bg-green-100 text-green-600 rounded-full text-xs flex items-center justify-center mr-2 mt-0.5 font-semibold">1</span>
+                          <span>Click "Download Verification File" button above</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="flex-shrink-0 w-5 h-5 bg-green-100 text-green-600 rounded-full text-xs flex items-center justify-center mr-2 mt-0.5 font-semibold">2</span>
+                          <span>Upload the downloaded file to your website's <code className="bg-gray-200 px-1 rounded">/.well-known/</code> folder</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="flex-shrink-0 w-5 h-5 bg-green-100 text-green-600 rounded-full text-xs flex items-center justify-center mr-2 mt-0.5 font-semibold">3</span>
+                          <span>Alternative: Upload to your website's root directory</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="flex-shrink-0 w-5 h-5 bg-green-100 text-green-600 rounded-full text-xs flex items-center justify-center mr-2 mt-0.5 font-semibold">4</span>
+                          <span>Ensure the file is accessible at: <code className="bg-gray-200 px-1 rounded text-xs">{fileData.file_info?.verification_url}</code></span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="flex-shrink-0 w-5 h-5 bg-green-100 text-green-600 rounded-full text-xs flex items-center justify-center mr-2 mt-0.5 font-semibold">5</span>
+                          <span>Click "Verify Domain" below to complete verification</span>
+                        </li>
+                      </ol>
+                      
+                      <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                        <p className="text-xs text-yellow-800">
+                          <strong>💡 Tip:</strong> Most hosting providers allow file uploads via cPanel File Manager, FTP, or SFTP.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* File Upload Methods */}
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <h4 className="font-medium text-yellow-900 mb-2">🏗️ Popular File Upload Methods</h4>
+                    <div className="text-sm text-yellow-800 space-y-1">
+                      <p><strong>cPanel:</strong> File Manager → public_html → /.well-known/ → Upload File</p>
+                      <p><strong>FTP/SFTP:</strong> Connect to server → Navigate to document root → Upload</p>
+                      <p><strong>GitHub Pages:</strong> Commit file to repository → Push changes</p>
+                      <p><strong>Netlify:</strong> Drag and drop to public folder → Deploy</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Meta Tag Method */}
+              {selectedMethod === 'meta_tag' && metaData && (
+                <div className="space-y-6">
+                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                    <h3 className="font-semibold text-purple-900 mb-2">🏷️ HTML Meta Tag Verification</h3>
+                    <p className="text-sm text-purple-800">
+                      Add the following meta tag to the &lt;head&gt; section of your website's homepage.
+                    </p>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Meta Tag 
+                          <span className="text-red-500 ml-1">*</span>
+                        </label>
+                        <div className="flex items-center space-x-2">
+                          <textarea
+                            value={metaData.tag_info?.tag || ''}
+                            readOnly
+                            rows={3}
+                            className="flex-1 px-3 py-2 border-2 border-purple-300 rounded-md bg-purple-50 text-gray-900 font-mono text-sm resize-none font-semibold"
+                          />
+                          <button
+                            onClick={() => handleCopyToClipboard(metaData.tag_info?.tag || '', 'Meta tag')}
+                            className="px-3 py-2 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-md transition-colors font-semibold"
+                          >
+                            <Copy className="h-4 w-4" />
+                          </button>
+                        </div>
+                        <p className="text-sm text-gray-600 mt-2">{metaData.tag_info?.placement}</p>
+                      </div>
+
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <h4 className="font-medium text-blue-900 mb-2">📍 Where to Add This</h4>
+                        <div className="space-y-2 text-sm text-blue-800">
+                          <p><strong>WordPress:</strong> Appearance → Theme Editor → header.php (in &lt;head&gt; section)</p>
+                          <p><strong>HTML Sites:</strong> Add to the &lt;head&gt; section of index.html</p>
+                          <p><strong>CMS:</strong> Add to the site's header HTML or meta tags section</p>
+                          <p><strong>React/Vue:</strong> Add to public/index.html or App component</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <h4 className="font-medium text-gray-900 mb-3">📝 Step-by-Step Instructions</h4>
+                      <ol className="space-y-2 text-sm text-gray-700">
+                        <li className="flex items-start">
+                          <span className="flex-shrink-0 w-5 h-5 bg-purple-100 text-purple-600 rounded-full text-xs flex items-center justify-center mr-2 mt-0.5 font-semibold">1</span>
+                          <span>Copy the meta tag shown on the left</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="flex-shrink-0 w-5 h-5 bg-purple-100 text-purple-600 rounded-full text-xs flex items-center justify-center mr-2 mt-0.5 font-semibold">2</span>
+                          <span>Access your website's HTML code or CMS</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="flex-shrink-0 w-5 h-5 bg-purple-100 text-purple-600 rounded-full text-xs flex items-center justify-center mr-2 mt-0.5 font-semibold">3</span>
+                          <span>Find the <code className="bg-gray-200 px-1 rounded">&lt;head&gt;</code> section of your homepage</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="flex-shrink-0 w-5 h-5 bg-purple-100 text-purple-600 rounded-full text-xs flex items-center justify-center mr-2 mt-0.5 font-semibold">4</span>
+                          <span>Paste the meta tag anywhere within the <code className="bg-gray-200 px-1 rounded">&lt;head&gt;</code> tags</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="flex-shrink-0 w-5 h-5 bg-purple-100 text-purple-600 rounded-full text-xs flex items-center justify-center mr-2 mt-0.5 font-semibold">5</span>
+                          <span>Save the changes and refresh your homepage</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="flex-shrink-0 w-5 h-5 bg-purple-100 text-purple-600 rounded-full text-xs flex items-center justify-center mr-2 mt-0.5 font-semibold">6</span>
+                          <span>Click "Verify Domain" below to complete verification</span>
+                        </li>
+                      </ol>
+                      
+                      <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                        <p className="text-xs text-yellow-800">
+                          <strong>💡 Tip:</strong> You can verify the meta tag was added correctly by viewing your page source (Ctrl+U or Cmd+U).
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Meta Tag Examples */}
+                  <div className="bg-gray-100 border border-gray-300 rounded-lg p-4">
+                    <h4 className="font-medium text-gray-900 mb-2">📄 Example HTML Structure</h4>
+                    <pre className="text-xs text-gray-700 bg-white p-3 rounded border overflow-x-auto">
+{`<!DOCTYPE html>
+<html>
+<head>
+    <title>Your Website</title>
+    <meta name="botinterceptor-domain-verification" content="${metaData.tag_info?.tag?.match(/content="([^"]*)"/) ?.[1] || 'your-token'}" />
+    <!-- Other meta tags and stylesheets -->
+</head>
+<body>
+    <!-- Your website content -->
+</body>
+</html>`}
+                    </pre>
+                  </div>
+                </div>
+              )}
+
+              {/* Verify Button */}
+              <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+                <button
+                  onClick={onClose}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={handleVerifyDomain}
+                  disabled={verifying}
+                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                >
+                  {verifying ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Verifying...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Verify Domain
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
 const Domains = () => {
   const dispatch = useDispatch()
   const { domains, loading, error, filters } = useSelector((state) => state.domains)
@@ -314,6 +990,7 @@ const Domains = () => {
   // Local state
   const [showFormModal, setShowFormModal] = useState(false)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
+  const [showVerificationModal, setShowVerificationModal] = useState(false)
   const [selectedDomain, setSelectedDomain] = useState(null)
   const [editingDomain, setEditingDomain] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
@@ -325,6 +1002,20 @@ const Domains = () => {
     }
   }, [dispatch, isAuthenticated])
 
+  // Listen for custom refresh event
+  useEffect(() => {
+    const handleRefreshDomains = () => {
+      if (isAuthenticated) {
+        dispatch(fetchDomains())
+      }
+    }
+
+    window.addEventListener('refreshDomains', handleRefreshDomains)
+    return () => {
+      window.removeEventListener('refreshDomains', handleRefreshDomains)
+    }
+  }, [dispatch, isAuthenticated])
+
   // Debug logging
   useEffect(() => {
     console.log('Domains state:', domains)
@@ -332,14 +1023,16 @@ const Domains = () => {
     console.log('Is array:', Array.isArray(domains))
   }, [domains])
 
-  // Filter domains based on search and status
-  const filteredDomains = safeFilter(domains, domain => {
-    const matchesSearch = domain?.domain_name?.toLowerCase().includes(searchTerm.toLowerCase()) || false
-    const matchesStatus = statusFilter === 'all' || domain?.status === statusFilter
-    return matchesSearch && matchesStatus
-  })
+  // Memoized filtered domains to prevent unnecessary re-calculations
+  const filteredDomains = useMemo(() => {
+    return safeFilter(domains, domain => {
+      const matchesSearch = domain?.domain_name?.toLowerCase().includes(searchTerm.toLowerCase()) || false
+      const matchesStatus = statusFilter === 'all' || domain?.status === statusFilter
+      return matchesSearch && matchesStatus
+    })
+  }, [domains, searchTerm, statusFilter])
 
-  const handleAddDomain = (formData) => {
+  const handleAddDomain = useCallback((formData) => {
     // Transform the form data to match backend API expectations
     const apiData = {
       domain_name: formData.name,
@@ -358,7 +1051,7 @@ const Domains = () => {
       .catch((error) => {
         toast.error(error || 'Failed to add domain')
       })
-  }
+  }, [dispatch])
 
   const handleEditDomain = (domain) => {
     setEditingDomain(domain)
@@ -402,8 +1095,8 @@ const Domains = () => {
     }
   }
 
-  const handleVerifyDomain = (domain) => {
-    dispatch(verifyDomain(domain.id))
+  const handleVerifyDomain = useCallback((domain) => {
+    dispatch(verifyDomain({ id: domain.id, method: 'dns' }))
       .unwrap()
       .then(() => {
         toast.success('Domain verification started!')
@@ -411,11 +1104,16 @@ const Domains = () => {
       .catch((error) => {
         toast.error(error || 'Failed to verify domain')
       })
-  }
+  }, [dispatch])
 
   const handleViewDetails = (domain) => {
     setSelectedDomain(domain)
     setShowDetailsModal(true)
+  }
+
+  const handleGetTxtString = (domain) => {
+    setSelectedDomain(domain)
+    setShowVerificationModal(true)
   }
 
   const copyToClipboard = (text) => {
@@ -423,7 +1121,7 @@ const Domains = () => {
     toast.success('Copied to clipboard!')
   }
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = useCallback((status) => {
     const statusConfig = {
       verified: { color: 'bg-green-100 text-green-800', label: 'Verified' },
       pending: { color: 'bg-yellow-100 text-yellow-800', label: 'Pending' },
@@ -435,14 +1133,14 @@ const Domains = () => {
         {config.label}
       </span>
     )
-  }
+  }, [])
 
-  const getDomainStats = (domain) => ({
+  const getDomainStats = useCallback((domain) => ({
     requests: domain.monthly_requests || 0,
     blocked: domain.monthly_blocked || 0,
     revenue: domain.monthly_revenue || 0,
     blockRate: domain.monthly_requests ? ((domain.monthly_blocked / domain.monthly_requests) * 100).toFixed(1) : 0
-  })
+  }), [])
 
   return (
     <>
@@ -469,7 +1167,7 @@ const Domains = () => {
         </div>
 
         {/* Filters and Search */}
-        <div className="bg-white p-4 rounded-lg shadow">
+        <div className="bg-white p-4 rounded-lg shadow-lg">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -539,7 +1237,7 @@ const Domains = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
-                    className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+                    className="bg-white rounded-lg shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-shadow"
                   >
                     {/* Domain Header */}
                     <div className="flex items-start justify-between mb-4">
@@ -622,12 +1320,22 @@ const Domains = () => {
                     {/* Actions */}
                     <div className="flex flex-wrap gap-2">
                       {domain.status === 'pending' && (
-                        <button
-                          onClick={() => handleVerifyDomain(domain)}
-                          className="flex-1 px-3 py-2 bg-blue-50 text-blue-700 rounded-md text-sm font-medium hover:bg-blue-100"
-                        >
-                          Verify Domain
-                        </button>
+                        <>
+                          <button
+                            onClick={() => handleGetTxtString(domain)}
+                            className="flex-1 px-3 py-2 bg-green-50 text-green-700 rounded-md text-sm font-medium hover:bg-green-100"
+                          >
+                            <FileText className="h-3 w-3 inline mr-1" />
+                            Get TXT String
+                          </button>
+                          <button
+                            onClick={() => handleVerifyDomain(domain)}
+                            className="flex-1 px-3 py-2 bg-blue-50 text-blue-700 rounded-md text-sm font-medium hover:bg-blue-100"
+                          >
+                            <CheckCircle className="h-3 w-3 inline mr-1" />
+                            Verify Domain
+                          </button>
+                        </>
                       )}
                       {domain.status === 'verified' && (
                         <>
@@ -696,6 +1404,15 @@ const Domains = () => {
         isOpen={showDetailsModal}
         onClose={() => {
           setShowDetailsModal(false)
+          setSelectedDomain(null)
+        }}
+        domain={selectedDomain}
+      />
+
+      <DomainVerificationModal
+        isOpen={showVerificationModal}
+        onClose={() => {
+          setShowVerificationModal(false)
           setSelectedDomain(null)
         }}
         domain={selectedDomain}

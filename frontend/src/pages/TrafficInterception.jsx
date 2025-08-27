@@ -225,10 +225,10 @@ const TrafficInterception = () => {
         </div>
       </div>
 
-      {/* Enhanced Navigation Tabs */}
-      <div className="bg-white border-b border-gray-200 shadow-sm">
+      {/* Enhanced Premium Navigation Tabs */}
+      <div className="bg-gradient-to-r from-gray-50 to-white border-b border-gray-200 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="-mb-px flex space-x-1 overflow-x-auto">
+          <nav className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-2 py-3">
             {tabs.map((tab) => {
               const Icon = tab.icon
               const isActive = activeTab === tab.id
@@ -236,27 +236,42 @@ const TrafficInterception = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`group relative min-w-0 flex-1 overflow-hidden py-4 px-4 text-center text-sm font-medium transition-all duration-200 ${
+                  className={`group relative overflow-hidden rounded-xl p-3 text-sm font-medium transition-all duration-300 border-b-2 ${
                     isActive
-                      ? 'border-b-2 border-blue-500 text-blue-600 bg-blue-50'
-                      : 'border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50'
+                      ? 'bg-black text-white shadow-lg border-b-black'
+                      : 'text-gray-600 hover:text-black hover:bg-gray-50 bg-white hover:shadow-md border-b-gray-300'
                   }`}
                   title={tab.description}
                 >
-                  <div className="flex items-center justify-center space-x-2">
-                    <Icon className={`h-5 w-5 ${isActive ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'}`} />
-                    <span className="hidden sm:block truncate">{tab.name}</span>
-                  </div>
-                  
-                  {/* Active indicator */}
+                  {/* Active State Ripple Effect */}
                   {isActive && (
-                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 transform scale-x-100 transition-transform duration-200"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-black via-gray-800 to-black" />
                   )}
                   
-                  {/* Hover tooltip for mobile */}
-                  <div className="sm:hidden absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-900 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                    {tab.name}
+                  {/* White Circle Indicator */}
+                  {isActive && (
+                    <div className="absolute top-1 right-1 w-2 h-2 bg-white rounded-full shadow-md">
+                      <div className="w-full h-full bg-white rounded-full opacity-60 animate-pulse" />
+                    </div>
+                  )}
+                  
+                  <div className="relative z-10 flex flex-col items-center space-y-1">
+                    <div className={`p-1.5 rounded-lg transition-all duration-300 ${
+                      isActive 
+                        ? 'bg-white bg-opacity-20' 
+                        : 'bg-gray-100 group-hover:bg-gray-200'
+                    }`}>
+                      <Icon className={`h-4 w-4 ${isActive ? 'text-white' : 'text-gray-500 group-hover:text-gray-700'}`} />
+                    </div>
+                    <div className="text-center">
+                      <div className={`text-xs font-semibold leading-tight ${isActive ? 'text-white' : 'text-gray-800 group-hover:text-black'}`}>
+                        {tab.name}
+                      </div>
+                    </div>
                   </div>
+                  
+                  {/* Hover ripple effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-300 to-transparent rounded-xl opacity-0 group-hover:opacity-10 transition-opacity duration-200" />
                 </button>
               )
             })}

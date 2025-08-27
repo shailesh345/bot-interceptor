@@ -84,6 +84,7 @@ class Domain(db.Model):
     cdn_enabled = db.Column(db.Boolean, default=False)
     traffic_enabled = db.Column(db.Boolean, default=True)
     status = db.Column(db.String(20), default='active')  # active, suspended, pending
+    verified_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -107,6 +108,7 @@ class Domain(db.Model):
             'traffic_enabled': self.traffic_enabled,
             'status': self.status,
             'tenant_id': self.tenant_id,
+            'verified_at': self.verified_at.isoformat() if self.verified_at else None,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,
             # Placeholder stats (in production, these would be calculated from traffic logs)

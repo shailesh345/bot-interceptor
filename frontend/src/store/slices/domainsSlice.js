@@ -80,9 +80,9 @@ export const deleteDomain = createAsyncThunk(
 
 export const verifyDomain = createAsyncThunk(
   'domains/verifyDomain',
-  async (id, { rejectWithValue }) => {
+  async ({ id, method = 'dns' }, { rejectWithValue }) => {
     try {
-      const response = await domainsAPI.verifyDomain(id)
+      const response = await domainsAPI.verifyDomain(id, method)
       return { id, verified: response.data.verified }
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to verify domain')

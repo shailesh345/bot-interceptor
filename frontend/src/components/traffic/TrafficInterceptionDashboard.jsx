@@ -284,9 +284,9 @@ const TrafficInterceptionDashboard = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="w-full space-y-6">
       {/* Enhanced Header */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg shadow-lg p-6 border border-blue-200">
+      <div className="w-full bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg shadow-lg p-6 border border-blue-200">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
           <div className="mb-4 lg:mb-0">
             <h1 className="text-2xl font-bold text-gray-900">Traffic Interception Dashboard</h1>
@@ -346,7 +346,7 @@ const TrafficInterceptionDashboard = () => {
       </div>
 
       {/* Enhanced Real-time Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+      <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg shadow-md p-4 border border-blue-200">
           <div className="flex items-center justify-between">
             <div>
@@ -419,7 +419,7 @@ const TrafficInterceptionDashboard = () => {
       </div>
 
       {/* System Performance Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="w-full grid grid-cols-1 lg:grid-cols-4 gap-6">
         <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
           <div className="flex items-center justify-between">
             <div>
@@ -470,7 +470,7 @@ const TrafficInterceptionDashboard = () => {
       </div>
 
       {/* Enhanced Traffic Table with Filters */}
-      <div className="bg-white rounded-lg shadow">
+      <div className="w-full bg-white rounded-lg shadow">
         <div className="px-6 py-4 border-b border-gray-200">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div>

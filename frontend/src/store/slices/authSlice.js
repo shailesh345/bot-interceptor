@@ -83,14 +83,13 @@ export const updateUserProfile = createAsyncThunk(
 
 // Get initial state from localStorage
 const getInitialState = () => {
-  const user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null
-  const token = localStorage.getItem('token')
-  
+  // Let redux-persist handle the state loading
+  // Don't manually load from localStorage here
   return {
-    user,
-    token,
-    refreshToken: localStorage.getItem('refreshToken'),
-    isAuthenticated: !!token,
+    user: null,
+    token: null,
+    refreshToken: null,
+    isAuthenticated: false,
     loading: false,
     error: null,
   }
@@ -132,6 +131,7 @@ const authSlice = createSlice({
         state.token = action.payload.access_token
         state.refreshToken = action.payload.refresh_token
         state.isAuthenticated = true
+        toast.success('Login successful!')
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false

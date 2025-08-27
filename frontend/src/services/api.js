@@ -88,7 +88,7 @@ export const domainsAPI = {
   createDomain: (domainData) => api.post('/v1/domains', domainData),
   updateDomain: (id, domainData) => api.put(`/v1/domains/${id}`, domainData),
   deleteDomain: (id) => api.delete(`/v1/domains/${id}`),
-  verifyDomain: (id) => api.post(`/v1/domains/${id}/verify`),
+  verifyDomain: (id, method = 'dns') => api.post(`/v1/domains/${id}/verify`, { method }),
   getDomainStats: (id) => api.get(`/v1/domains/${id}/stats`),
   getDomain: (id) => api.get(`/v1/domains/${id}`),
   bulkImportDomains: (domains) => api.post('/v1/domains/bulk-import', { domains }),
@@ -161,6 +161,9 @@ export const trafficAPI = {
 export const analyticsAPI = {
   getDashboard: (params) => api.get('/analytics/dashboard', { params }),
   getDashboardStats: (timeRange = '7d') => api.get(`/analytics/dashboard?timeRange=${timeRange}`),
+  getTrafficPatterns: (days = 30) => api.get(`/analytics/traffic-patterns?days=${days}`),
+  getBotIntelligence: (days = 30) => api.get(`/analytics/bot-intelligence?days=${days}`),
+  getPerformanceMetrics: (hours = 24) => api.get(`/analytics/performance-metrics?hours=${hours}`),
   getTrafficLogs: (params = {}) => api.get('/analytics/traffic', { params }),
   getTrafficAnalytics: (params) => api.get('/analytics/traffic', { params }),
   getBotAnalytics: (params = {}) => api.get('/analytics/bots', { params }),

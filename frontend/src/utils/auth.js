@@ -55,9 +55,16 @@ export const login = async (credentials) => {
     }
 
     const data = await response.json();
+    
+    // Set authentication data in localStorage
     setAuth(data);
-    toast.success('Login successful!');
-    return data;
+    
+    // Return data in the format expected by Redux
+    return {
+      user: data.user,
+      access_token: data.access_token,
+      refresh_token: data.refresh_token
+    };
   } catch (error) {
     toast.error(error.message || 'Login failed');
     throw error;

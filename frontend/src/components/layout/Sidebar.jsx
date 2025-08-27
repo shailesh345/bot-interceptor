@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
-import { toggleSidebarCollapsed } from '../../store/slices/uiSlice'
+import { motion } from 'framer-motion'
+import { toggleSidebarCollapsed, toggleAdvancedFeatures } from '../../store/slices/uiSlice'
 import { 
   BarChart3, 
   Shield, 
@@ -44,7 +45,7 @@ import { MVP_CONFIG } from '../../config/mvp'
 const Sidebar = () => {
   const dispatch = useDispatch()
   const { user } = useSelector((state) => state.auth)
-  const { sidebarCollapsed } = useSelector((state) => state.ui)
+  const { sidebarCollapsed, showAdvancedFeatures } = useSelector((state) => state.ui)
 
     // MVP Core Navigation - Essential features only
   const navigation = [
@@ -113,7 +114,7 @@ const Sidebar = () => {
   ]
 
   // Check if advanced features should be shown
-  const showAdvancedFeatures = MVP_CONFIG.FEATURE_FLAGS.showAdvancedFeatures || user?.preferences?.showAdvancedFeatures
+  // const showAdvancedFeaturesFromConfig = MVP_CONFIG.FEATURE_FLAGS.showAdvancedFeatures || user?.preferences?.showAdvancedFeatures
 
   return (
     <div className={`sidebar min-h-screen h-full overflow-y-auto flex flex-col bg-white border-r border-gray-200 transition-all duration-300 ${
@@ -151,28 +152,81 @@ const Sidebar = () => {
               </h3>
             </div>
           )}
-          {navigation.map((item) => (
-            <NavLink
-              key={item.name}
-              to={item.href}
-              className={({ isActive }) => 
-                `group relative flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                  isActive 
-                    ? 'bg-gray-100 text-black' 
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-black'
-                }`
-              }
-              title={sidebarCollapsed ? item.name : undefined}
-            >
-              <item.icon className={`w-4 h-4 ${sidebarCollapsed ? '' : 'mr-3'}`} />
-              {!sidebarCollapsed && item.name}
-              {sidebarCollapsed && (
-                <div className="absolute left-full ml-2 px-2 py-1 text-xs text-white bg-gray-900 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-                  {item.name}
-                </div>
+          {navigation.map((item) => {
+            // Add 'end' prop for routes that might have sub-routes
+            const shouldUseEnd = ['/dashboard', '/admin'].includes(item.href)
+            return (
+              <NavLink
+                key={item.name}
+                to={item.href}
+                end={shouldUseEnd}
+                className={({ isActive }) => 
+                  `group relative flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all duration-300 overflow-hidden ${
+                    isActive 
+                      ? 'bg-black text-white shadow-lg' 
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-black'
+                  }`
+                }
+                title={sidebarCollapsed ? item.name : undefined}
+              >
+              {({ isActive }) => (
+                <>
+                  {/* Active State Ripple Effect */}
+                  {isActive && (
+                    <motion.div
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ duration: 0.3, ease: "easeOut" }}
+                      className="absolute inset-0 bg-gradient-to-r from-black via-gray-800 to-black"
+                    />
+                  )}
+                  
+                  {/* White Circle Indicator */}
+                  {isActive && (
+                    <motion.div
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ duration: 0.4, delay: 0.1, ease: "backOut" }}
+                      className="absolute top-1 right-1 w-3 h-3 bg-white rounded-full shadow-md"
+                    >
+                      <motion.div
+                        animate={{ scale: [1, 1.2, 1] }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                        className="w-full h-full bg-white rounded-full opacity-60"
+                      />
+                    </motion.div>
+                  )}
+                  
+                  <item.icon className={`w-5 h-5 ${sidebarCollapsed ? '' : 'mr-3'} relative z-10 transition-colors duration-300 ${
+                    isActive ? 'text-white' : 'text-gray-400 group-hover:text-gray-500'
+                  }`} />
+                  {!sidebarCollapsed && (
+                    <span className={`font-medium relative z-10 transition-colors duration-300 ${
+                      isActive ? 'text-white' : 'text-gray-600 group-hover:text-gray-900'
+                    }`}>
+                      {item.name}
+                    </span>
+                  )}
+                  
+                  {/* Tooltip for collapsed sidebar */}
+                  {sidebarCollapsed && (
+                    <div className="absolute left-full ml-2 px-2 py-1 text-xs text-white bg-gray-900 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                      {item.name}
+                    </div>
+                  )}
+                  
+                  {/* Hover ripple effect */}
+                  <motion.div
+                    initial={{ scale: 0, opacity: 0 }}
+                    whileHover={{ scale: 1, opacity: 0.1 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-300 to-transparent rounded-md"
+                  />
+                </>
               )}
             </NavLink>
-          ))}
+            )
+          })}
         </div>
         
         {/* MVP Admin Features */}
@@ -186,33 +240,86 @@ const Sidebar = () => {
                 </h3>
               </div>
             )}
-            {adminNavigation.map((item) => (
-              <NavLink
-                key={item.name}
-                to={item.href}
-                className={({ isActive }) =>
-                  `group relative flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                    isActive 
-                      ? 'bg-gray-100 text-black' 
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-black'
-                  }`
-                }
-                title={sidebarCollapsed ? item.name : undefined}
-              >
-                <item.icon className={`w-4 h-4 ${sidebarCollapsed ? '' : 'mr-3'}`} />
-                {!sidebarCollapsed && item.name}
-                {sidebarCollapsed && (
-                  <div className="absolute left-full ml-2 px-2 py-1 text-xs text-white bg-gray-900 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-                    {item.name}
-                  </div>
-                )}
-              </NavLink>
-            ))}
+            {adminNavigation.map((item) => {
+              // Add 'end' prop to prevent partial matching for admin routes
+              const shouldUseEnd = item.href === '/admin'
+              return (
+                <NavLink
+                  key={item.name}
+                  to={item.href}
+                  end={shouldUseEnd}
+                  className={({ isActive }) =>
+                    `group relative flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all duration-300 overflow-hidden ${
+                      isActive 
+                        ? 'bg-black text-white shadow-lg' 
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-black'
+                    }`
+                  }
+                  title={sidebarCollapsed ? item.name : undefined}
+                >
+                {({ isActive }) => (
+                  <>
+                    {/* Active State Ripple Effect */}
+                    {isActive && (
+                      <motion.div
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ duration: 0.3, ease: "easeOut" }}
+                        className="absolute inset-0 bg-gradient-to-r from-black via-gray-800 to-black"
+                      />
+                    )}
+                    
+                    {/* White Circle Indicator */}
+                    {isActive && (
+                      <motion.div
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ duration: 0.4, delay: 0.1, ease: "backOut" }}
+                        className="absolute top-1 right-1 w-3 h-3 bg-white rounded-full shadow-md"
+                      >
+                        <motion.div
+                          animate={{ scale: [1, 1.2, 1] }}
+                          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                          className="w-full h-full bg-white rounded-full opacity-60"
+                        />
+                      </motion.div>
+                    )}
+                    
+                    <item.icon className={`w-5 h-5 ${sidebarCollapsed ? '' : 'mr-3'} relative z-10 transition-colors duration-300 ${
+                      isActive ? 'text-white' : 'text-gray-400 group-hover:text-gray-500'
+                    }`} />
+                    {!sidebarCollapsed && (
+                      <span className={`font-medium relative z-10 transition-colors duration-300 ${
+                        isActive ? 'text-white' : 'text-gray-600 group-hover:text-gray-900'
+                      }`}>
+                        {item.name}
+                      </span>
+                    )}
+                    
+                    {/* Tooltip for collapsed sidebar */}
+                    {sidebarCollapsed && (
+                      <div className="absolute left-full ml-2 px-2 py-1 text-xs text-white bg-gray-900 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                        {item.name}
+                      </div>
+                    )}
+                    
+                    {/* Hover ripple effect */}
+                    <motion.div
+                      initial={{ scale: 0, opacity: 0 }}
+                      whileHover={{ scale: 1, opacity: 0.1 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-300 to-transparent rounded-md"
+                    />
+                </>
+              )}
+            </NavLink>
+            )
+          })}
           </div>
         )}
 
         {/* Advanced Features (Post-MVP) */}
-        {showAdvancedFeatures && user?.role === 'super_admin' && (
+        {(showAdvancedFeatures || MVP_CONFIG.FEATURE_FLAGS.showAdvancedFeatures) && user?.role === 'super_admin' && (
           <div className="mb-4">
             <div className="border-t my-2 border-gray-200" />
             {!sidebarCollapsed && (
@@ -252,9 +359,7 @@ const Sidebar = () => {
         {user?.role === 'super_admin' && !sidebarCollapsed && (
           <div className="border-t mt-4 pt-4 border-gray-200">
             <button
-              onClick={() => {
-                // This would typically update user preferences
-              }}
+              onClick={() => dispatch(toggleAdvancedFeatures())}
               className="w-full px-3 py-2 text-xs text-left transition-all duration-200 text-gray-500 hover:text-black hover:bg-gray-50 rounded-md"
             >
               {showAdvancedFeatures ? 'Hide' : 'Show'} Advanced Features

@@ -1,5 +1,7 @@
 import React, { useState } from 'react'
 import { Helmet } from 'react-helmet-async'
+import { motion } from 'framer-motion'
+import TabButton from '../components/common/TabButton'
 import toast from 'react-hot-toast'
 import { 
   User, 
@@ -141,19 +143,69 @@ const Settings = () => {
                 <div className="space-y-1">
                   {tabs.map((tab) => {
                     const Icon = tab.icon
+                    const isActive = activeTab === tab.id
                     return (
-                      <button
+                      <motion.button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
-                        className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                          activeTab === tab.id
-                            ? 'bg-blue-100 text-blue-700'
+                        className={`w-full relative flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all duration-300 overflow-hidden ${
+                          isActive
+                            ? 'bg-black text-white shadow-lg'
                             : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                         }`}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                       >
-                        <Icon className="h-4 w-4 mr-3" />
-                        {tab.name}
-                      </button>
+                        {/* Active State Ripple Effect */}
+                        {isActive && (
+                          <motion.div
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ duration: 0.3, ease: "easeOut" }}
+                            className="absolute inset-0 bg-gradient-to-r from-black via-gray-800 to-black"
+                          />
+                        )}
+                        
+                        {/* White Circle Indicator */}
+                        {isActive && (
+                          <motion.div
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ duration: 0.4, delay: 0.1, ease: "backOut" }}
+                            className="absolute top-1 right-1 w-3 h-3 bg-white rounded-full shadow-md"
+                          >
+                            <motion.div
+                              animate={{ scale: [1, 1.2, 1] }}
+                              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                              className="w-full h-full bg-white rounded-full opacity-60"
+                            />
+                          </motion.div>
+                        )}
+                        
+                        {/* Icon */}
+                        <motion.div
+                          whileHover={{ scale: 1.05 }}
+                          className="relative z-10"
+                        >
+                          <Icon className={`h-4 w-4 mr-3 ${isActive ? 'text-white' : ''} transition-colors duration-300`} />
+                        </motion.div>
+                        
+                        {/* Text */}
+                        <motion.span
+                          className={`relative z-10 ${isActive ? 'text-white font-semibold' : ''} transition-all duration-300`}
+                          whileHover={{ x: 2 }}
+                        >
+                          {tab.name}
+                        </motion.span>
+                        
+                        {/* Hover ripple effect */}
+                        <motion.div
+                          initial={{ scale: 0, opacity: 0 }}
+                          whileHover={{ scale: 1, opacity: 0.1 }}
+                          transition={{ duration: 0.2 }}
+                          className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-300 to-transparent rounded-md"
+                        />
+                      </motion.button>
                     )
                   })}
                 </div>

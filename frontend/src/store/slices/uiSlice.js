@@ -4,6 +4,7 @@ const initialState = {
   sidebarOpen: false,
   sidebarCollapsed: false,
   theme: 'light',
+  showAdvancedFeatures: false,
   notifications: [],
   loading: false,
   currentPage: 'dashboard',
@@ -31,6 +32,9 @@ const uiSlice = createSlice({
     },
     setTheme: (state, action) => {
       state.theme = action.payload
+    },
+    toggleAdvancedFeatures: (state) => {
+      state.showAdvancedFeatures = !state.showAdvancedFeatures
     },
     setCurrentPage: (state, action) => {
       state.currentPage = action.payload
@@ -75,6 +79,7 @@ export const {
   toggleSidebarCollapsed,
   setSidebarOpen,
   setTheme,
+  toggleAdvancedFeatures,
   setCurrentPage,
   setBreadcrumbs,
   setLoading,

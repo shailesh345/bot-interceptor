@@ -75,21 +75,26 @@ function App() {
   const dispatch = useDispatch()
   const { isAuthenticated, loading, user } = useSelector((state) => state.auth)
   
-  // Debug logging (removed for production)
+  // Debug logging to understand the authentication state
+  console.log('App - Auth State:', { isAuthenticated, loading, user: user ? 'exists' : 'null' })
 
   useEffect(() => {
     if (isAuthenticated && !user) {
+      console.log('App - Fetching user profile')
       dispatch(fetchUserProfile())
     }
   }, [dispatch, isAuthenticated, user])
 
   if (loading) {
+    console.log('App - Loading state')
     return (
       <div className="flex items-center justify-center min-h-screen">
         <LoadingSpinner size="lg" />
       </div>
     )
   }
+
+  console.log('App - Rendering with auth state:', { isAuthenticated, user: user ? 'exists' : 'null' })
 
   return (
     <>
@@ -98,6 +103,7 @@ function App() {
         <meta name="description" content="Advanced bot traffic management and interception with AI-powered analytics and protection." />
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#3b82f6" />
+        <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Traffic Interceptor" />

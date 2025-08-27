@@ -96,3 +96,53 @@ def get_invoices():
         } for invoice in invoices]), 200
     except Exception as e:
         return jsonify({'message': 'Error fetching invoices', 'error': str(e)}), 500
+
+@billing.route('/subscription', methods=['GET'])
+@jwt_required()
+def get_subscription():
+    """Get current subscription"""
+    try:
+        from app.models import User
+        current_user = User.query.filter_by(uuid=get_jwt_identity()).first()
+        if not current_user:
+            return jsonify({'message': 'User not found'}), 404
+        
+        # Mock subscription data for now
+        subscription = {
+            'id': 'sub_123',
+            'status': 'active',
+            'plan': 'Pro',
+            'current_period_start': datetime.utcnow().isoformat(),
+            'current_period_end': (datetime.utcnow() + timedelta(days=30)).isoformat()
+        }
+        return jsonify(subscription), 200
+    except Exception as e:
+        return jsonify({'message': 'Error fetching subscription', 'error': str(e)}), 500
+
+@billing.route('/payment-methods', methods=['GET'])
+@jwt_required()
+def get_payment_methods():
+    """Get payment methods"""
+    try:
+        from app.models import User
+        current_user = User.query.filter_by(uuid=get_jwt_identity()).first()
+        if not current_user:
+            return jsonify({'message': 'User not found'}), 404
+        
+        # Mock payment methods for now
+        payment_methods = [
+            {
+                'id': 'pm_123',
+                'type': 'card',
+                'card': {
+                    'brand': 'visa',
+                    'last4': '4242',
+                    'exp_month': 12,
+                    'exp_year': 2025
+                },
+                'is_default': True
+            }
+        ]
+        return jsonify(payment_methods), 200
+    except Exception as e:
+        return jsonify({'message': 'Error fetching payment methods', 'error': str(e)}), 500

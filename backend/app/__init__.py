@@ -16,13 +16,21 @@ db = SQLAlchemy()
 migrate = Migrate()
 jwt = JWTManager()
 mail = Mail()
+
+# Advanced rate limiter with Redis backend
 limiter = Limiter(
     key_func=get_remote_address,
-    default_limits=["10000 per day", "5000 per hour"]
+    default_limits=["10000 per day", "5000 per hour", "100 per minute"],
+    storage_uri="memory://",  # Will be updated to use Redis in production
+    strategy="fixed-window"
 )
 
 # Initialize WebSocket
 from .websocket import socketio
+
+# Import middleware
+from .middleware.error_handler import error_handler
+from .middleware.api_monitor import api_monitor
 
 # Import API documentation (optional)
 try:
@@ -44,7 +52,11 @@ def create_app(config_name=None):
     migrate.init_app(app, db)
     jwt.init_app(app)
     mail.init_app(app)
-    # limiter.init_app(app)  # Temporarily disabled for testing
+    limiter.init_app(app)
+    
+    # Initialize middleware
+    error_handler.init_app(app)
+    api_monitor.init_app(app)
     
     # Configure CORS
     CORS(app, 
@@ -74,12 +86,17 @@ def create_app(config_name=None):
     from app.interceptor import interceptor as interceptor_blueprint
     app.register_blueprint(interceptor_blueprint, url_prefix='/interceptor')
     
-    from app.billing import billing as billing_blueprint
-    app.register_blueprint(billing_blueprint, url_prefix='/billing')
+# Billing routes are already registered via api blueprint in routes.py
     
     # Register traffic interception blueprint
     from app.api.traffic_interception import traffic_interception_bp
     app.register_blueprint(traffic_interception_bp)
+    
+    # Register Phase 2 endpoints (domains, rules, traffic)
+    from app.api.phase2_endpoints import domains_bp, rules_bp, traffic_bp
+    app.register_blueprint(domains_bp, url_prefix='/api/v1')
+    app.register_blueprint(rules_bp, url_prefix='/api/v1')
+    app.register_blueprint(traffic_bp, url_prefix='/api/v1')
     
     # Register API documentation
     if API_DOCS_AVAILABLE:
@@ -111,6 +128,26 @@ def create_app(config_name=None):
     def health_check():
         return {'status': 'healthy', 'service': 'traffic-interceptor-api'}
     
+    # Advanced monitoring endpoints
+    @app.route('/api/monitoring/health')
+    def api_health():
+        """Get comprehensive API health status"""
+        return api_monitor.get_health_status()
+    
+    @app.route('/api/monitoring/metrics')
+    def api_metrics():
+        """Get detailed API metrics"""
+        return api_monitor.get_metrics_summary()
+    
+    @app.route('/api/monitoring/performance')
+    def api_performance():
+        """Get performance metrics"""
+        return {
+            'performance': api_monitor.get_performance_metrics(),
+            'top_endpoints': api_monitor.get_top_endpoints(),
+            'hourly_stats': api_monitor.get_hourly_stats()
+        }
+    
     # API Testing Interface
     @app.route('/test-api')
     def api_test_interface():
@@ -123,5 +160,22 @@ def create_app(config_name=None):
     @app.route('/static/<path:filename>')
     def serve_static(filename):
         return app.send_static_file(filename)
+    
+    # Placeholder image endpoint
+    @app.route('/api/placeholder/<int:width>/<int:height>')
+    def placeholder_image(width, height):
+        """Generate placeholder image"""
+        try:
+            # Return a simple SVG placeholder
+            svg_content = f'''<?xml version="1.0" encoding="UTF-8"?>
+<svg width="{width}" height="{height}" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100%" height="100%" fill="#f0f0f0" stroke="#ccc" stroke-width="1"/>
+    <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="14" fill="#999" text-anchor="middle" dy=".3em">
+        {width}x{height}
+    </text>
+</svg>'''
+            return svg_content, 200, {'Content-Type': 'image/svg+xml'}
+        except Exception as e:
+            return f"Error generating placeholder: {str(e)}", 500
     
     return app

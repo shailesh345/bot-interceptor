@@ -142,7 +142,7 @@ def get_traffic_patterns():
         end_date = datetime.utcnow()
         start_date = end_date - timedelta(days=days)
         
-        # Daily traffic pattern
+        # Daily traffic pattern - SQLite compatible
         daily_pattern = db.session.query(
             func.date(TrafficLog.timestamp).label('date'),
             func.count(TrafficLog.id).label('total_requests'),
@@ -326,14 +326,14 @@ def get_performance_metrics():
         
         error_rate = (error_requests / total_requests * 100) if total_requests > 0 else 0
         
-        # Throughput metrics
+        # Throughput metrics - SQLite compatible (using strftime instead of date_trunc)
         throughput_data = db.session.query(
-            func.date_trunc('hour', TrafficLog.timestamp).label('hour'),
+            func.strftime('%Y-%m-%d %H:00:00', TrafficLog.timestamp).label('hour'),
             func.count(TrafficLog.id).label('requests')
         ).join(Domain).filter(
             Domain.tenant_id == user.tenant_id,
             TrafficLog.timestamp >= start_date
-        ).group_by('hour').order_by('hour').all()
+        ).group_by(func.strftime('%Y-%m-%d %H:00:00', TrafficLog.timestamp)).order_by('hour').all()
         
         return jsonify({
             'success': True,

@@ -21,7 +21,7 @@ performance = Blueprint('performance', __name__)
 
 @performance.route('/health', methods=['GET'])
 @jwt_required()
-def get_system_health():
+def get_performance_health():
     """Get comprehensive system health status"""
     try:
         # System metrics
