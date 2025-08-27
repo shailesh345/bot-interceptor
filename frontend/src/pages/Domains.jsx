@@ -334,8 +334,8 @@ const Domains = () => {
 
   // Filter domains based on search and status
   const filteredDomains = safeFilter(domains, domain => {
-    const matchesSearch = domain.domain_name.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = statusFilter === 'all' || domain.status === statusFilter
+    const matchesSearch = domain?.domain_name?.toLowerCase().includes(searchTerm.toLowerCase()) || false
+    const matchesStatus = statusFilter === 'all' || domain?.status === statusFilter
     return matchesSearch && matchesStatus
   })
 

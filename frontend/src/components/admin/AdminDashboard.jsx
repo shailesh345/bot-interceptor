@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
 import { 
   ChartBarIcon, 
   UsersIcon, 
@@ -7,7 +8,13 @@ import {
   GlobeAltIcon,
   CogIcon,
   ExclamationTriangleIcon,
-  CheckCircleIcon
+  CheckCircleIcon,
+  ArrowTrendingUpIcon,
+  ServerIcon,
+  ClockIcon,
+  BoltIcon,
+  EyeIcon,
+  CommandLineIcon
 } from '@heroicons/react/24/outline'
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 

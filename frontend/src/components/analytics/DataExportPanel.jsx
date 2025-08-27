@@ -126,7 +126,7 @@ const DataExportPanel = () => {
         days: selectedDays,
         domain: selectedDomain === 'all' ? 'All Domains' : 
                availableDomains.find(d => d.id === selectedDomain)?.name || 'Unknown',
-        timestamp: new Date().toISOformat(),
+        timestamp: new Date().toISOString(),
         status: 'failed'
       };
       setExportHistory(prev => [failedExport, ...prev.slice(0, 9)]);
@@ -268,7 +268,7 @@ const DataExportPanel = () => {
             ) : (
               <>
                 {getExportIcon(selectedFormat)}
-                <span className="ml-2">Export {selectedExport.title()} Data</span>
+                <span className="ml-2">Export {exportConfigs[selectedExport]?.name || selectedExport} Data</span>
               </>
             )}
           </button>

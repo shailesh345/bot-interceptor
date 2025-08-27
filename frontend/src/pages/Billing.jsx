@@ -5,10 +5,22 @@ import { useSelector } from 'react-redux'
 import { 
   CreditCard, Check, X, Star, Download, 
   Calendar, DollarSign, Plus, Edit, Trash2,
-  AlertCircle, CheckCircle
+  AlertCircle, CheckCircle, Settings, History,
+  Receipt, Users, TrendingUp, Shield, Activity,
+  BarChart3, FileText
 } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { mockAPI } from '../services/comprehensiveMockAPI'
+import { billingAPI } from '../services/api'
+import SubscriptionManagement from '../components/billing/SubscriptionManagement'
+import BillingHistory from '../components/billing/BillingHistory'
+import ProfessionalBillingCard from '../components/billing/ProfessionalBillingCard'
+import BillingAnalyticsCharts from '../components/billing/BillingAnalyticsCharts'
+import ProfessionalInput, { useFormValidation, validators } from '../components/billing/ProfessionalFormValidation'
+import AdvancedExportUtilities from '../components/billing/AdvancedExportUtilities'
+import { BillingEmptyState, InvoicesEmptyState } from '../components/billing/ProfessionalEmptyStates'
+import { SkeletonStyles, BillingCardSkeleton, SubscriptionSkeleton } from '../components/common/Skeleton'
+import PaymentMethodModal from '../components/billing/PaymentMethodModal'
+import PlanSelectionModal from '../components/billing/PlanSelectionModal'
 
 const Billing = () => {
   const { user } = useSelector((state) => state.auth)
@@ -16,7 +28,9 @@ const Billing = () => {
   const [loading, setLoading] = useState(true)
   const [showPlanModal, setShowPlanModal] = useState(false)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [showExportModal, setShowExportModal] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState(null)
+  const [activeTab, setActiveTab] = useState('overview')
 
   useEffect(() => {
     loadBillingData()
@@ -25,10 +39,40 @@ const Billing = () => {
   const loadBillingData = async () => {
     setLoading(true)
     try {
-      const data = await mockAPI.getBillingInfo()
-      setBillingData(data)
+      const [subscriptionResponse, invoicesResponse, plansResponse, paymentMethodsResponse, usageResponse] = await Promise.all([
+        billingAPI.getSubscription(),
+        billingAPI.getInvoices(),
+        billingAPI.getPlans(),
+        billingAPI.getPaymentMethods(),
+        billingAPI.getUsage({ period: 'current' })
+      ])
+
+      setBillingData({
+        currentPlan: subscriptionResponse.data?.plan || {
+          id: 'professional',
+          name: 'Professional',
+          price: 99
+        },
+        nextBillingDate: subscriptionResponse.data?.subscription?.current_period_end || 'December 15, 2024',
+        invoices: invoicesResponse.data?.invoices || [],
+        paymentMethods: paymentMethodsResponse.data?.payment_methods || [],
+        usage: {
+          requests: usageResponse.data?.requests_current_period || 0,
+          blocked: usageResponse.data?.blocked_requests || 0,
+          domains: usageResponse.data?.active_domains || 0
+        }
+      })
     } catch (error) {
+      console.error('Failed to load billing data:', error)
       toast.error('Failed to load billing data')
+      // Fallback to mock data
+      setBillingData({
+        currentPlan: { id: 'professional', name: 'Professional', price: 99 },
+        nextBillingDate: 'December 15, 2024',
+        invoices: [],
+        paymentMethods: [],
+        usage: { requests: 250000, blocked: 1250, domains: 3 }
+      })
     } finally {
       setLoading(false)
     }
@@ -36,40 +80,64 @@ const Billing = () => {
 
   const handlePlanChange = async (planId) => {
     try {
-      await mockAPI.updateSubscription(planId)
+      await billingAPI.updateSubscription({ plan_id: planId })
       toast.success('Plan updated successfully!')
       loadBillingData()
       setShowPlanModal(false)
     } catch (error) {
+      console.error('Failed to update plan:', error)
       toast.error('Failed to update plan')
     }
   }
 
   const handleAddPaymentMethod = async (paymentData) => {
     try {
-      await mockAPI.addPaymentMethod(paymentData)
+      await billingAPI.addPaymentMethod({
+        card_number: paymentData.cardNumber.replace(/\s/g, ''),
+        exp_month: parseInt(paymentData.expMonth),
+        exp_year: parseInt(paymentData.expYear),
+        cvc: paymentData.cvv,
+        name: paymentData.name,
+        is_default: paymentData.isDefault
+      })
       toast.success('Payment method added successfully!')
       loadBillingData()
       setShowPaymentModal(false)
     } catch (error) {
+      console.error('Failed to add payment method:', error)
       toast.error('Failed to add payment method')
     }
   }
 
   const handleDeletePaymentMethod = async (methodId) => {
     try {
-      await mockAPI.deletePaymentMethod(methodId)
+      await billingAPI.deletePaymentMethod(methodId)
       toast.success('Payment method deleted successfully!')
       loadBillingData()
     } catch (error) {
+      console.error('Failed to delete payment method:', error)
       toast.error('Failed to delete payment method')
     }
   }
 
   const downloadInvoice = async (invoiceId) => {
     try {
+      const response = await billingAPI.getInvoice(invoiceId)
+      
+      // Create blob and download
+      const blob = new Blob([response.data], { type: 'application/pdf' })
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `invoice-${invoiceId}.pdf`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+      
       toast.success('Invoice downloaded successfully!')
     } catch (error) {
+      console.error('Failed to download invoice:', error)
       toast.error('Failed to download invoice')
     }
   }
@@ -125,127 +193,251 @@ const Billing = () => {
     }
   ]
 
-  return (
-    <>
-      <Helmet>
-        <title>Billing - Traffic Interceptor</title>
-      </Helmet>
-      
+  const tabs = [
+    { id: 'overview', name: 'Overview', icon: DollarSign },
+    { id: 'subscription', name: 'Subscription', icon: Settings },
+    { id: 'analytics', name: 'Analytics', icon: BarChart3 },
+    { id: 'history', name: 'Billing History', icon: History },
+    { id: 'payment-methods', name: 'Payment Methods', icon: CreditCard }
+  ]
+
+  const renderTabContent = () => {
+    if (loading) {
+      switch (activeTab) {
+        case 'subscription':
+          return <SubscriptionSkeleton />
+        case 'analytics':
+          return <div className="space-y-6">{Array.from({ length: 3 }).map((_, i) => <BillingCardSkeleton key={i} />)}</div>
+        default:
+          return <div className="space-y-6">{Array.from({ length: 4 }).map((_, i) => <BillingCardSkeleton key={i} />)}</div>
+      }
+    }
+
+    switch (activeTab) {
+      case 'subscription':
+        return <SubscriptionManagement />
+      case 'analytics':
+        return <BillingAnalyticsCharts data={billingData} />
+      case 'history':
+        return <BillingHistory />
+      case 'payment-methods':
+        return renderPaymentMethods()
+      default:
+        return renderOverview()
+    }
+  }
+
+  const renderOverview = () => (
       <div className="space-y-8">
-        {/* Header */}
+      {/* Current Plan Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <ProfessionalBillingCard
+          title="Current Plan"
+          value={billingData?.currentPlan?.name || 'Professional'}
+          subtitle={`$${billingData?.currentPlan?.price || 99}/month`}
+          icon={CreditCard}
+          color="blue"
+          onClick={() => setActiveTab('subscription')}
+          actionText="Manage Plan"
+          gradient={true}
+        />
+
+        <ProfessionalBillingCard
+          title="Monthly Usage"
+          value={`${((billingData?.usage?.requests || 250000) / 1000).toFixed(0)}K`}
+          subtitle="of 1M requests"
+          icon={Activity}
+          color="green"
+          trend="up"
+          trendValue="+12%"
+          onClick={() => setActiveTab('analytics')}
+          actionText="View Analytics"
+        />
+
+        <ProfessionalBillingCard
+          title="Threats Blocked"
+          value={(billingData?.usage?.blocked || 1250).toLocaleString()}
+          subtitle="This month"
+          icon={Shield}
+          color="purple"
+          trend="up"
+          trendValue="+8%"
+          onClick={() => setActiveTab('analytics')}
+          actionText="Security Report"
+        />
+
+        <ProfessionalBillingCard
+          title="Next Billing"
+          value="Dec 15"
+          subtitle="2024"
+          icon={Calendar}
+          color="orange"
+          onClick={() => setActiveTab('history')}
+          actionText="View History"
+        />
+        </div>
+
+      {/* Quick Actions */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="bg-white rounded-xl shadow-sm border p-6"
+      >
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
+                <button
+            onClick={() => setShowExportModal(true)}
+            className="text-sm text-blue-600 hover:text-blue-800 flex items-center space-x-1"
+          >
+            <Download className="w-4 h-4" />
+            <span>Export Data</span>
+                </button>
+              </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <motion.button
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => setActiveTab('subscription')}
+            className="flex items-center p-4 border border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 group"
+          >
+            <div className="bg-blue-100 rounded-lg p-2 mr-3 group-hover:bg-blue-200 transition-colors">
+              <Settings className="w-5 h-5 text-blue-600" />
+            </div>
+            <span className="text-sm font-medium text-gray-900">Manage Plan</span>
+          </motion.button>
+          
+          <motion.button
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => setActiveTab('payment-methods')}
+            className="flex items-center p-4 border border-gray-200 rounded-xl hover:border-green-300 hover:bg-green-50 transition-all duration-200 group"
+          >
+            <div className="bg-green-100 rounded-lg p-2 mr-3 group-hover:bg-green-200 transition-colors">
+              <CreditCard className="w-5 h-5 text-green-600" />
+          </div>
+            <span className="text-sm font-medium text-gray-900">Payment Methods</span>
+          </motion.button>
+          
+          <motion.button
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => setActiveTab('analytics')}
+            className="flex items-center p-4 border border-gray-200 rounded-xl hover:border-purple-300 hover:bg-purple-50 transition-all duration-200 group"
+          >
+            <div className="bg-purple-100 rounded-lg p-2 mr-3 group-hover:bg-purple-200 transition-colors">
+              <BarChart3 className="w-5 h-5 text-purple-600" />
+        </div>
+            <span className="text-sm font-medium text-gray-900">View Analytics</span>
+          </motion.button>
+          
+          <motion.button
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => setShowPaymentModal(true)}
+            className="flex items-center p-4 border border-gray-200 rounded-xl hover:border-orange-300 hover:bg-orange-50 transition-all duration-200 group"
+          >
+            <div className="bg-orange-100 rounded-lg p-2 mr-3 group-hover:bg-orange-200 transition-colors">
+              <Plus className="w-5 h-5 text-orange-600" />
+            </div>
+            <span className="text-sm font-medium text-gray-900">Add Payment</span>
+          </motion.button>
+        </div>
+      </motion.div>
+
+      {/* Usage Chart */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="bg-white rounded-xl shadow-sm border p-6"
+      >
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-semibold text-gray-900">Usage Overview</h3>
+          <button
+            onClick={() => setActiveTab('analytics')}
+            className="text-sm text-blue-600 hover:text-blue-800 flex items-center space-x-1"
+          >
+            <TrendingUp className="w-4 h-4" />
+            <span>View Details</span>
+          </button>
+        </div>
+        <div className="space-y-6">
+              <div>
+            <div className="flex justify-between text-sm mb-3">
+              <span className="text-gray-600 flex items-center">
+                <Activity className="w-4 h-4 mr-2" />
+                API Requests
+              </span>
+                  <span className="font-medium">
+                {(billingData?.usage?.requests || 250000).toLocaleString()} / 1,000,000
+                  </span>
+                </div>
+            <div className="w-full bg-gray-200 rounded-full h-3">
+              <motion.div 
+                className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full"
+                initial={{ width: 0 }}
+                animate={{ width: `${((billingData?.usage?.requests || 250000) / 1000000) * 100}%` }}
+                transition={{ duration: 1, delay: 0.5 }}
+              />
+            </div>
+            <div className="text-xs text-gray-500 mt-1">
+              {(((billingData?.usage?.requests || 250000) / 1000000) * 100).toFixed(1)}% of monthly limit
+                </div>
+              </div>
+              
+              <div>
+            <div className="flex justify-between text-sm mb-3">
+              <span className="text-gray-600 flex items-center">
+                <Shield className="w-4 h-4 mr-2" />
+                Threats Blocked
+              </span>
+                  <span className="font-medium text-red-600">
+                {(billingData?.usage?.blocked || 1250).toLocaleString()}
+                  </span>
+                </div>
+            <div className="text-xs text-gray-500">
+              Security efficiency: 98.4%
+            </div>
+          </div>
+
+          <div>
+            <div className="flex justify-between text-sm mb-3">
+              <span className="text-gray-600 flex items-center">
+                <Users className="w-4 h-4 mr-2" />
+                Active Domains
+              </span>
+              <span className="font-medium">
+                {billingData?.usage?.domains || 3} / 25
+              </span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-3">
+              <motion.div 
+                className="bg-gradient-to-r from-green-500 to-green-600 h-3 rounded-full"
+                initial={{ width: 0 }}
+                animate={{ width: `${((billingData?.usage?.domains || 3) / 25) * 100}%` }}
+                transition={{ duration: 1, delay: 0.7 }}
+              />
+              </div>
+            <div className="text-xs text-gray-500 mt-1">
+              {(((billingData?.usage?.domains || 3) / 25) * 100).toFixed(1)}% of domain limit
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  )
+
+  const renderPaymentMethods = () => (
+    <div className="space-y-8">
+      {/* Payment Methods Header */}
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Billing & Subscription</h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Manage your subscription, billing information, and payment methods
+          <h3 className="text-lg font-semibold text-gray-900">Payment Methods</h3>
+          <p className="text-sm text-gray-600 mt-1">
+            Manage your payment methods and billing preferences
           </p>
         </div>
-
-        {/* Current Plan */}
-        <div className="bg-white shadow rounded-lg">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900">Current Plan</h2>
-          </div>
-          <div className="px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-xl font-semibold text-gray-900">
-                  {billingData?.currentPlan?.name || 'Professional'} Plan
-                </h3>
-                <p className="text-gray-600">
-                  ${billingData?.currentPlan?.price || 99}/month
-                </p>
-                <p className="text-sm text-gray-500 mt-1">
-                  Next billing date: {billingData?.nextBillingDate || 'December 15, 2024'}
-                </p>
-              </div>
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => setShowPlanModal(true)}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-                >
-                  Change Plan
-                </button>
-                <button className="px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700">
-                  Cancel Subscription
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Usage & Billing Info */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Current Usage */}
-          <div className="bg-white shadow rounded-lg">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900">Current Usage</h2>
-            </div>
-            <div className="px-6 py-4 space-y-4">
-              <div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Requests this month</span>
-                  <span className="font-medium">
-                    {(billingData?.usage?.requests || 0).toLocaleString()} / 1,000,000
-                  </span>
-                </div>
-                <div className="mt-2 bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-blue-600 h-2 rounded-full" 
-                    style={{ width: `${((billingData?.usage?.requests || 0) / 1000000) * 100}%` }}
-                  ></div>
-                </div>
-              </div>
-              
-              <div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Blocked threats</span>
-                  <span className="font-medium text-red-600">
-                    {(billingData?.usage?.blocked || 0).toLocaleString()}
-                  </span>
-                </div>
-              </div>
-              
-              <div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Active domains</span>
-                  <span className="font-medium">
-                    {billingData?.usage?.domains || 0}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Billing Summary */}
-          <div className="bg-white shadow rounded-lg">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900">Billing Summary</h2>
-            </div>
-            <div className="px-6 py-4 space-y-4">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Plan</span>
-                <span className="font-medium">${billingData?.currentPlan?.price || 99}.00</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Tax</span>
-                <span className="font-medium">${((billingData?.currentPlan?.price || 99) * 0.08).toFixed(2)}</span>
-              </div>
-              <div className="border-t pt-4">
-                <div className="flex justify-between">
-                  <span className="text-lg font-medium text-gray-900">Total</span>
-                  <span className="text-lg font-medium text-gray-900">
-                    ${((billingData?.currentPlan?.price || 99) * 1.08).toFixed(2)}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Payment Methods */}
-        <div className="bg-white shadow rounded-lg">
-          <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-            <h2 className="text-lg font-medium text-gray-900">Payment Methods</h2>
             <button
               onClick={() => setShowPaymentModal(true)}
               className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
@@ -254,12 +446,16 @@ const Billing = () => {
               Add Payment Method
             </button>
           </div>
-          <div className="px-6 py-4">
+
+      {/* Payment Methods List */}
             <div className="space-y-4">
-              {(billingData?.paymentMethods || []).map((method) => (
-                <div key={method.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+        {(billingData?.paymentMethods || []).length > 0 ? (
+          (billingData?.paymentMethods || []).map((method) => (
+            <div key={method.id} className="flex items-center justify-between p-6 border border-gray-200 rounded-lg bg-white">
                   <div className="flex items-center">
-                    <CreditCard className="h-8 w-8 text-gray-400 mr-4" />
+                <div className="bg-gray-100 rounded-lg p-3 mr-4">
+                  <CreditCard className="h-6 w-6 text-gray-600" />
+                </div>
                     <div>
                       <p className="font-medium text-gray-900">
                         •••• •••• •••• {method.last4}
@@ -267,94 +463,112 @@ const Billing = () => {
                       <p className="text-sm text-gray-500">
                         {method.brand.toUpperCase()} • Expires {method.expMonth}/{method.expYear}
                       </p>
-                    </div>
                     {method.isDefault && (
-                      <span className="ml-4 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        Default
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 mt-1">
+                      Default Payment Method
                       </span>
                     )}
+                </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <button className="text-gray-400 hover:text-gray-500">
+                <button className="p-2 text-gray-400 hover:text-gray-600 rounded-md hover:bg-gray-100">
                       <Edit className="h-4 w-4" />
                     </button>
                     <button 
                       onClick={() => handleDeletePaymentMethod(method.id)}
-                      className="text-red-400 hover:text-red-500"
+                  className="p-2 text-red-400 hover:text-red-600 rounded-md hover:bg-red-50"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
+          ))
+        ) : (
+          <BillingEmptyState
+            type="billing"
+            onAction={() => setShowPaymentModal(true)}
+          />
+        )}
+      </div>
 
-        {/* Billing History */}
-        <div className="bg-white shadow rounded-lg">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900">Billing History</h2>
+      {/* Billing Information */}
+      <div className="bg-gray-50 rounded-lg p-6">
+        <h4 className="text-sm font-medium text-gray-900 mb-4">Billing Information</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+          <div>
+            <span className="text-gray-600">Billing Email:</span>
+            <span className="ml-2 text-gray-900">{user?.email || 'user@example.com'}</span>
           </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Invoice
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Amount
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {(billingData?.invoices || []).map((invoice) => (
-                  <tr key={invoice.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      #{invoice.number}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {invoice.date}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      ${invoice.amount}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        invoice.status === 'paid' 
-                          ? 'bg-green-100 text-green-800'
-                          : invoice.status === 'pending'
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {invoice.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button
-                        onClick={() => downloadInvoice(invoice.id)}
-                        className="text-blue-600 hover:text-blue-900 inline-flex items-center"
-                      >
-                        <Download className="h-4 w-4 mr-1" />
-                        Download
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div>
+            <span className="text-gray-600">Currency:</span>
+            <span className="ml-2 text-gray-900">USD</span>
+          </div>
+          <div>
+            <span className="text-gray-600">Tax Rate:</span>
+            <span className="ml-2 text-gray-900">8%</span>
+            </div>
+          <div>
+            <span className="text-gray-600">Billing Cycle:</span>
+            <span className="ml-2 text-gray-900">Monthly</span>
           </div>
         </div>
+      </div>
+    </div>
+  )
+
+
+
+  return (
+    <>
+      <Helmet>
+        <title>Billing - Traffic Interceptor</title>
+      </Helmet>
+      <SkeletonStyles />
+      
+      <div className="space-y-8">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <h1 className="text-2xl font-bold text-gray-900">Billing & Subscription</h1>
+          <p className="mt-1 text-sm text-gray-600">
+            Manage your subscription, billing information, and payment methods
+          </p>
+        </motion.div>
+
+        {/* Navigation Tabs */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bg-white rounded-lg shadow-sm border"
+        >
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8 px-6" aria-label="Tabs">
+              {tabs.map((tab) => (
+                      <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`${
+                    activeTab === tab.id
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center`}
+                >
+                  <tab.icon className="w-5 h-5 mr-2" />
+                  {tab.name}
+                      </button>
+                ))}
+            </nav>
+        </div>
+          
+          <div className="p-6">
+            {renderTabContent()}
+          </div>
+        </motion.div>
+
+
 
         {/* Plan Selection Modal */}
         {showPlanModal && (
@@ -418,6 +632,16 @@ const Billing = () => {
           </div>
         )}
 
+        {/* Plan Selection Modal */}
+        {showPlanModal && (
+          <PlanSelectionModal
+            plans={plans}
+            currentPlan={billingData?.currentPlan}
+            onClose={() => setShowPlanModal(false)}
+            onSelectPlan={handlePlanChange}
+          />
+        )}
+
         {/* Add Payment Method Modal */}
         {showPaymentModal && (
           <PaymentMethodModal
@@ -425,189 +649,27 @@ const Billing = () => {
             onSave={handleAddPaymentMethod}
           />
         )}
+
+        {/* Export Modal */}
+        {showExportModal && (
+          <AdvancedExportUtilities
+            data={billingData?.invoices || []}
+            title="Billing Data"
+            columns={[
+              { key: 'number', label: 'Invoice Number' },
+              { key: 'date', label: 'Date' },
+              { key: 'amount', label: 'Amount' },
+              { key: 'status', label: 'Status' },
+              { key: 'description', label: 'Description' }
+            ]}
+            onClose={() => setShowExportModal(false)}
+          />
+        )}
       </div>
     </>
   )
 }
 
-// Payment Method Modal Component
-const PaymentMethodModal = ({ onClose, onSave }) => {
-  const [formData, setFormData] = useState({
-    cardNumber: '',
-    expiryDate: '',
-    cvv: '',
-    name: '',
-    isDefault: false
-  })
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    
-    // Validate card number (basic Luhn algorithm check would be better)
-    const cardNumbers = formData.cardNumber.replace(/\s/g, '')
-    if (cardNumbers.length < 13 || cardNumbers.length > 19) {
-      toast.error('Please enter a valid card number')
-      return
-    }
-    
-    // Validate expiry date
-    const [month, year] = formData.expiryDate.split('/')
-    if (!month || !year || month < 1 || month > 12) {
-      toast.error('Please enter a valid expiry date')
-      return
-    }
-    
-    const currentYear = new Date().getFullYear() % 100
-    const currentMonth = new Date().getMonth() + 1
-    if (parseInt(year) < currentYear || (parseInt(year) === currentYear && parseInt(month) < currentMonth)) {
-      toast.error('Card has expired')
-      return
-    }
-    
-    // Validate CVV
-    if (formData.cvv.length < 3 || formData.cvv.length > 4) {
-      toast.error('Please enter a valid CVV')
-      return
-    }
-    
-    // Validate name
-    if (!formData.name.trim()) {
-      toast.error('Please enter the cardholder name')
-      return
-    }
-    
-    onSave({
-      ...formData,
-      expMonth: month,
-      expYear: `20${year}`,
-      last4: formData.cardNumber.slice(-4),
-      brand: 'visa' // Simplified for demo
-    })
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={onClose}></div>
-        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-          <form onSubmit={handleSubmit}>
-            <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-medium text-gray-900">Add Payment Method</h3>
-                <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-500">
-                  <X className="h-6 w-6" />
-                </button>
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Card Number
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.cardNumber}
-                    onChange={(e) => {
-                      // Format card number with spaces
-                      const value = e.target.value.replace(/\D/g, '').replace(/(\d{4})(?=\d)/g, '$1 ')
-                      if (value.replace(/\s/g, '').length <= 16) {
-                        setFormData({ ...formData, cardNumber: value })
-                      }
-                    }}
-                    placeholder="1234 5678 9012 3456"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    maxLength="19"
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Expiry Date
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.expiryDate}
-                      onChange={(e) => {
-                        // Format expiry date MM/YY
-                        let value = e.target.value.replace(/\D/g, '')
-                        if (value.length >= 2) {
-                          value = value.substring(0, 2) + '/' + value.substring(2, 4)
-                        }
-                        setFormData({ ...formData, expiryDate: value })
-                      }}
-                      placeholder="MM/YY"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                      maxLength="5"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      CVV
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.cvv}
-                      onChange={(e) => {
-                        // Only allow numbers, max 4 digits
-                        const value = e.target.value.replace(/\D/g, '')
-                        if (value.length <= 4) {
-                          setFormData({ ...formData, cvv: value })
-                        }
-                      }}
-                      placeholder="123"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                      maxLength="4"
-                      required
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Cardholder Name
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="John Doe"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
-                </div>
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={formData.isDefault}
-                    onChange={(e) => setFormData({ ...formData, isDefault: e.target.checked })}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <label className="ml-2 block text-sm text-gray-900">
-                    Set as default payment method
-                  </label>
-                </div>
-              </div>
-            </div>
-            <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-              <button
-                type="submit"
-                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
-              >
-                Add Payment Method
-              </button>
-              <button
-                type="button"
-                onClick={onClose}
-                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 export default Billing

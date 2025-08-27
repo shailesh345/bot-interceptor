@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { NavLink } from 'react-router-dom'
-import { useSelector } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
+import { toggleSidebarCollapsed } from '../../store/slices/uiSlice'
 import { 
   BarChart3, 
   Shield, 
@@ -41,7 +42,9 @@ import {
 import { MVP_CONFIG } from '../../config/mvp'
 
 const Sidebar = () => {
+  const dispatch = useDispatch()
   const { user } = useSelector((state) => state.auth)
+  const { sidebarCollapsed } = useSelector((state) => state.ui)
 
     // MVP Core Navigation - Essential features only
   const navigation = [
@@ -113,34 +116,61 @@ const Sidebar = () => {
   const showAdvancedFeatures = MVP_CONFIG.FEATURE_FLAGS.showAdvancedFeatures || user?.preferences?.showAdvancedFeatures
 
   return (
-    <div className="sidebar min-h-screen h-full overflow-y-auto flex flex-col">
-      <div className="flex items-center justify-center py-6 border-b" style={{ 
-        borderColor: 'var(--border-primary)',
-        backgroundColor: 'var(--primary-bg)'
-      }}>
-        <h1 className="text-2xl font-bold font-yandex" style={{ color: 'var(--text-primary)' }}>
-          Traffic Interceptor
-        </h1>
+    <div className={`sidebar min-h-screen h-full overflow-y-auto flex flex-col bg-white border-r border-gray-200 transition-all duration-300 ${
+      sidebarCollapsed ? 'w-16' : 'w-64'
+    }`}>
+      <div className="flex items-center justify-between py-3 px-3 border-b border-gray-200">
+        {!sidebarCollapsed && (
+          <div className="flex flex-col">
+            <h1 className="text-lg font-bold text-black">BI</h1>
+            <p className="text-xs text-gray-500 -mt-1">The Bot Interceptor</p>
+          </div>
+        )}
+        <button
+          onClick={() => dispatch(toggleSidebarCollapsed())}
+          className="p-1 rounded-md hover:bg-gray-100 text-gray-600 transition-colors"
+          title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {sidebarCollapsed ? (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+            ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7M19 19l-7-7 7-7" />
+            )}
+          </svg>
+        </button>
       </div>
       
       <nav className="sidebar-nav flex-1">
         {/* MVP Core Features */}
         <div className="mb-4">
-          <div className="px-4 py-3">
-            <h3 className="text-xs font-semibold uppercase tracking-wider font-yandex" style={{ color: 'var(--text-muted)' }}>
-              Core Features
-            </h3>
-          </div>
+          {!sidebarCollapsed && (
+            <div className="px-4 py-2">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                Core Features
+              </h3>
+            </div>
+          )}
           {navigation.map((item) => (
             <NavLink
               key={item.name}
               to={item.href}
               className={({ isActive }) => 
-                `sidebar-item ${isActive ? 'active' : ''}`
+                `group relative flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                  isActive 
+                    ? 'bg-gray-100 text-black' 
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-black'
+                }`
               }
+              title={sidebarCollapsed ? item.name : undefined}
             >
-              <item.icon className="w-5 h-5 mr-3" />
-              {item.name}
+              <item.icon className={`w-4 h-4 ${sidebarCollapsed ? '' : 'mr-3'}`} />
+              {!sidebarCollapsed && item.name}
+              {sidebarCollapsed && (
+                <div className="absolute left-full ml-2 px-2 py-1 text-xs text-white bg-gray-900 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                  {item.name}
+                </div>
+              )}
             </NavLink>
           ))}
         </div>
@@ -148,22 +178,34 @@ const Sidebar = () => {
         {/* MVP Admin Features */}
         {user?.role === 'super_admin' && (
           <div className="mb-4">
-            <div className="border-t my-4" style={{ borderColor: 'var(--border-primary)' }} />
-            <div className="px-4 py-3">
-                          <h3 className="text-xs font-semibold uppercase tracking-wider font-yandex" style={{ color: 'var(--text-muted)' }}>
-              Admin Features
-            </h3>
-            </div>
+            <div className="border-t my-2 border-gray-200" />
+            {!sidebarCollapsed && (
+              <div className="px-4 py-2">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  Admin Features
+                </h3>
+              </div>
+            )}
             {adminNavigation.map((item) => (
               <NavLink
                 key={item.name}
                 to={item.href}
                 className={({ isActive }) =>
-                  `sidebar-item ${isActive ? 'active' : ''}`
+                  `group relative flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                    isActive 
+                      ? 'bg-gray-100 text-black' 
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-black'
+                  }`
                 }
+                title={sidebarCollapsed ? item.name : undefined}
               >
-                <item.icon className="w-5 h-5 mr-3" />
-                {item.name}
+                <item.icon className={`w-4 h-4 ${sidebarCollapsed ? '' : 'mr-3'}`} />
+                {!sidebarCollapsed && item.name}
+                {sidebarCollapsed && (
+                  <div className="absolute left-full ml-2 px-2 py-1 text-xs text-white bg-gray-900 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                    {item.name}
+                  </div>
+                )}
               </NavLink>
             ))}
           </div>
@@ -172,38 +214,48 @@ const Sidebar = () => {
         {/* Advanced Features (Post-MVP) */}
         {showAdvancedFeatures && user?.role === 'super_admin' && (
           <div className="mb-4">
-            <div className="border-t my-4" style={{ borderColor: 'var(--border-primary)' }} />
-            <div className="px-4 py-3">
-                          <h3 className="text-xs font-semibold uppercase tracking-wider font-yandex" style={{ color: 'var(--text-muted)' }}>
-              Advanced Features
-            </h3>
-              <p className="text-xs mt-1 font-yandex" style={{ color: 'var(--text-muted)' }}>Coming Soon</p>
-            </div>
+            <div className="border-t my-2 border-gray-200" />
+            {!sidebarCollapsed && (
+              <div className="px-4 py-2">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  Advanced Features
+                </h3>
+                <p className="text-xs mt-1 text-gray-400">Coming Soon</p>
+              </div>
+            )}
             {advancedFeatures.map((item) => (
               <NavLink
                 key={item.name}
                 to={item.href}
                 className={({ isActive }) =>
-                  `sidebar-item opacity-50 ${isActive ? 'active' : ''}`
+                  `group relative flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors opacity-50 ${
+                    isActive 
+                      ? 'bg-gray-100 text-black' 
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-black'
+                  }`
                 }
+                title={sidebarCollapsed ? item.name : undefined}
               >
-                <item.icon className="w-5 h-5 mr-3" />
-                {item.name}
+                <item.icon className={`w-4 h-4 ${sidebarCollapsed ? '' : 'mr-3'}`} />
+                {!sidebarCollapsed && item.name}
+                {sidebarCollapsed && (
+                  <div className="absolute left-full ml-2 px-2 py-1 text-xs text-white bg-gray-900 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                    {item.name}
+                  </div>
+                )}
               </NavLink>
             ))}
           </div>
         )}
 
         {/* MVP Toggle Button */}
-        {user?.role === 'super_admin' && (
-          <div className="border-t mt-4 pt-4" style={{ borderColor: 'var(--border-primary)' }}>
+        {user?.role === 'super_admin' && !sidebarCollapsed && (
+          <div className="border-t mt-4 pt-4 border-gray-200">
             <button
               onClick={() => {
                 // This would typically update user preferences
-                // console.log('Toggle advanced features') // Commented to prevent console logs
               }}
-              className="w-full px-2 py-2 text-xs text-left transition-all duration-200 interactive"
-              style={{ color: 'var(--text-muted)' }}
+              className="w-full px-3 py-2 text-xs text-left transition-all duration-200 text-gray-500 hover:text-black hover:bg-gray-50 rounded-md"
             >
               {showAdvancedFeatures ? 'Hide' : 'Show'} Advanced Features
             </button>
@@ -212,24 +264,44 @@ const Sidebar = () => {
 
         {/* MVP Dashboard Link (Development Only) */}
         {import.meta.env.DEV && (
-          <div className="border-t mt-4 pt-4" style={{ borderColor: 'var(--border-primary)' }}>
+          <div className="border-t mt-4 pt-4 border-gray-200">
             <NavLink
               to="/mvp"
               className={({ isActive }) =>
-                `sidebar-item ${isActive ? 'active' : ''}`
+                `group relative flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                  isActive 
+                    ? 'bg-gray-100 text-black' 
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-black'
+                }`
               }
+              title={sidebarCollapsed ? "MVP Dashboard" : undefined}
             >
-              <Settings className="w-5 h-5 mr-3" />
-              MVP Dashboard
+              <Settings className={`w-4 h-4 ${sidebarCollapsed ? '' : 'mr-3'}`} />
+              {!sidebarCollapsed && "MVP Dashboard"}
+              {sidebarCollapsed && (
+                <div className="absolute left-full ml-2 px-2 py-1 text-xs text-white bg-gray-900 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                  MVP Dashboard
+                </div>
+              )}
             </NavLink>
             <NavLink
               to="/component-demo"
               className={({ isActive }) =>
-                `sidebar-item ${isActive ? 'active' : ''}`
+                `group relative flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                  isActive 
+                    ? 'bg-gray-100 text-black' 
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-black'
+                }`
               }
+              title={sidebarCollapsed ? "Component Demo" : undefined}
             >
-              <Palette className="w-5 h-5 mr-3" />
-              Component Demo
+              <Palette className={`w-4 h-4 ${sidebarCollapsed ? '' : 'mr-3'}`} />
+              {!sidebarCollapsed && "Component Demo"}
+              {sidebarCollapsed && (
+                <div className="absolute left-full ml-2 px-2 py-1 text-xs text-white bg-gray-900 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                  Component Demo
+                </div>
+              )}
             </NavLink>
           </div>
         )}

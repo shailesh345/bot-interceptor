@@ -25,7 +25,7 @@ import Demo from './pages/Demo'
 import TrafficInterception from './pages/TrafficInterception'
 import MLModelManagement from './components/ml/MLModelManagement'
 import ContentProtection from './components/protection/ContentProtection'
-import BillingManagement from './components/billing/BillingManagement'
+import Billing from './pages/Billing'
 import SecurityManagement from './components/security/SecurityManagement'
 import PerformanceMonitoring from './components/performance/PerformanceMonitoring'
 import PerformanceOptimizer from './components/performance/PerformanceOptimizer'
@@ -61,6 +61,7 @@ import SystemHealth from './pages/admin/SystemHealth'
 import ClientManagement from './pages/admin/ClientManagement'
 import UserManagement from './pages/admin/UserManagement'
 import NotFound from './pages/NotFound'
+import TestAuth from './pages/TestAuth'
 
 // MVP Components
 import MVPDashboard from './components/mvp/MVPDashboard'
@@ -93,8 +94,8 @@ function App() {
   return (
     <>
       <Helmet>
-        <title>Traffic Interceptor - Bot Traffic Management SaaS</title>
-        <meta name="description" content="Monitor, control, and monetize bot traffic with advanced analytics and content protection." />
+        <title>BI - The Bot Interceptor</title>
+        <meta name="description" content="Advanced bot traffic management and interception with AI-powered analytics and protection." />
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#3b82f6" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -131,7 +132,7 @@ function App() {
           <Route path="domains" element={<Domains />} />
           <Route path="rules" element={<Rules />} />
           <Route path="analytics" element={<Analytics />} />
-          <Route path="billing" element={<BillingManagement />} />
+          <Route path="billing" element={<Billing />} />
           <Route path="settings" element={<Settings />} />
           <Route path="profile" element={<Profile />} />
           <Route path="demo" element={<Demo />} />
@@ -193,6 +194,9 @@ function App() {
           <Route path="admin/client-management" element={
             user?.role === 'admin' || user?.role === 'super_admin' ? <ClientManagement /> : <Navigate to="/dashboard" replace />
           } />
+          
+          {/* Test Authentication Route */}
+          <Route path="test-auth" element={<TestAuth />} />
         </Route>
 
         {/* 404 Page */}

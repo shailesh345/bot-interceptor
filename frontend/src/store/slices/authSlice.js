@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { authAPI } from '../../services/api'
-// mockAPI import removed - using real API integration
+import { login as authLogin, setAuth, clearAuth } from '../../utils/auth'
 import toast from 'react-hot-toast'
 
 // Async thunks
@@ -8,23 +8,11 @@ export const loginUser = createAsyncThunk(
   'auth/login',
   async (credentials, { rejectWithValue }) => {
     try {
-      const response = await authAPI.login(credentials)
-      
-      // Handle response data - axios wraps response in data property
-      const data = response.data || response
-      
-      // Store tokens and user data in localStorage
-      localStorage.setItem('token', data.access_token)
-      localStorage.setItem('refreshToken', data.refresh_token)
-      localStorage.setItem('user', JSON.stringify(data.user))
-      
-      toast.success('Login successful!')
+      const data = await authLogin(credentials)
       return data
     } catch (error) {
       console.error('Login error:', error)
-      const message = error.response?.data?.message || error.message || 'Login failed'
-      toast.error(message)
-      return rejectWithValue(message)
+      return rejectWithValue(error.message)
     }
   }
 )
@@ -34,12 +22,7 @@ export const registerUser = createAsyncThunk(
   async (userData, { rejectWithValue }) => {
     try {
       const response = await authAPI.register(userData)
-      
-      // Store tokens and user data in localStorage
-      localStorage.setItem('token', response.data.access_token)
-      localStorage.setItem('refreshToken', response.data.refresh_token)
-      localStorage.setItem('user', JSON.stringify(response.data.user))
-      
+      setAuth(response.data)
       toast.success('Registration successful!')
       return response.data
     } catch (error) {
@@ -53,10 +36,7 @@ export const registerUser = createAsyncThunk(
 export const logoutUser = createAsyncThunk(
   'auth/logout',
   async (_, { rejectWithValue }) => {
-    // Clear tokens and user data from localStorage
-    localStorage.removeItem('token')
-    localStorage.removeItem('refreshToken')
-    localStorage.removeItem('user')
+    clearAuth()
     toast.success('Logged out successfully')
     return null
   }
@@ -101,14 +81,22 @@ export const updateUserProfile = createAsyncThunk(
   }
 )
 
-const initialState = {
-  user: localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null,
-  token: localStorage.getItem('token'),
-  refreshToken: localStorage.getItem('refreshToken'),
-  isAuthenticated: !!localStorage.getItem('token'),
-  loading: false,
-  error: null,
+// Get initial state from localStorage
+const getInitialState = () => {
+  const user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null
+  const token = localStorage.getItem('token')
+  
+  return {
+    user,
+    token,
+    refreshToken: localStorage.getItem('refreshToken'),
+    isAuthenticated: !!token,
+    loading: false,
+    error: null,
+  }
 }
+
+const initialState = getInitialState()
 
 const authSlice = createSlice({
   name: 'auth',

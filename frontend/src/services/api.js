@@ -3,10 +3,12 @@ import toast from 'react-hot-toast'
 
 // Create axios instance
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:5002/api',
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 10000, // 10 second timeout
+  withCredentials: true, // Include cookies for CORS
 })
 
 // Request interceptor to add auth token
@@ -27,18 +29,43 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    console.error('API Error:', {
+      url: error.config?.url,
+      status: error.response?.status,
+      message: error.message,
+      response: error.response?.data
+    })
+
     if (error.response?.status === 401) {
-      // Token expired or invalid - only clear if it's an auth endpoint or critical failure
+      // Token expired or invalid
       console.log('API 401 error:', error.config?.url)
       
-      // Don't auto-redirect on every 401, let the app handle it
-      // localStorage.removeItem('token')
-      // localStorage.removeItem('refreshToken')
-      // window.location.href = '/login'
+      // Clear invalid tokens and redirect to login
+      localStorage.removeItem('token')
+      localStorage.removeItem('refreshToken')
+      localStorage.removeItem('user')
+      
+      // Redirect to login page
+      window.location.href = '/login'
+    } else if (error.response?.status === 403) {
+      toast.error('Access denied. Please check your permissions.')
+    } else if (error.response?.status === 404) {
+      console.warn('API endpoint not found:', error.config?.url)
+      // Don't show toast for 404s in development
+      if (!import.meta.env.DEV) {
+        toast.error('Resource not found.')
+      }
     } else if (error.response?.status === 500) {
       toast.error('Server error. Please try again later.')
+    } else if (error.code === 'ECONNREFUSED' || error.code === 'ERR_NETWORK') {
+      console.error('Network connection error:', error.message)
+      toast.error('Unable to connect to server. Please check your internet connection.')
     } else if (!error.response) {
+      console.error('Network error with no response:', error.message)
       toast.error('Network error. Please check your connection.')
+    } else {
+      console.error('Unexpected API error:', error)
+      toast.error('An unexpected error occurred. Please try again.')
     }
     return Promise.reject(error)
   }
@@ -46,13 +73,13 @@ api.interceptors.response.use(
 
 // Auth API
 export const authAPI = {
-  login: (credentials) => axios.post('/auth/login', credentials),
-  register: (userData) => axios.post('/auth/register', userData),
-  logout: () => axios.post('/auth/logout'),
-  refreshToken: () => axios.post('/auth/refresh'),
-  getProfile: () => axios.get('/auth/profile'),
-  updateProfile: (profileData) => axios.put('/auth/profile', profileData),
-  changePassword: (passwordData) => axios.post('/auth/change-password', passwordData),
+  login: (credentials) => api.post('/auth/login', credentials),
+  register: (userData) => api.post('/auth/register', userData),
+  logout: () => api.post('/auth/logout'),
+  refreshToken: () => api.post('/auth/refresh'),
+  getProfile: () => api.get('/auth/profile'),
+  updateProfile: (profileData) => api.put('/auth/profile', profileData),
+  changePassword: (passwordData) => api.post('/auth/change-password', passwordData),
 }
 
 // Domains API (Updated for Phase 2)

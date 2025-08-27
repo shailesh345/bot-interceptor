@@ -6,12 +6,15 @@ import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-  ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell
+  ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell,
+  AreaChart, Area, RadialBarChart, RadialBar
 } from 'recharts'
 import { 
   Activity, TrendingUp, Shield, Bot, Users, DollarSign,
   Globe, RefreshCw, ArrowUp, Eye, Server, CheckCircle,
-  Clock, Settings, Bell, X, BarChart3, ShieldCheck
+  Clock, Settings, Bell, X, BarChart3, ShieldCheck,
+  Zap, AlertTriangle, Target, Cpu, HardDrive, Wifi,
+  Filter, Download, Share2, Maximize2
 } from 'lucide-react'
 import { analyticsAPI, domainsAPI, rulesAPI } from '../services/api'
 import RealTimeDashboard from '../components/dashboard/RealTimeDashboard'
@@ -30,10 +33,49 @@ const Dashboard = () => {
   const [refreshing, setRefreshing] = useState(false)
   const [timeRange, setTimeRange] = useState('24h')
   const [activeTab, setActiveTab] = useState('overview')
+  const [realTimeData, setRealTimeData] = useState({
+    systemHealth: { cpu: 0, memory: 0, network: 0 },
+    activeThreats: 0,
+    liveTraffic: 0,
+    uptime: '99.9%'
+  })
+  const [alertsCount, setAlertsCount] = useState(0)
+  const [widgetSettings, setWidgetSettings] = useState({
+    showRealTime: true,
+    showCharts: true,
+    showAlerts: true,
+    compactMode: false
+  })
 
   useEffect(() => {
     loadDashboardData()
+    
+    // Set up real-time updates
+    const realTimeInterval = setInterval(updateRealTimeData, 5000)
+    
+    return () => {
+      clearInterval(realTimeInterval)
+    }
   }, [timeRange])
+
+  const updateRealTimeData = () => {
+    // Simulate real-time data updates
+    setRealTimeData(prev => ({
+      systemHealth: {
+        cpu: Math.max(0, Math.min(100, prev.systemHealth.cpu + (Math.random() - 0.5) * 10)),
+        memory: Math.max(0, Math.min(100, prev.systemHealth.memory + (Math.random() - 0.5) * 8)),
+        network: Math.max(0, Math.min(100, prev.systemHealth.network + (Math.random() - 0.5) * 15))
+      },
+      activeThreats: Math.max(0, prev.activeThreats + Math.floor((Math.random() - 0.8) * 3)),
+      liveTraffic: Math.max(0, prev.liveTraffic + Math.floor((Math.random() - 0.5) * 20)),
+      uptime: '99.9%'
+    }))
+    
+    // Simulate alerts
+    if (Math.random() > 0.9) {
+      setAlertsCount(prev => prev + 1)
+    }
+  }
 
   const loadDashboardData = async () => {
     setLoading(true)
@@ -178,47 +220,165 @@ const Dashboard = () => {
       </Helmet>
       
       <main role="main" className="space-y-6">
-        {/* Header */}
+        {/* Enhanced Header */}
         <motion.div 
-          className="flex justify-between items-center"
+          className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-lg p-6 border border-blue-200"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
-          <div>
-            <h1 className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
-              Welcome back, {user?.firstName || 'User'}!
-            </h1>
-            <p className="mt-2 text-lg" style={{ color: 'var(--text-secondary)' }}>
-              Here's what's happening with your traffic protection
-            </p>
-          </div>
-          <div className="flex items-center space-x-3">
-            <select
-              value={timeRange}
-              onChange={(e) => setTimeRange(e.target.value)}
-              className="px-4 py-2 rounded-lg text-sm border transition-all duration-200 focus:ring-2 focus:ring-offset-2"
-              style={{ 
-                borderColor: 'var(--border-primary)',
-                backgroundColor: 'var(--primary-bg)',
-                color: 'var(--text-primary)'
-              }}
-            >
-              <option value="24h">Last 24 Hours</option>
-              <option value="7d">Last 7 Days</option>
-              <option value="30d">Last 30 Days</option>
-              <option value="90d">Last 90 Days</option>
-            </select>
-            <Button
-              onClick={handleRefresh}
-              loading={refreshing}
-              icon={RefreshCw}
-              variant="primary"
-            >
-              Refresh
-            </Button>
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+            <div className="mb-4 lg:mb-0">
+              <h1 className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
+                Welcome back, {user?.firstName || 'User'}! 
+                <motion.span 
+                  className="inline-block ml-2"
+                  animate={{ rotate: [0, 20, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                >
+                  👋
+                </motion.span>
+              </h1>
+              <p className="mt-2 text-lg" style={{ color: 'var(--text-secondary)' }}>
+                Your AI-powered security dashboard - real-time protection status
+              </p>
+              
+              {/* Live Status Indicators */}
+              <div className="mt-4 flex flex-wrap gap-4">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-sm text-green-600 font-medium">System Online</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Wifi className="h-4 w-4 text-blue-600" />
+                  <span className="text-sm text-blue-600 font-medium">{realTimeData.liveTraffic} req/min</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Shield className="h-4 w-4 text-red-600" />
+                  <span className="text-sm text-red-600 font-medium">{realTimeData.activeThreats} active threats</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <span className="text-sm text-green-600 font-medium">Uptime: {realTimeData.uptime}</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Enhanced Controls */}
+            <div className="flex flex-wrap gap-3">
+              <select
+                value={timeRange}
+                onChange={(e) => setTimeRange(e.target.value)}
+                className="px-4 py-2 rounded-lg text-sm border transition-all duration-200 focus:ring-2 focus:ring-offset-2"
+                style={{ 
+                  borderColor: 'var(--border-primary)',
+                  backgroundColor: 'var(--primary-bg)',
+                  color: 'var(--text-primary)'
+                }}
+              >
+                <option value="1h">Last Hour</option>
+                <option value="24h">Last 24 Hours</option>
+                <option value="7d">Last 7 Days</option>
+                <option value="30d">Last 30 Days</option>
+                <option value="90d">Last 90 Days</option>
+              </select>
+
+              <Button
+                onClick={() => setWidgetSettings(prev => ({ ...prev, compactMode: !prev.compactMode }))}
+                variant="outline"
+                icon={widgetSettings.compactMode ? Maximize2 : Filter}
+                size="sm"
+              >
+                {widgetSettings.compactMode ? 'Expand' : 'Compact'}
+              </Button>
+
+              <Button
+                onClick={() => {/* Export functionality */}}
+                variant="outline"
+                icon={Download}
+                size="sm"
+              >
+                Export
+              </Button>
+
+              <Button
+                onClick={handleRefresh}
+                loading={refreshing}
+                icon={RefreshCw}
+                variant="primary"
+              >
+                Refresh
+              </Button>
+
+              {alertsCount > 0 && (
+                <div className="relative">
+                  <Button
+                    onClick={() => setAlertsCount(0)}
+                    variant="outline"
+                    icon={Bell}
+                    className="relative"
+                  >
+                    Alerts
+                  </Button>
+                  <span className="absolute -top-2 -right-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                    {alertsCount}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         </motion.div>
+
+        {/* Real-Time System Health Widget */}
+        {widgetSettings.showRealTime && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <Card className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold flex items-center">
+                  <Cpu className="h-5 w-5 mr-2 text-blue-600" />
+                  System Health Monitor
+                </h3>
+                <div className="flex space-x-2">
+                  {Object.entries(realTimeData.systemHealth).map(([key, value]) => (
+                    <div key={key} className="text-center">
+                      <div className="text-xs font-medium text-gray-600 uppercase">{key}</div>
+                      <div className={`text-sm font-bold ${
+                        value > 80 ? 'text-red-600' : value > 60 ? 'text-yellow-600' : 'text-green-600'
+                      }`}>
+                        {value.toFixed(0)}%
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-4">
+                {Object.entries(realTimeData.systemHealth).map(([key, value]) => (
+                  <div key={key} className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium capitalize">{key}</span>
+                      <span className="text-sm">{value.toFixed(0)}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <motion.div
+                        className={`h-2 rounded-full ${
+                          value > 80 ? 'bg-red-500' : value > 60 ? 'bg-yellow-500' : 'bg-green-500'
+                        }`}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${value}%` }}
+                        transition={{ duration: 1, delay: 0.5 }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </motion.div>
+        )}
 
         {/* Tab Navigation */}
         <Card className="p-0">

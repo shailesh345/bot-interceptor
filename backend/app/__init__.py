@@ -47,7 +47,12 @@ def create_app(config_name=None):
     # limiter.init_app(app)  # Temporarily disabled for testing
     
     # Configure CORS
-    CORS(app, origins=['http://localhost:3000', 'https://yourdomain.com'])
+    CORS(app, 
+         origins=['http://localhost:3000', 'http://127.0.0.1:3000', 'https://yourdomain.com'],
+         supports_credentials=True,
+         methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+         allow_headers=['Content-Type', 'Authorization', 'X-Requested-With'],
+         expose_headers=['Content-Range', 'X-Content-Range'])
     
     # Initialize Redis
     app.redis = redis.from_url(app.config['REDIS_URL'])

@@ -2,6 +2,7 @@ import { createSlice } from '@reduxjs/toolkit'
 
 const initialState = {
   sidebarOpen: false,
+  sidebarCollapsed: false,
   theme: 'light',
   notifications: [],
   loading: false,
@@ -21,6 +22,9 @@ const uiSlice = createSlice({
   reducers: {
     toggleSidebar: (state) => {
       state.sidebarOpen = !state.sidebarOpen
+    },
+    toggleSidebarCollapsed: (state) => {
+      state.sidebarCollapsed = !state.sidebarCollapsed
     },
     setSidebarOpen: (state, action) => {
       state.sidebarOpen = action.payload
@@ -68,6 +72,7 @@ const uiSlice = createSlice({
 
 export const {
   toggleSidebar,
+  toggleSidebarCollapsed,
   setSidebarOpen,
   setTheme,
   setCurrentPage,

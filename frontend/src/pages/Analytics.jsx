@@ -4,12 +4,14 @@ import { motion } from 'framer-motion'
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell,
-  AreaChart, Area
+  AreaChart, Area, RadialBarChart, RadialBar, ScatterChart, Scatter
 } from 'recharts'
 import { 
   TrendingUp, TrendingDown, Activity, Shield, Bot, Users,
   Globe, ArrowUp, ArrowDown, Eye, Server, Clock,
-  Download, Filter, Calendar, Search, Zap, CheckCircle
+  Download, Filter, Calendar, Search, Zap, CheckCircle,
+  BarChart3, Target, Brain, Sparkles, Layers, Settings,
+  Share2, Maximize2, RefreshCw, AlertTriangle
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { analyticsAPI } from '../services/api'

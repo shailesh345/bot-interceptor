@@ -40,9 +40,10 @@ export default defineConfig({
       },
 
       // Traffic interception API endpoints
-      '/api/traffic': {
+      '/traffic': {
         target: API_BASE_URL,
         changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/traffic/, '/api/traffic'),
       },
       // Admin API endpoints
       '/admin/api': {
