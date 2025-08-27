@@ -3,7 +3,7 @@ import toast from 'react-hot-toast'
 
 // Create axios instance
 const api = axios.create({
-  baseURL: process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:5002/api',
+  baseURL: process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:5000/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -84,39 +84,42 @@ export const authAPI = {
 
 // Domains API (Updated for Phase 2)
 export const domainsAPI = {
-  getDomains: () => api.get('/v1/domains'),
-  createDomain: (domainData) => api.post('/v1/domains', domainData),
-  updateDomain: (id, domainData) => api.put(`/v1/domains/${id}`, domainData),
-  deleteDomain: (id) => api.delete(`/v1/domains/${id}`),
-  verifyDomain: (id, method = 'dns') => api.post(`/v1/domains/${id}/verify`, { method }),
-  getDomainStats: (id) => api.get(`/v1/domains/${id}/stats`),
-  getDomain: (id) => api.get(`/v1/domains/${id}`),
-  bulkImportDomains: (domains) => api.post('/v1/domains/bulk-import', { domains }),
-  exportDomains: () => api.get('/v1/domains/export'),
+  getDomains: () => api.get('/domains'),
+  createDomain: (domainData) => api.post('/domains', domainData),
+  updateDomain: (id, domainData) => api.put(`/domains/${id}`, domainData),
+  deleteDomain: (id) => api.delete(`/domains/${id}`),
+  verifyDomain: (id, method = 'dns') => api.post(`/domains/${id}/verify`, { method }),
+  getVerificationInstructions: (id) => api.get(`/domains/${id}/verification`),
+  getDomainStats: (id) => api.get(`/domains/${id}/stats`),
+  getDomain: (id) => api.get(`/domains/${id}`),
+  bulkImportDomains: (domains) => api.post('/domains/bulk-import', { domains }),
+  exportDomains: () => api.get('/domains/export'),
+  testMonitoring: (id) => api.post(`/domains/${id}/test-monitoring`),
+  updateDomainMonitoring: (id, config) => api.put(`/domains/${id}/monitoring`, config),
 }
 
 // Phase 2: Domain Management API
 export const domainAPI = {
   // Get all domains
-  getDomains: (params = {}) => api.get('/v1/domains', { params }),
+  getDomains: (params = {}) => api.get('/domains', { params }),
 
   // Create new domain
-  createDomain: (domainData) => api.post('/v1/domains', domainData),
+  createDomain: (domainData) => api.post('/domains', domainData),
 
   // Get specific domain
-  getDomain: (domainId) => api.get(`/v1/domains/${domainId}`),
+  getDomain: (domainId) => api.get(`/domains/${domainId}`),
 
   // Update domain
-  updateDomain: (domainId, domainData) => api.put(`/v1/domains/${domainId}`, domainData),
+  updateDomain: (domainId, domainData) => api.put(`/domains/${domainId}`, domainData),
 
   // Delete domain
-  deleteDomain: (domainId) => api.delete(`/v1/domains/${domainId}`),
+  deleteDomain: (domainId) => api.delete(`/domains/${domainId}`),
 
   // Verify domain ownership
-  verifyDomain: (domainId) => api.post(`/v1/domains/${domainId}/verify`),
+  verifyDomain: (domainId) => api.post(`/domains/${domainId}/verify`),
 
   // Get verification instructions
-  getVerificationInstructions: (domainId) => api.get(`/v1/domains/${domainId}/verification-instructions`),
+  getVerificationInstructions: (domainId) => api.get(`/domains/${domainId}/verification-instructions`),
 }
 
 // Rules API (Enhanced for Phase 2)
@@ -126,7 +129,7 @@ export const rulesAPI = {
   createRule: (ruleData) => api.post('/v1/rules', ruleData),
   getRule: (ruleId) => api.get(`/v1/rules/${ruleId}`),
   updateRule: (ruleId, ruleData) => api.put(`/v1/rules/${ruleId}`, ruleData),
-  deleteRule: (ruleId) => api.delete(`/v1/rules/${ruleId}`),
+  deleteRule: (ruleId, ruleData) => api.delete(`/v1/rules/${ruleId}`),
   testRule: (ruleId, sampleRequests) => api.post(`/v1/rules/${ruleId}/test`, { sample_requests: sampleRequests }),
   
   // Legacy endpoints (maintain backward compatibility)
@@ -143,18 +146,18 @@ export const rulesAPI = {
 // Traffic API (Enhanced for Phase 2)
 export const trafficAPI = {
   // Phase 2 enhanced endpoints
-  processRequest: (requestData) => api.post('/v1/traffic/process', requestData),
-  getStats: () => api.get('/v1/traffic/stats'),
-  getLogs: (params = {}) => api.get('/v1/traffic/logs', { params }),
+  processRequest: (requestData) => api.post('/traffic/intercept', requestData),
+  getStats: () => api.get('/traffic/metrics/realtime'),
+  getLogs: (params = {}) => api.get('/traffic/logs', { params }),
   
   // Legacy endpoints (maintain backward compatibility)
   getTrafficLogs: (params) => api.get('/traffic/logs', { params }),
-  getTrafficStats: (params) => api.get('/traffic/stats', { params }),
-  getTrafficSummary: (domainId) => api.get(`/traffic/summary/${domainId}`),
-  getTopTraffic: (params) => api.get('/traffic/top', { params }),
-  exportTrafficData: (params) => api.get('/traffic/export', { params }),
-  getTrafficAnalytics: (params) => api.get('/traffic/analytics', { params }),
-  getRealTimeTraffic: (domainId) => api.get(`/traffic/realtime/${domainId}`),
+  getTrafficStats: (params) => api.get('/traffic/metrics/realtime', { params }),
+  getTrafficSummary: (domainId) => api.get(`/traffic/metrics/domain/${domainId}`),
+  getTopTraffic: (params) => api.get('/traffic/metrics/realtime', { params }),
+  exportTrafficData: (params) => api.get('/traffic/logs', { params }),
+  getTrafficAnalytics: (params) => api.get('/analytics/traffic-patterns', { params }),
+  getRealTimeTraffic: (domainId) => api.get('/real-time/traffic-stream'),
 }
 
 // Analytics API

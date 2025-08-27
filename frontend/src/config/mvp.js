@@ -11,6 +11,7 @@ export const MVP_CONFIG = {
     rules: { enabled: true },
     traffic_interception: { enabled: true },
     analytics: { enabled: true },
+    monitoring: { enabled: true },
     billing: { enabled: true },
     profile: { enabled: true },
     settings: { enabled: true }

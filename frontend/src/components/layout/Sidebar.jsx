@@ -54,6 +54,7 @@ const Sidebar = () => {
     { name: 'Rules', href: '/rules', icon: ShieldCheck, mvpKey: 'rules' },
     { name: 'Traffic Interception', href: '/traffic-interception', icon: Network, mvpKey: 'traffic_interception' },
     { name: 'Analytics', href: '/analytics', icon: LineChart, mvpKey: 'analytics' },
+    { name: 'Monitoring', href: '/monitoring', icon: Activity, mvpKey: 'monitoring' },
     { name: 'ML Model Management', href: '/ml-management', icon: Bot, mvpKey: 'ml_management' },
     { name: 'Content Protection', href: '/content-protection', icon: ShieldAlert, mvpKey: 'content_protection' },
     { name: 'Billing & Subscription', href: '/billing', icon: Wallet, mvpKey: 'billing' },

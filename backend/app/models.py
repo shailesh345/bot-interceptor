@@ -85,6 +85,18 @@ class Domain(db.Model):
     traffic_enabled = db.Column(db.Boolean, default=True)
     status = db.Column(db.String(20), default='active')  # active, suspended, pending
     verified_at = db.Column(db.DateTime, nullable=True)
+    
+    # Monitoring settings
+    monitoring_enabled = db.Column(db.Boolean, default=False)
+    monitoring_interval = db.Column(db.Integer, default=60)  # minutes
+    monitoring_url = db.Column(db.String(500))  # Custom monitoring URL
+    monitoring_content = db.Column(db.Text)  # Content to check for
+    monitoring_headers = db.Column(db.Text)  # JSON headers for monitoring
+    
+    # Security scanning settings
+    security_scan_enabled = db.Column(db.Boolean, default=False)
+    security_scan_interval = db.Column(db.Integer, default=24)  # hours
+    
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -649,3 +661,163 @@ class AuditLog(db.Model):
     
     def __repr__(self):
         return f'<AuditLog {self.action}:{self.resource_type}:{self.resource_id}>'
+
+class UptimeCheck(db.Model):
+    """Uptime monitoring check results"""
+    __tablename__ = 'uptime_checks'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    domain_id = db.Column(db.Integer, db.ForeignKey('domains.id'), nullable=False)
+    status = db.Column(db.String(20), nullable=False)  # success, failure, error
+    response_time = db.Column(db.Float)  # in milliseconds
+    status_code = db.Column(db.Integer)
+    error_message = db.Column(db.Text)
+    content_check_passed = db.Column(db.Boolean, default=True)
+    checked_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    domain = db.relationship('Domain', backref='uptime_checks')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'domain_id': self.domain_id,
+            'status': self.status,
+            'response_time': self.response_time,
+            'status_code': self.status_code,
+            'error_message': self.error_message,
+            'content_check_passed': self.content_check_passed,
+            'checked_at': self.checked_at.isoformat() if self.checked_at else None
+        }
+
+class UptimeAlert(db.Model):
+    """Uptime monitoring alerts"""
+    __tablename__ = 'uptime_alerts'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    domain_id = db.Column(db.Integer, db.ForeignKey('domains.id'), nullable=False)
+    alert_type = db.Column(db.String(50), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    details = db.Column(db.Text)
+    severity = db.Column(db.String(20), default='medium')  # low, medium, high, critical
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    resolved_at = db.Column(db.DateTime)
+    resolved_by = db.Column(db.String(100))
+    
+    # Relationships
+    domain = db.relationship('Domain', backref='uptime_alerts')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'domain_id': self.domain_id,
+            'alert_type': self.alert_type,
+            'message': self.message,
+            'details': self.details,
+            'severity': self.severity,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'resolved_at': self.resolved_at.isoformat() if self.resolved_at else None,
+            'resolved_by': self.resolved_by
+        }
+
+class SecurityScan(db.Model):
+    """Security scan results"""
+    __tablename__ = 'security_scans'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    domain_id = db.Column(db.Integer, db.ForeignKey('domains.id'), nullable=False)
+    scan_type = db.Column(db.String(50), nullable=False)  # full, ssl, web, vulnerability, threat
+    status = db.Column(db.String(20), default='running')  # running, completed, failed
+    started_at = db.Column(db.DateTime, default=datetime.utcnow)
+    completed_at = db.Column(db.DateTime)
+    results = db.Column(db.Text)  # JSON results
+    error_message = db.Column(db.Text)
+    
+    # Relationships
+    domain = db.relationship('Domain', backref='security_scans')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'domain_id': self.domain_id,
+            'scan_type': self.scan_type,
+            'status': self.status,
+            'started_at': self.started_at.isoformat() if self.started_at else None,
+            'completed_at': self.completed_at.isoformat() if self.completed_at else None,
+            'results': self.results,
+            'error_message': self.error_message
+        }
+
+class SecurityVulnerability(db.Model):
+    """Security vulnerabilities found"""
+    __tablename__ = 'security_vulnerabilities'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    domain_id = db.Column(db.Integer, db.ForeignKey('domains.id'), nullable=False)
+    scan_id = db.Column(db.Integer, db.ForeignKey('security_scans.id'), nullable=False)
+    vulnerability_type = db.Column(db.String(100), nullable=False)
+    severity = db.Column(db.String(20), nullable=False)  # low, medium, high, critical
+    description = db.Column(db.Text, nullable=False)
+    cve_id = db.Column(db.String(20))
+    cvss_score = db.Column(db.Float)
+    details = db.Column(db.Text)  # JSON details
+    discovered_at = db.Column(db.DateTime, default=datetime.utcnow)
+    resolved_at = db.Column(db.DateTime)
+    resolved_by = db.Column(db.String(100))
+    
+    # Relationships
+    domain = db.relationship('Domain', backref='security_vulnerabilities')
+    scan = db.relationship('SecurityScan', backref='vulnerabilities')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'domain_id': self.domain_id,
+            'scan_id': self.scan_id,
+            'vulnerability_type': self.vulnerability_type,
+            'severity': self.severity,
+            'description': self.description,
+            'cve_id': self.cve_id,
+            'cvss_score': self.cvss_score,
+            'details': self.details,
+            'discovered_at': self.discovered_at.isoformat() if self.discovered_at else None,
+            'resolved_at': self.resolved_at.isoformat() if self.resolved_at else None,
+            'resolved_by': self.resolved_by
+        }
+
+class SecurityThreat(db.Model):
+    """Security threats detected"""
+    __tablename__ = 'security_threats'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    domain_id = db.Column(db.Integer, db.ForeignKey('domains.id'), nullable=False)
+    scan_id = db.Column(db.Integer, db.ForeignKey('security_scans.id'))
+    threat_type = db.Column(db.String(100), nullable=False)
+    severity = db.Column(db.String(20), nullable=False)  # low, medium, high, critical
+    description = db.Column(db.Text, nullable=False)
+    source = db.Column(db.String(100))
+    confidence = db.Column(db.String(20))  # low, medium, high
+    details = db.Column(db.Text)  # JSON details
+    discovered_at = db.Column(db.DateTime, default=datetime.utcnow)
+    resolved_at = db.Column(db.DateTime)
+    resolved_by = db.Column(db.String(100))
+    
+    # Relationships
+    domain = db.relationship('Domain', backref='security_threats')
+    scan = db.relationship('SecurityScan', backref='threats')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'domain_id': self.domain_id,
+            'scan_id': self.scan_id,
+            'threat_type': self.threat_type,
+            'severity': self.severity,
+            'description': self.description,
+            'source': self.source,
+            'confidence': self.confidence,
+            'details': self.details,
+            'discovered_at': self.discovered_at.isoformat() if self.discovered_at else None,
+            'resolved_at': self.resolved_at.isoformat() if self.resolved_at else None,
+            'resolved_by': self.resolved_by
+        }

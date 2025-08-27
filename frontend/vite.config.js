@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 
 // API Configuration Constants
-const API_BASE_URL = 'http://127.0.0.1:5002'
+const API_BASE_URL = 'http://127.0.0.1:5000'
 const FRONTEND_PORT = 3000
 
 export default defineConfig({
@@ -11,7 +11,7 @@ export default defineConfig({
   define: {
     // Make sure environment variables are available
     'import.meta.env.VITE_AI_ENABLED': JSON.stringify(process.env.VITE_AI_ENABLED || 'false'),
-    'import.meta.env.VITE_WS_URL': JSON.stringify(process.env.VITE_WS_URL || 'ws://127.0.0.1:5002'),
+    'import.meta.env.VITE_WS_URL': JSON.stringify(process.env.VITE_WS_URL || 'ws://127.0.0.1:5000'),
   },
   resolve: {
     alias: {
@@ -27,39 +27,39 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: API_BASE_URL,
+        target: 'http://127.0.0.1:5000',
         changeOrigin: true,
       },
       '/auth': {
-        target: API_BASE_URL,
+        target: 'http://127.0.0.1:5000',
         changeOrigin: true,
       },
       '/health': {
-        target: API_BASE_URL,
+        target: 'http://127.0.0.1:5000',
         changeOrigin: true,
       },
 
       // Traffic interception API endpoints
       '/traffic': {
-        target: API_BASE_URL,
+        target: 'http://127.0.0.1:5000',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/traffic/, '/api/traffic'),
       },
       // Admin API endpoints
       '/admin/api': {
-        target: API_BASE_URL,
+        target: 'http://127.0.0.1:5000',
         changeOrigin: true,
       },
       '/interceptor': {
-        target: API_BASE_URL,
+        target: 'http://127.0.0.1:5000',
         changeOrigin: true,
       },
       '/analytics': {
-        target: API_BASE_URL,
+        target: 'http://127.0.0.1:5000',
         changeOrigin: true,
       },
       '/billing': {
-        target: API_BASE_URL,
+        target: 'http://127.0.0.1:5000',
         changeOrigin: true,
       },
     },

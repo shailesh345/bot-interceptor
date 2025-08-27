@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet-async'
 import { useDispatch, useSelector } from 'react-redux'
 import { motion, AnimatePresence } from 'framer-motion'
 import { safeFilter, ensureArray } from '../utils/safeArray'
+import { domainsAPI } from '../services/api'
 import { 
   fetchDomains, 
   createDomain, 
@@ -20,6 +21,7 @@ import {
   Download, Filter, RefreshCw, Calendar, DollarSign,
   Server, X, FileText, Code, Database
 } from 'lucide-react'
+import DomainMonitoringConfig from '../components/monitoring/DomainMonitoringConfig'
 
 // Domain Form Modal Component
 const DomainFormModal = ({ isOpen, onClose, domain = null, onSubmit }) => {
@@ -995,6 +997,7 @@ const Domains = () => {
   const [editingDomain, setEditingDomain] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [showMonitoringConfigModal, setShowMonitoringConfigModal] = useState(false)
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -1114,6 +1117,11 @@ const Domains = () => {
   const handleGetTxtString = (domain) => {
     setSelectedDomain(domain)
     setShowVerificationModal(true)
+  }
+
+  const handleMonitoringConfig = (domain) => {
+    setSelectedDomain(domain)
+    setShowMonitoringConfigModal(true)
   }
 
   const copyToClipboard = (text) => {
@@ -1272,6 +1280,15 @@ const Domains = () => {
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
+                        {domain.status === 'verified' && (
+                          <button
+                            onClick={() => handleMonitoringConfig(domain)}
+                            className="p-1 text-gray-400 hover:text-purple-600"
+                            title="Configure Monitoring"
+                          >
+                            <Settings className="h-4 w-4" />
+                          </button>
+                        )}
                       </div>
                     </div>
 
@@ -1416,6 +1433,18 @@ const Domains = () => {
           setSelectedDomain(null)
         }}
         domain={selectedDomain}
+      />
+
+      <DomainMonitoringConfig
+        isOpen={showMonitoringConfigModal}
+        onClose={() => setShowMonitoringConfigModal(false)}
+        domain={selectedDomain}
+        onSave={(updatedDomain) => {
+          // Refresh domains list to show updated monitoring status
+          dispatch(fetchDomains())
+          setShowMonitoringConfigModal(false)
+          setSelectedDomain(null)
+        }}
       />
     </>
   )

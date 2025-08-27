@@ -7,6 +7,7 @@ from flask_jwt_extended import JWTManager
 from flask_mail import Mail
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from flask_socketio import SocketIO
 from config import config
 import redis
 import os
@@ -16,6 +17,7 @@ db = SQLAlchemy()
 migrate = Migrate()
 jwt = JWTManager()
 mail = Mail()
+socketio = SocketIO(cors_allowed_origins="*", async_mode='threading')
 
 # Advanced rate limiter with Redis backend
 limiter = Limiter(
@@ -24,9 +26,6 @@ limiter = Limiter(
     storage_uri="memory://",  # Will be updated to use Redis in production
     strategy="fixed-window"
 )
-
-# Initialize WebSocket
-from .websocket import socketio
 
 # Import middleware
 from .middleware.error_handler import error_handler
@@ -72,6 +71,16 @@ def create_app(config_name=None):
     
     # Initialize WebSocket
     socketio.init_app(app, cors_allowed_origins="*")
+    
+    # Import and register WebSocket events
+    from app.websocket.events import init_websocket_events
+    from app.websocket.traffic_stream import TrafficStreamManager
+    
+    # Initialize traffic stream manager
+    traffic_stream_manager = TrafficStreamManager(socketio)
+    
+    # Initialize WebSocket events with traffic stream manager
+    init_websocket_events(socketio, traffic_stream_manager)
     
     # Register blueprints
     from app.api import api as api_blueprint

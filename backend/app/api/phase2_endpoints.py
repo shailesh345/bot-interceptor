@@ -711,5 +711,133 @@ def verify_meta_tag(domain_name, expected_token):
             'method': 'meta_tag'
         }
 
+@domains_bp.route('/<int:domain_id>/test-monitoring', methods=['POST'])
+@jwt_required()
+def test_monitoring_features(domain_id):
+    """Test endpoint for monitoring features"""
+    try:
+        domain = Domain.query.get_or_404(domain_id)
+        
+        # Check if user owns this domain
+        current_user_id = get_jwt_identity()
+        if domain.user_id != current_user_id:
+            return jsonify({'error': 'Unauthorized access to domain'}), 403
+        
+        # Test traffic stream
+        from app.websocket.traffic_stream import get_traffic_stream_manager
+        traffic_manager = get_traffic_stream_manager()
+        
+        if traffic_manager:
+            # Generate test traffic data
+            test_traffic = {
+                'timestamp': datetime.utcnow().isoformat(),
+                'ip': '192.168.1.100',
+                'user_agent': 'Mozilla/5.0 (Test Browser)',
+                'method': 'GET',
+                'path': '/test',
+                'status_code': 200,
+                'response_time': 150,
+                'is_bot': False,
+                'country': 'US',
+                'city': 'Test City'
+            }
+            
+            # Add to traffic stream
+            traffic_manager.add_traffic_data(str(domain_id), test_traffic)
+            
+            return jsonify({
+                'success': True,
+                'message': 'Test traffic data sent to monitoring stream',
+                'domain_id': domain_id,
+                'test_data': test_traffic
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Traffic stream manager not available'
+            }), 500
+            
+    except Exception as e:
+        current_app.logger.error(f"Error testing monitoring features: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@domains_bp.route('/<int:domain_id>/monitoring', methods=['PUT'])
+@jwt_required()
+def update_domain_monitoring(domain_id):
+    """Update domain monitoring configuration"""
+    try:
+        domain = Domain.query.get_or_404(domain_id)
+        
+        # Check if user owns this domain
+        current_user_id = get_jwt_identity()
+        if domain.user_id != current_user_id:
+            return jsonify({'error': 'Unauthorized access to domain'}), 403
+        
+        data = request.get_json()
+        
+        # Update monitoring settings
+        if 'monitoring_enabled' in data:
+            domain.monitoring_enabled = data['monitoring_enabled']
+        
+        if 'monitoring_interval' in data:
+            domain.monitoring_interval = data['monitoring_interval']
+        
+        if 'monitoring_url' in data:
+            domain.monitoring_url = data['monitoring_url']
+        
+        if 'monitoring_content' in data:
+            domain.monitoring_content = data['monitoring_content']
+        
+        if 'monitoring_headers' in data:
+            domain.monitoring_headers = data['monitoring_headers']
+        
+        # Update security scanning settings
+        if 'security_scan_enabled' in data:
+            domain.security_scan_enabled = data['security_scan_enabled']
+        
+        if 'security_scan_interval' in data:
+            domain.security_scan_interval = data['security_scan_interval']
+        
+        # Update additional monitoring settings
+        if 'proxy_interception_enabled' in data:
+            domain.proxy_interception_enabled = data['proxy_interception_enabled']
+        
+        if 'traffic_analysis_enabled' in data:
+            domain.traffic_analysis_enabled = data['traffic_analysis_enabled']
+        
+        if 'uptime_alerts_enabled' in data:
+            domain.uptime_alerts_enabled = data['uptime_alerts_enabled']
+        
+        if 'security_alerts_enabled' in data:
+            domain.security_alerts_enabled = data['security_alerts_enabled']
+        
+        domain.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Monitoring configuration updated successfully',
+            'domain': {
+                'id': domain.id,
+                'domain_name': domain.domain_name,
+                'monitoring_enabled': domain.monitoring_enabled,
+                'monitoring_interval': domain.monitoring_interval,
+                'monitoring_url': domain.monitoring_url,
+                'monitoring_content': domain.monitoring_content,
+                'monitoring_headers': domain.monitoring_headers,
+                'security_scan_enabled': domain.security_scan_enabled,
+                'security_scan_interval': domain.security_scan_interval,
+                'proxy_interception_enabled': domain.proxy_interception_enabled,
+                'traffic_analysis_enabled': domain.traffic_analysis_enabled,
+                'uptime_alerts_enabled': domain.uptime_alerts_enabled,
+                'security_alerts_enabled': domain.security_alerts_enabled
+            }
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"Error updating domain monitoring: {e}")
+        return jsonify({'error': str(e)}), 500
+
 # Export blueprints
 __all__ = ['domains_bp', 'rules_bp', 'traffic_bp']

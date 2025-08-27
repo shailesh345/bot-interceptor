@@ -17,6 +17,7 @@ import Dashboard from './pages/Dashboard'
 import Domains from './pages/Domains'
 import Rules from './pages/Rules'
 import Analytics from './pages/Analytics'
+import Monitoring from './pages/Monitoring'
 
 import Settings from './pages/Settings'
 import Profile from './pages/Profile'
@@ -138,6 +139,7 @@ function App() {
           <Route path="domains" element={<Domains />} />
           <Route path="rules" element={<Rules />} />
           <Route path="analytics" element={<Analytics />} />
+          <Route path="monitoring" element={<Monitoring />} />
           <Route path="billing" element={<Billing />} />
           <Route path="settings" element={<Settings />} />
           <Route path="profile" element={<Profile />} />
