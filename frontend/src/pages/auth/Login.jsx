@@ -45,16 +45,16 @@ const Login = () => {
       <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
         <div>
           <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-            Email or Username
+            Username
           </label>
           <div className="mt-1">
             <input
               {...register('username', {
-                required: 'Email or username is required',
+                required: 'Username is required',
               })}
               type="text"
               className="input"
-              placeholder="Enter your email or username"
+              placeholder="Enter your username"
             />
             {errors.username && (
               <p className="mt-1 text-sm text-red-600">{errors.username.message}</p>

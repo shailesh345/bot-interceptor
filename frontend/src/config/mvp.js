@@ -23,6 +23,7 @@ export const MVP_CONFIG = {
     system_monitoring: { enabled: true },
     security_operations: { enabled: true },
     system_health: { enabled: true },
+    database_manager: { enabled: true },
     users: { enabled: true },
     client_management: { enabled: true }
   },

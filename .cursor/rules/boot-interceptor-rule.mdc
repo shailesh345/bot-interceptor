@@ -1,0 +1,1962 @@
+---
+description: "Boot Interceptor SaaS Project Rules - Comprehensive coding standards, patterns, and guidelines for SaaS bot interception and redirection system with React frontend and Python Flask backend. Specializes in detecting bots and redirecting them to credit pages for crawling, includes billing integration, multi-tenant architecture, subscription management, and advanced bot detection algorithms."
+globs: ["**/*.{js,jsx,ts,tsx,py,md,json,yml,yaml}"]
+alwaysApply: true
+autoAttach: true
+---
+
+# Boot Interceptor Project Rules
+
+## 🎯 Project Overview
+SaaS bot interception and redirection system with React frontend and Python Flask backend. Specializes in detecting bots and redirecting them to credit pages for crawling, enabling monetization through bot traffic. Features multi-tenant architecture, subscription management, billing integration, and advanced bot detection algorithms.
+
+## 📁 File Structure
+```
+boot-interceptor/
+├── frontend/          # React SaaS application
+├── backend/           # Flask API with multi-tenant support
+├── database/          # Database schemas & migrations
+├── billing/           # Billing and subscription management
+├── credit-pages/      # Credit page templates and logic
+├── nginx/            # Nginx configuration
+└── docs/             # Documentation
+```
+
+## 🚀 Quick Start Commands
+```bash
+# Kill existing processes
+taskkill /f /im node.exe
+taskkill /f /im python.exe
+
+# Start backend (port 5000)
+cd backend && python app.py
+
+# Start frontend (port 3000)
+cd frontend && npm start
+
+# Test API
+curl http://localhost:5000/api/health
+
+# Test bot detection
+curl -X POST http://localhost:5000/api/bot/detect -H "Content-Type: application/json" -d '{"user_agent": "Mozilla/5.0", "ip": "192.168.1.1"}'
+
+# Test bot redirection to credit page
+curl -X POST http://localhost:5000/api/bot/redirect -H "Content-Type: application/json" -d '{"bot_id": "123", "target_url": "https://credit-page.com"}'
+
+# Test subscription management
+curl -X GET http://localhost:5000/api/subscriptions/status -H "Authorization: Bearer <token>"
+
+# Test billing integration
+curl -X POST http://localhost:5000/api/billing/charge -H "Content-Type: application/json" -d '{"amount": 10.00, "currency": "USD"}'
+```
+
+## 💻 Coding Standards
+
+### React/JavaScript Frontend
+```javascript
+// ✅ Component Structure
+const DomainVerification = ({ domain, onVerify }) => {
+  const [status, setStatus] = useState('idle');
+  const [result, setResult] = useState(null);
+
+  const handleVerification = async () => {
+    setStatus('loading');
+    try {
+      const response = await verifyDomain(domain);
+      setResult(response);
+      onVerify(response);
+    } catch (error) {
+      setStatus('error');
+      console.error('Verification failed:', error);
+    }
+  };
+
+  return (
+    <div className="domain-verification">
+      <button 
+        onClick={handleVerification}
+        disabled={status === 'loading'}
+        className="btn btn-primary"
+      >
+        {status === 'loading' ? 'Verifying...' : 'Verify Domain'}
+      </button>
+      {result && <VerificationResult result={result} />}
+    </div>
+  );
+};
+
+// ✅ API Service Pattern
+const apiService = {
+  async get(endpoint) {
+    const response = await fetch(`/api${endpoint}`, {
+      headers: { 'Authorization': `Bearer ${getToken()}` }
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return response.json();
+  },
+
+  async post(endpoint, data) {
+    const response = await fetch(`/api${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getToken()}`
+      },
+      body: JSON.stringify(data)
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return response.json();
+  }
+};
+
+// ✅ SaaS Bot Redirection Dashboard Component
+const BotRedirectionDashboard = () => {
+  const [botRedirects, setBotRedirects] = useState([]);
+  const [revenueStats, setRevenueStats] = useState({});
+  const [subscriptionStatus, setSubscriptionStatus] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+
+  const fetchBotRedirects = async () => {
+    setIsLoading(true);
+    try {
+      const response = await apiService.get('/bot/redirects');
+      setBotRedirects(response.data);
+    } catch (error) {
+      console.error('Failed to fetch bot redirects:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchRevenueStats = async () => {
+    try {
+      const response = await apiService.get('/billing/revenue');
+      setRevenueStats(response.data);
+    } catch (error) {
+      console.error('Failed to fetch revenue stats:', error);
+    }
+  };
+
+  const fetchSubscriptionStatus = async () => {
+    try {
+      const response = await apiService.get('/subscriptions/status');
+      setSubscriptionStatus(response.data);
+    } catch (error) {
+      console.error('Failed to fetch subscription status:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchBotRedirects();
+    fetchRevenueStats();
+    fetchSubscriptionStatus();
+    
+    // Refresh data every 30 seconds
+    const interval = setInterval(() => {
+      fetchBotRedirects();
+      fetchRevenueStats();
+      fetchSubscriptionStatus();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="bot-redirection-dashboard">
+      <div className="dashboard-header">
+        <h2>Bot Redirection & Revenue Dashboard</h2>
+        <button 
+          onClick={fetchBotRedirects}
+          disabled={isLoading}
+          className="btn btn-primary"
+        >
+          {isLoading ? 'Refreshing...' : 'Refresh Data'}
+        </button>
+      </div>
+
+      <div className="stats-grid">
+        <div className="stat-card">
+          <h3>Bot Redirects</h3>
+          <p className="stat-number">{botRedirects.length}</p>
+          <p className="stat-label">Last 24 hours</p>
+        </div>
+        
+        <div className="stat-card">
+          <h3>Revenue Generated</h3>
+          <p className="stat-number">${revenueStats.totalRevenue || 0}</p>
+          <p className="stat-label">This month</p>
+        </div>
+        
+        <div className="stat-card">
+          <h3>Conversion Rate</h3>
+          <p className="stat-number">{revenueStats.conversionRate || 0}%</p>
+          <p className="stat-label">Credit page conversions</p>
+        </div>
+
+        <div className="stat-card">
+          <h3>Subscription Status</h3>
+          <p className={`stat-number ${subscriptionStatus.status === 'active' ? 'text-success' : 'text-danger'}`}>
+            {subscriptionStatus.status || 'inactive'}
+          </p>
+          <p className="stat-label">Current plan</p>
+        </div>
+      </div>
+
+      <div className="credit-pages-section">
+        <h3>Credit Pages Performance</h3>
+        <div className="credit-pages-grid">
+          {revenueStats.creditPages?.map((page, index) => (
+            <div key={index} className="credit-page-card">
+              <h4>{page.name}</h4>
+              <p>Revenue: ${page.revenue}</p>
+              <p>Conversions: {page.conversions}</p>
+              <p>Conversion Rate: {page.conversionRate}%</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="bot-redirects-list">
+        <h3>Recent Bot Redirects</h3>
+        {botRedirects.map((redirect, index) => (
+          <div key={index} className="redirect-item">
+            <div className="redirect-info">
+              <span className="bot-id">{redirect.bot_id}</span>
+              <span className="credit-page">{redirect.credit_page_name}</span>
+              <span className="revenue">${redirect.revenue_generated}</span>
+            </div>
+            <div className="redirect-details">
+              <p>Original URL: {redirect.original_url}</p>
+              <p>Redirect URL: {redirect.redirect_url}</p>
+              <p>Timestamp: {new Date(redirect.timestamp).toLocaleString()}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ✅ Subscription Management Component
+const SubscriptionManager = () => {
+  const [subscription, setSubscription] = useState(null);
+  const [plans, setPlans] = useState([]);
+  const [usage, setUsage] = useState({});
+
+  const fetchSubscription = async () => {
+    try {
+      const response = await apiService.get('/subscriptions/current');
+      setSubscription(response.data);
+    } catch (error) {
+      console.error('Failed to fetch subscription:', error);
+    }
+  };
+
+  const fetchPlans = async () => {
+    try {
+      const response = await apiService.get('/subscriptions/plans');
+      setPlans(response.data);
+    } catch (error) {
+      console.error('Failed to fetch plans:', error);
+    }
+  };
+
+  const fetchUsage = async () => {
+    try {
+      const response = await apiService.get('/subscriptions/usage');
+      setUsage(response.data);
+    } catch (error) {
+      console.error('Failed to fetch usage:', error);
+    }
+  };
+
+  const upgradePlan = async (planId) => {
+    try {
+      await apiService.post('/subscriptions/upgrade', { plan_id: planId });
+      fetchSubscription();
+    } catch (error) {
+      console.error('Failed to upgrade plan:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchSubscription();
+    fetchPlans();
+    fetchUsage();
+  }, []);
+
+  return (
+    <div className="subscription-manager">
+      <h2>Subscription Management</h2>
+      
+      {subscription && (
+        <div className="current-subscription">
+          <h3>Current Plan: {subscription.plan_name}</h3>
+          <p>Status: {subscription.status}</p>
+          <p>Next Billing: {new Date(subscription.next_billing_date).toLocaleDateString()}</p>
+        </div>
+      )}
+
+      <div className="usage-section">
+        <h3>Usage This Month</h3>
+        <div className="usage-grid">
+          <div className="usage-item">
+            <span>Bot Redirects: {usage.bot_redirects || 0} / {subscription?.limits?.bot_redirects || 0}</span>
+            <div className="usage-bar">
+              <div 
+                className="usage-fill" 
+                style={{width: `${((usage.bot_redirects || 0) / (subscription?.limits?.bot_redirects || 1)) * 100}%`}}
+              ></div>
+            </div>
+          </div>
+          <div className="usage-item">
+            <span>Credit Pages: {usage.credit_pages || 0} / {subscription?.limits?.credit_pages || 0}</span>
+            <div className="usage-bar">
+              <div 
+                className="usage-fill" 
+                style={{width: `${((usage.credit_pages || 0) / (subscription?.limits?.credit_pages || 1)) * 100}%`}}
+              ></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="plans-section">
+        <h3>Available Plans</h3>
+        <div className="plans-grid">
+          {plans.map((plan, index) => (
+            <div key={index} className="plan-card">
+              <h4>{plan.name}</h4>
+              <p className="price">${plan.price}/month</p>
+              <ul>
+                <li>{plan.limits.bot_redirects} bot redirects/month</li>
+                <li>{plan.limits.credit_pages} credit pages</li>
+                <li>{plan.features.join(', ')}</li>
+              </ul>
+              <button 
+                onClick={() => upgradePlan(plan.id)}
+                className="btn btn-primary"
+                disabled={subscription?.plan_id === plan.id}
+              >
+                {subscription?.plan_id === plan.id ? 'Current Plan' : 'Upgrade'}
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+```
+
+### Python/Flask Backend
+```python
+# ✅ Service Pattern
+from typing import Dict, List, Optional
+from flask import Flask, request, jsonify
+from dataclasses import dataclass
+
+@dataclass
+class VerificationResult:
+    domain: str
+    verified: bool
+    confidence: float
+    details: Dict[str, any]
+
+class DomainVerificationService:
+    """Handles domain verification logic."""
+    
+    def __init__(self, config: Dict[str, str]):
+        self.config = config
+        self.rules = self._load_verification_rules()
+    
+    def verify_domain(self, domain: str) -> VerificationResult:
+        """Verify domain against configured rules."""
+        try:
+            # Implementation logic
+            is_valid = self._check_domain_validity(domain)
+            confidence = self._calculate_confidence(domain)
+            
+            return VerificationResult(
+                domain=domain,
+                verified=is_valid,
+                confidence=confidence,
+                details=self._get_verification_details(domain)
+            )
+        except Exception as e:
+            app.logger.error(f"Domain verification failed: {e}")
+            raise VerificationError(f"Failed to verify domain: {domain}")
+
+# ✅ SaaS Bot Redirection API Routes
+@app.route('/api/bot/redirect', methods=['POST'])
+@jwt_required
+@tenant_middleware()
+def redirect_bot():
+    """Intercept bot and redirect to credit page."""
+    try:
+        data = request.get_json()
+        request_data = {
+            'url': data.get('url', ''),
+            'user_agent': data.get('user_agent', ''),
+            'ip': data.get('ip', ''),
+            'headers': data.get('headers', {}),
+            'tenant_id': request.tenant_id
+        }
+        
+        # Perform bot redirection
+        result = bot_redirection_service.intercept_and_redirect_bot(request_data)
+        
+        # Log redirection for billing
+        log_bot_redirection(request.tenant_id, result.bot_id, result.credit_page_url)
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'bot_id': result.bot_id,
+                'redirect_url': result.redirect_url,
+                'credit_page_url': result.credit_page_url,
+                'redirect_reason': result.redirect_reason,
+                'timestamp': result.timestamp
+            }
+        }), 200
+        
+    except Exception as e:
+        app.logger.error(f"Bot redirection failed: {e}")
+        return jsonify({'error': 'Bot redirection failed'}), 500
+
+@app.route('/api/bot/redirects', methods=['GET'])
+@jwt_required
+@tenant_middleware()
+def get_bot_redirects():
+    """Get recent bot redirects for tenant."""
+    try:
+        limit = request.args.get('limit', 50, type=int)
+        redirects = bot_redirection_service.get_tenant_redirects(request.tenant_id, limit)
+        
+        return jsonify({
+            'success': True,
+            'data': redirects
+        }), 200
+        
+    except Exception as e:
+        app.logger.error(f"Failed to get bot redirects: {e}")
+        return jsonify({'error': 'Failed to get bot redirects'}), 500
+
+# ✅ Subscription Management API Routes
+@app.route('/api/subscriptions/current', methods=['GET'])
+@jwt_required
+@tenant_middleware()
+def get_current_subscription():
+    """Get current subscription for tenant."""
+    try:
+        subscription = subscription_service.get_active_subscription(request.tenant_id)
+        
+        return jsonify({
+            'success': True,
+            'data': subscription
+        }), 200
+        
+    except Exception as e:
+        app.logger.error(f"Failed to get subscription: {e}")
+        return jsonify({'error': 'Failed to get subscription'}), 500
+
+@app.route('/api/subscriptions/plans', methods=['GET'])
+@jwt_required
+def get_subscription_plans():
+    """Get available subscription plans."""
+    try:
+        plans = subscription_service.get_available_plans()
+        
+        return jsonify({
+            'success': True,
+            'data': plans
+        }), 200
+        
+    except Exception as e:
+        app.logger.error(f"Failed to get plans: {e}")
+        return jsonify({'error': 'Failed to get plans'}), 500
+
+@app.route('/api/subscriptions/upgrade', methods=['POST'])
+@jwt_required
+@tenant_middleware()
+def upgrade_subscription():
+    """Upgrade tenant subscription."""
+    try:
+        data = request.get_json()
+        plan_id = data.get('plan_id')
+        
+        if not plan_id:
+            return jsonify({'error': 'Plan ID required'}), 400
+        
+        subscription = subscription_service.upgrade_subscription(request.tenant_id, plan_id)
+        
+        return jsonify({
+            'success': True,
+            'data': subscription
+        }), 200
+        
+    except Exception as e:
+        app.logger.error(f"Failed to upgrade subscription: {e}")
+        return jsonify({'error': 'Failed to upgrade subscription'}), 500
+
+@app.route('/api/subscriptions/usage', methods=['GET'])
+@jwt_required
+@tenant_middleware()
+def get_subscription_usage():
+    """Get current usage for tenant."""
+    try:
+        usage = subscription_service.get_current_usage(request.tenant_id)
+        
+        return jsonify({
+            'success': True,
+            'data': usage
+        }), 200
+        
+    except Exception as e:
+        app.logger.error(f"Failed to get usage: {e}")
+        return jsonify({'error': 'Failed to get usage'}), 500
+
+# ✅ Billing & Revenue API Routes
+@app.route('/api/billing/revenue', methods=['GET'])
+@jwt_required
+@tenant_middleware()
+def get_revenue_stats():
+    """Get revenue statistics for tenant."""
+    try:
+        revenue_stats = billing_service.get_tenant_revenue_stats(request.tenant_id)
+        
+        return jsonify({
+            'success': True,
+            'data': revenue_stats
+        }), 200
+        
+    except Exception as e:
+        app.logger.error(f"Failed to get revenue stats: {e}")
+        return jsonify({'error': 'Failed to get revenue stats'}), 500
+
+@app.route('/api/billing/charge', methods=['POST'])
+@jwt_required
+@tenant_middleware()
+def charge_for_redirect():
+    """Charge for bot redirection."""
+    try:
+        data = request.get_json()
+        bot_id = data.get('bot_id')
+        credit_page_id = data.get('credit_page_id')
+        amount = data.get('amount', 0.10)  # Default $0.10 per redirect
+        
+        result = billing_service.charge_for_redirect(bot_id, credit_page_id, amount)
+        
+        return jsonify({
+            'success': True,
+            'data': result
+        }), 200
+        
+    except Exception as e:
+        app.logger.error(f"Billing charge failed: {e}")
+        return jsonify({'error': 'Billing charge failed'}), 500
+
+# ✅ Credit Page Management API Routes
+@app.route('/api/credit-pages', methods=['POST'])
+@jwt_required
+@tenant_middleware()
+def create_credit_page():
+    """Create new credit page for tenant."""
+    try:
+        data = request.get_json()
+        template_id = data.get('template_id')
+        config = data.get('config', {})
+        
+        credit_page = credit_page_service.create_credit_page(request.tenant_id, template_id, config)
+        
+        return jsonify({
+            'success': True,
+            'data': credit_page
+        }), 201
+        
+    except Exception as e:
+        app.logger.error(f"Failed to create credit page: {e}")
+        return jsonify({'error': 'Failed to create credit page'}), 500
+
+@app.route('/api/credit-pages/<page_id>/optimize', methods=['GET'])
+@jwt_required
+@tenant_middleware()
+def optimize_credit_page(page_id):
+    """Get optimization suggestions for credit page."""
+    try:
+        optimization = credit_page_service.optimize_credit_page(page_id)
+        
+        return jsonify({
+            'success': True,
+            'data': optimization
+        }), 200
+        
+    except Exception as e:
+        app.logger.error(f"Failed to optimize credit page: {e}")
+        return jsonify({'error': 'Failed to optimize credit page'}), 500
+
+# ✅ Traffic Analysis API Routes
+@app.route('/api/traffic/analyze', methods=['POST'])
+@jwt_required
+def analyze_traffic():
+    """Analyze incoming traffic."""
+    try:
+        data = request.get_json()
+        request_data = data.get('request_data', {})
+        
+        # Perform traffic analysis
+        result = traffic_interceptor.intercept_request(request_data)
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'allowed': result['allowed'],
+                'analysis': result['analysis'],
+                'threats': result['threats'],
+                'rate_limit': result['rate_limit']
+            }
+        }), 200
+        
+    except Exception as e:
+        app.logger.error(f"Traffic analysis failed: {e}")
+        return jsonify({'error': 'Traffic analysis failed'}), 500
+
+@app.route('/api/traffic/stats', methods=['GET'])
+@jwt_required
+def get_traffic_stats():
+    """Get traffic statistics."""
+    try:
+        stats = traffic_interceptor.get_traffic_stats()
+        
+        return jsonify({
+            'success': True,
+            'data': stats
+        }), 200
+        
+    except Exception as e:
+        app.logger.error(f"Failed to get traffic stats: {e}")
+        return jsonify({'error': 'Failed to get traffic stats'}), 500
+
+# ✅ Domain Verification API Route
+@app.route('/api/domains/verify', methods=['POST'])
+@jwt_required
+def verify_domain():
+    """Verify a domain endpoint."""
+    try:
+        data = request.get_json()
+        domain = data.get('domain')
+        
+        if not domain:
+            return jsonify({'error': 'Domain is required'}), 400
+        
+        # Validate domain format
+        if not is_valid_domain_format(domain):
+            return jsonify({'error': 'Invalid domain format'}), 400
+        
+        # Perform verification
+        result = domain_service.verify_domain(domain)
+        
+        # Log verification attempt
+        log_verification_attempt(request.user_id, domain, result.verified)
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'domain': result.domain,
+                'verified': result.verified,
+                'confidence': result.confidence,
+                'details': result.details
+            }
+        }), 200
+        
+    except VerificationError as e:
+        return jsonify({'error': str(e)}), 422
+    except Exception as e:
+        app.logger.error(f"Unexpected error: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+```
+
+## 🎨 UI/UX Guidelines
+
+### Color Scheme (Black & White Theme)
+```css
+/* ✅ Theme Variables */
+:root {
+  --primary-black: #000000;
+  --primary-white: #ffffff;
+  --gray-light: #f5f5f5;
+  --gray-medium: #666666;
+  --gray-dark: #333333;
+  --border-light: 1px solid #e0e0e0;
+  --border-dark: 1px solid #333333;
+  --shadow-light: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-dark: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* ✅ Component Styles */
+.btn {
+  border: var(--border-light);
+  background: var(--primary-white);
+  color: var(--primary-black);
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-family: "YS Display Regular Regular", sans-serif;
+  transition: all 0.2s ease;
+}
+
+.btn:hover {
+  background: var(--gray-light);
+  box-shadow: var(--shadow-light);
+}
+
+.btn--primary {
+  background: var(--primary-black);
+  color: var(--primary-white);
+  border: var(--border-dark);
+}
+
+.btn--primary:hover {
+  background: var(--gray-dark);
+}
+```
+
+### Font Usage
+```css
+/* ✅ Font Implementation */
+body {
+  font-family: "YS Display Regular Regular", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+.heading {
+  font-family: "YS Display Regular Regular", sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+```
+
+## 🔧 Development Workflow
+
+### Git Commit Convention
+```bash
+# ✅ Good commit messages
+git commit -m "feat: add domain verification endpoint"
+git commit -m "fix: resolve CORS issue in API"
+git commit -m "docs: update deployment guide"
+git commit -m "test: add unit tests for verification service"
+
+# ❌ Avoid
+git commit -m "fixed bug"
+git commit -m "updated code"
+git commit -m "wip"
+```
+
+### Branch Naming
+```bash
+# ✅ Good branch names
+git checkout -b feature/domain-verification
+git checkout -b fix/cors-issue
+git checkout -b hotfix/security-vulnerability
+git checkout -b docs/api-documentation
+```
+
+## 🧪 Testing Patterns
+
+### Frontend Testing
+```javascript
+// ✅ Component Test
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { DomainVerification } from './DomainVerification';
+
+test('verifies domain successfully', async () => {
+  const mockOnVerify = jest.fn();
+  render(<DomainVerification domain="example.com" onVerify={mockOnVerify} />);
+  
+  const verifyButton = screen.getByText('Verify Domain');
+  fireEvent.click(verifyButton);
+  
+  await waitFor(() => {
+    expect(screen.getByText('Verifying...')).toBeInTheDocument();
+  });
+  
+  await waitFor(() => {
+    expect(mockOnVerify).toHaveBeenCalledWith(expect.objectContaining({
+      verified: true,
+      domain: 'example.com'
+    }));
+  });
+});
+```
+
+### Backend Testing
+```python
+# ✅ Service Test
+import pytest
+from unittest.mock import Mock, patch
+from app.services.domain_verification import DomainVerificationService
+
+class TestDomainVerificationService:
+    def setup_method(self):
+        self.service = DomainVerificationService({'test': 'config'})
+    
+    def test_verify_valid_domain(self):
+        result = self.service.verify_domain("example.com")
+        assert result.verified is True
+        assert result.domain == "example.com"
+        assert 0 <= result.confidence <= 1
+    
+    def test_verify_invalid_domain(self):
+        result = self.service.verify_domain("invalid-domain")
+        assert result.verified is False
+        assert result.confidence < 0.5
+    
+    @patch('app.services.domain_verification.external_api_call')
+    def test_verify_with_external_api(self, mock_api):
+        mock_api.return_value = {'valid': True, 'score': 0.9}
+        result = self.service.verify_domain("example.com")
+        assert result.verified is True
+        mock_api.assert_called_once_with("example.com")
+```
+
+## 🔒 Security Guidelines
+
+### Authentication & Authorization
+```python
+# ✅ JWT Implementation
+from functools import wraps
+from flask_jwt_extended import jwt_required, get_jwt_identity
+
+def admin_required(f):
+    @wraps(f)
+    @jwt_required()
+    def decorated_function(*args, **kwargs):
+        current_user = get_jwt_identity()
+        if not is_admin(current_user):
+            return jsonify({'error': 'Admin access required'}), 403
+        return f(*args, **kwargs)
+    return decorated_function
+
+@app.route('/api/admin/domains', methods=['GET'])
+@admin_required
+def get_all_domains():
+    """Admin-only endpoint to get all domains."""
+    domains = domain_service.get_all_domains()
+    return jsonify({'domains': domains}), 200
+```
+
+### Input Validation
+```python
+# ✅ Validation Pattern
+from marshmallow import Schema, fields, validate
+
+class DomainVerificationSchema(Schema):
+    domain = fields.Str(required=True, validate=validate.Length(min=1, max=253))
+    verification_type = fields.Str(validate=validate.OneOf(['basic', 'advanced', 'full']))
+    options = fields.Dict(keys=fields.Str(), values=fields.Raw())
+
+@app.route('/api/domains/verify', methods=['POST'])
+def verify_domain():
+    schema = DomainVerificationSchema()
+    try:
+        data = schema.load(request.get_json())
+    except ValidationError as e:
+        return jsonify({'error': 'Validation failed', 'details': e.messages}), 400
+    
+    # Process validated data
+    result = domain_service.verify_domain(data['domain'])
+    return jsonify({'result': result}), 200
+```
+
+## 📊 Database Patterns
+
+### Model Definition
+```python
+# ✅ SQLAlchemy Model
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Float
+from sqlalchemy.ext.declarative import declarative_base
+from datetime import datetime
+
+Base = declarative_base()
+
+class Domain(Base):
+    __tablename__ = 'domains'
+    
+    id = Column(Integer, primary_key=True)
+    domain = Column(String(253), unique=True, nullable=False, index=True)
+    verified = Column(Boolean, default=False)
+    confidence = Column(Float, default=0.0)
+    verification_date = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'domain': self.domain,
+            'verified': self.verified,
+            'confidence': self.confidence,
+            'verification_date': self.verification_date.isoformat() if self.verification_date else None,
+            'created_at': self.created_at.isoformat(),
+            'updated_at': self.updated_at.isoformat()
+        }
+```
+
+## 🚀 Deployment Checklist
+
+### Environment Variables
+```bash
+# ✅ Backend (.env)
+FLASK_ENV=production
+DATABASE_URL=postgresql://user:pass@localhost/boot_interceptor
+SECRET_KEY=your-super-secret-key-here
+JWT_SECRET_KEY=your-jwt-secret-key
+CORS_ORIGINS=https://yourdomain.com
+LOG_LEVEL=INFO
+
+# ✅ Frontend (.env)
+REACT_APP_API_BASE_URL=https://api.yourdomain.com
+REACT_APP_ENVIRONMENT=production
+REACT_APP_SENTRY_DSN=your-sentry-dsn
+```
+
+### Health Check Endpoints
+```python
+# ✅ Health Check
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    """System health check endpoint."""
+    try:
+        # Check database connection
+        db.session.execute('SELECT 1')
+        
+        # Check external services
+        external_services_status = check_external_services()
+        
+        return jsonify({
+            'status': 'healthy',
+            'timestamp': datetime.utcnow().isoformat(),
+            'version': '1.0.0',
+            'services': external_services_status
+        }), 200
+    except Exception as e:
+        app.logger.error(f"Health check failed: {e}")
+        return jsonify({
+            'status': 'unhealthy',
+            'error': str(e)
+        }), 503
+```
+
+## 🐛 Common Issues & Solutions
+
+### Port Conflicts
+```bash
+# ✅ Kill processes on ports 3000 and 5000
+# Windows
+netstat -ano | findstr :3000
+taskkill /PID <PID> /F
+
+netstat -ano | findstr :5000
+taskkill /PID <PID> /F
+
+# Linux/Mac
+lsof -ti:3000 | xargs kill -9
+lsof -ti:5000 | xargs kill -9
+```
+
+### CORS Issues
+```python
+# ✅ CORS Configuration
+from flask_cors import CORS
+
+app = Flask(__name__)
+CORS(app, origins=[
+    'http://localhost:3000',
+    'https://yourdomain.com'
+], supports_credentials=True)
+```
+
+### Database Connection Issues
+```python
+# ✅ Database Connection with Retry
+import time
+from sqlalchemy import create_engine
+from sqlalchemy.exc import OperationalError
+
+def create_db_engine_with_retry(database_url, max_retries=5):
+    """Create database engine with retry logic."""
+    for attempt in range(max_retries):
+        try:
+            engine = create_engine(database_url, pool_pre_ping=True)
+            # Test connection
+            with engine.connect() as conn:
+                conn.execute('SELECT 1')
+            return engine
+        except OperationalError as e:
+            if attempt == max_retries - 1:
+                raise e
+            time.sleep(2 ** attempt)  # Exponential backoff
+```
+
+## 📈 Performance Optimization
+
+### Frontend Optimization
+```javascript
+// ✅ React.memo for expensive components
+const ExpensiveComponent = React.memo(({ data, onUpdate }) => {
+  const processedData = useMemo(() => {
+    return data.map(item => ({
+      ...item,
+      processed: heavyComputation(item)
+    }));
+  }, [data]);
+
+  return (
+    <div className="expensive-component">
+      {processedData.map(item => (
+        <DataItem key={item.id} item={item} onUpdate={onUpdate} />
+      ))}
+    </div>
+  );
+});
+
+// ✅ Lazy loading for routes
+const DomainVerification = lazy(() => import('./pages/DomainVerification'));
+const Analytics = lazy(() => import('./pages/Analytics'));
+
+function App() {
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <Routes>
+        <Route path="/verify" element={<DomainVerification />} />
+        <Route path="/analytics" element={<Analytics />} />
+      </Routes>
+    </Suspense>
+  );
+}
+```
+
+### Backend Optimization
+```python
+# ✅ Database Query Optimization
+from sqlalchemy.orm import joinedload
+
+def get_domains_with_verifications():
+    """Optimized query with eager loading."""
+    return Domain.query.options(
+        joinedload(Domain.verifications)
+    ).filter(
+        Domain.verified == True
+    ).all()
+
+# ✅ Caching with Redis
+import redis
+from functools import wraps
+
+redis_client = redis.Redis(host='localhost', port=6379, db=0)
+
+def cache_result(expire_time=300):
+    """Cache decorator for expensive operations."""
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            cache_key = f"{func.__name__}:{hash(str(args) + str(kwargs))}"
+            
+            # Try to get from cache
+            cached_result = redis_client.get(cache_key)
+            if cached_result:
+                return json.loads(cached_result)
+            
+            # Execute function and cache result
+            result = func(*args, **kwargs)
+            redis_client.setex(cache_key, expire_time, json.dumps(result))
+            return result
+        return wrapper
+    return decorator
+
+@cache_result(expire_time=600)
+def verify_domain_cached(domain):
+    """Cached domain verification."""
+    return domain_service.verify_domain(domain)
+```
+
+## 🔍 Monitoring & Logging
+
+### Structured Logging
+```python
+# ✅ Logging Configuration
+import logging
+import json
+from datetime import datetime
+
+class JSONFormatter(logging.Formatter):
+    def format(self, record):
+        log_entry = {
+            'timestamp': datetime.utcnow().isoformat(),
+            'level': record.levelname,
+            'message': record.getMessage(),
+            'module': record.module,
+            'function': record.funcName,
+            'line': record.lineno
+        }
+        
+        if hasattr(record, 'user_id'):
+            log_entry['user_id'] = record.user_id
+        
+        if hasattr(record, 'domain'):
+            log_entry['domain'] = record.domain
+        
+        return json.dumps(log_entry)
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(message)s',
+    handlers=[logging.StreamHandler()]
+)
+
+logger = logging.getLogger(__name__)
+logger.handlers[0].setFormatter(JSONFormatter())
+
+# Usage
+logger.info('Domain verification started', extra={
+    'user_id': current_user.id,
+    'domain': domain
+})
+```
+
+## 🎯 Project-Specific Rules
+
+### SaaS Bot Interception & Redirection
+```python
+# ✅ Bot Redirection Service
+from typing import Dict, List, Optional
+from dataclasses import dataclass
+import uuid
+import time
+
+@dataclass
+class BotRedirectionResult:
+    bot_id: str
+    original_url: str
+    redirect_url: str
+    credit_page_url: str
+    redirect_reason: str
+    timestamp: float
+    session_data: Dict[str, any]
+
+class BotRedirectionService:
+    """SaaS bot redirection service for credit page monetization."""
+    
+    def __init__(self, config: Dict[str, any]):
+        self.config = config
+        self.credit_pages = self._load_credit_pages()
+        self.redirect_rules = self._load_redirect_rules()
+        self.session_manager = self._init_session_manager()
+    
+    def intercept_and_redirect_bot(self, request_data: Dict[str, any]) -> BotRedirectionResult:
+        """Intercept bot traffic and redirect to credit page."""
+        try:
+            # Detect if it's a bot
+            bot_detection = self._detect_bot(request_data)
+            
+            if bot_detection.is_bot:
+                # Generate unique bot session
+                bot_id = str(uuid.uuid4())
+                
+                # Select appropriate credit page
+                credit_page = self._select_credit_page(bot_detection)
+                
+                # Create redirect URL
+                redirect_url = self._create_redirect_url(
+                    original_url=request_data.get('url', ''),
+                    credit_page_url=credit_page.url,
+                    bot_id=bot_id
+                )
+                
+                # Store session data
+                session_data = self._store_bot_session(bot_id, request_data, credit_page)
+                
+                # Log redirection for billing
+                self._log_redirection_for_billing(bot_id, credit_page, request_data)
+                
+                return BotRedirectionResult(
+                    bot_id=bot_id,
+                    original_url=request_data.get('url', ''),
+                    redirect_url=redirect_url,
+                    credit_page_url=credit_page.url,
+                    redirect_reason='bot_detected',
+                    timestamp=time.time(),
+                    session_data=session_data
+                )
+            else:
+                # Allow normal traffic
+                return BotRedirectionResult(
+                    bot_id='',
+                    original_url=request_data.get('url', ''),
+                    redirect_url=request_data.get('url', ''),
+                    credit_page_url='',
+                    redirect_reason='human_traffic',
+                    timestamp=time.time(),
+                    session_data={}
+                )
+                
+        except Exception as e:
+            logger.error(f"Bot redirection failed: {e}")
+            raise
+    
+    def _select_credit_page(self, bot_detection: BotDetectionResult) -> CreditPage:
+        """Select appropriate credit page based on bot characteristics."""
+        # Select credit page based on bot type, location, etc.
+        if bot_detection.bot_type == 'scraper':
+            return self.credit_pages.get('scraper_credit_page')
+        elif bot_detection.bot_type == 'crawler':
+            return self.credit_pages.get('crawler_credit_page')
+        else:
+            return self.credit_pages.get('default_credit_page')
+    
+    def _create_redirect_url(self, original_url: str, credit_page_url: str, bot_id: str) -> str:
+        """Create redirect URL with tracking parameters."""
+        return f"{credit_page_url}?bot_id={bot_id}&original_url={original_url}&redirect_time={int(time.time())}"
+    
+    def _store_bot_session(self, bot_id: str, request_data: Dict[str, any], credit_page: CreditPage) -> Dict[str, any]:
+        """Store bot session data for tracking."""
+        session_data = {
+            'bot_id': bot_id,
+            'ip_address': request_data.get('ip', ''),
+            'user_agent': request_data.get('user_agent', ''),
+            'credit_page_id': credit_page.id,
+            'created_at': time.time(),
+            'status': 'redirected'
+        }
+        
+        # Store in database/cache
+        self.session_manager.store_session(bot_id, session_data)
+        return session_data
+    
+    def _log_redirection_for_billing(self, bot_id: str, credit_page: CreditPage, request_data: Dict[str, any]):
+        """Log redirection for billing and analytics."""
+        billing_data = {
+            'bot_id': bot_id,
+            'credit_page_id': credit_page.id,
+            'redirect_value': credit_page.value_per_redirect,
+            'timestamp': time.time(),
+            'ip_address': request_data.get('ip', ''),
+            'bot_type': request_data.get('bot_type', 'unknown')
+        }
+        
+        # Send to billing service
+        self.billing_service.log_redirection(billing_data)
+```
+
+### Multi-Tenant Architecture
+```python
+# ✅ Multi-Tenant Service
+class MultiTenantService:
+    """Multi-tenant support for SaaS application."""
+    
+    def __init__(self):
+        self.tenant_configs = {}
+        self.tenant_limits = {}
+    
+    def get_tenant_config(self, tenant_id: str) -> Dict[str, any]:
+        """Get tenant-specific configuration."""
+        return self.tenant_configs.get(tenant_id, {})
+    
+    def check_tenant_limits(self, tenant_id: str, feature: str) -> bool:
+        """Check if tenant has reached limits for specific feature."""
+        limits = self.tenant_limits.get(tenant_id, {})
+        current_usage = self.get_current_usage(tenant_id, feature)
+        max_limit = limits.get(feature, 0)
+        
+        return current_usage < max_limit
+    
+    def get_tenant_credit_pages(self, tenant_id: str) -> List[CreditPage]:
+        """Get credit pages available for specific tenant."""
+        tenant_config = self.get_tenant_config(tenant_id)
+        return tenant_config.get('credit_pages', [])
+
+# ✅ Tenant Middleware
+def tenant_middleware():
+    """Middleware to handle tenant identification and limits."""
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            tenant_id = request.headers.get('X-Tenant-ID')
+            if not tenant_id:
+                return jsonify({'error': 'Tenant ID required'}), 400
+            
+            # Check tenant limits
+            if not multi_tenant_service.check_tenant_limits(tenant_id, 'bot_redirects'):
+                return jsonify({'error': 'Tenant limit exceeded'}), 429
+            
+            # Add tenant context to request
+            request.tenant_id = tenant_id
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+```
+
+### Subscription & Billing Management
+```python
+# ✅ Subscription Service
+class SubscriptionService:
+    """Subscription management for SaaS customers."""
+    
+    def __init__(self):
+        self.plans = self._load_subscription_plans()
+        self.billing_provider = self._init_billing_provider()
+    
+    def create_subscription(self, tenant_id: str, plan_id: str) -> Subscription:
+        """Create new subscription for tenant."""
+        plan = self.plans.get(plan_id)
+        if not plan:
+            raise ValueError(f"Invalid plan: {plan_id}")
+        
+        subscription = Subscription(
+            tenant_id=tenant_id,
+            plan_id=plan_id,
+            status='active',
+            created_at=time.time(),
+            next_billing_date=time.time() + (30 * 24 * 3600)  # 30 days
+        )
+        
+        # Create billing subscription
+        billing_subscription = self.billing_provider.create_subscription(
+            customer_id=tenant_id,
+            plan_id=plan_id
+        )
+        
+        subscription.billing_id = billing_subscription.id
+        return subscription
+    
+    def check_subscription_status(self, tenant_id: str) -> Dict[str, any]:
+        """Check subscription status and limits."""
+        subscription = self.get_active_subscription(tenant_id)
+        if not subscription:
+            return {'status': 'inactive', 'message': 'No active subscription'}
+        
+        plan = self.plans.get(subscription.plan_id)
+        usage = self.get_current_usage(tenant_id)
+        
+        return {
+            'status': subscription.status,
+            'plan': plan.name,
+            'limits': plan.limits,
+            'usage': usage,
+            'next_billing': subscription.next_billing_date
+        }
+
+# ✅ Billing Integration
+class BillingService:
+    """Billing service integration for credit page monetization."""
+    
+    def __init__(self, config: Dict[str, str]):
+        self.config = config
+        self.stripe_client = stripe.Stripe(config['stripe_secret_key'])
+        self.pricing_tiers = self._load_pricing_tiers()
+    
+    def charge_for_redirect(self, bot_id: str, credit_page_id: str, amount: float) -> Dict[str, any]:
+        """Charge for bot redirection to credit page."""
+        try:
+            # Create charge
+            charge = self.stripe_client.Charge.create(
+                amount=int(amount * 100),  # Convert to cents
+                currency='usd',
+                source='tok_visa',  # In real app, use actual payment method
+                description=f'Bot redirect: {bot_id}',
+                metadata={
+                    'bot_id': bot_id,
+                    'credit_page_id': credit_page_id,
+                    'type': 'bot_redirect'
+                }
+            )
+            
+            # Log successful charge
+            self._log_charge_success(bot_id, charge.id, amount)
+            
+            return {
+                'success': True,
+                'charge_id': charge.id,
+                'amount': amount,
+                'status': charge.status
+            }
+            
+        except Exception as e:
+            logger.error(f"Billing charge failed: {e}")
+            return {
+                'success': False,
+                'error': str(e)
+            }
+    
+    def create_invoice(self, tenant_id: str, period_start: int, period_end: int) -> Invoice:
+        """Create invoice for tenant based on usage."""
+        usage = self.get_usage_for_period(tenant_id, period_start, period_end)
+        total_amount = self._calculate_invoice_amount(usage)
+        
+        invoice = Invoice(
+            tenant_id=tenant_id,
+            amount=total_amount,
+            period_start=period_start,
+            period_end=period_end,
+            status='pending',
+            items=usage
+        )
+        
+        return invoice
+```
+
+### Credit Page Management
+```python
+# ✅ Credit Page Service
+class CreditPageService:
+    """Credit page management and optimization."""
+    
+    def __init__(self):
+        self.templates = self._load_credit_page_templates()
+        self.analytics = self._init_analytics()
+    
+    def create_credit_page(self, tenant_id: str, template_id: str, config: Dict[str, any]) -> CreditPage:
+        """Create new credit page for tenant."""
+        template = self.templates.get(template_id)
+        if not template:
+            raise ValueError(f"Invalid template: {template_id}")
+        
+        credit_page = CreditPage(
+            tenant_id=tenant_id,
+            template_id=template_id,
+            url=self._generate_unique_url(tenant_id),
+            config=config,
+            status='active',
+            created_at=time.time()
+        )
+        
+        return credit_page
+    
+    def optimize_credit_page(self, credit_page_id: str) -> Dict[str, any]:
+        """Optimize credit page for better conversion."""
+        analytics_data = self.analytics.get_page_analytics(credit_page_id)
+        
+        # Analyze conversion rates
+        conversion_rate = analytics_data.get('conversion_rate', 0)
+        bounce_rate = analytics_data.get('bounce_rate', 0)
+        
+        # Generate optimization suggestions
+        suggestions = []
+        if conversion_rate < 0.05:  # Less than 5%
+            suggestions.append('Improve call-to-action buttons')
+            suggestions.append('Add social proof elements')
+        
+        if bounce_rate > 0.7:  # More than 70%
+            suggestions.append('Improve page load speed')
+            suggestions.append('Add engaging content')
+        
+        return {
+            'current_metrics': analytics_data,
+            'suggestions': suggestions,
+            'optimization_score': self._calculate_optimization_score(analytics_data)
+        }
+```
+
+### Bot Detection & Interception
+```python
+# ✅ Bot Detection Service
+from typing import Dict, List, Optional
+from dataclasses import dataclass
+import re
+import time
+
+@dataclass
+class BotDetectionResult:
+    is_bot: bool
+    confidence: float
+    bot_type: Optional[str]
+    detection_methods: List[str]
+    risk_score: float
+    details: Dict[str, any]
+
+class BotDetectionService:
+    """Advanced bot detection and interception service."""
+    
+    def __init__(self, config: Dict[str, any]):
+        self.config = config
+        self.detection_rules = self._load_detection_rules()
+        self.rate_limiters = {}
+        self.suspicious_patterns = self._load_suspicious_patterns()
+    
+    def detect_bot(self, request_data: Dict[str, any]) -> BotDetectionResult:
+        """Detect if request is from a bot."""
+        detection_methods = []
+        bot_score = 0.0
+        bot_type = None
+        
+        # User Agent Analysis
+        if self._check_user_agent(request_data.get('user_agent', '')):
+            detection_methods.append('user_agent_analysis')
+            bot_score += 0.3
+        
+        # Behavioral Analysis
+        if self._check_behavioral_patterns(request_data):
+            detection_methods.append('behavioral_analysis')
+            bot_score += 0.4
+        
+        # Rate Limiting Check
+        if self._check_rate_limiting(request_data.get('ip', '')):
+            detection_methods.append('rate_limiting')
+            bot_score += 0.2
+        
+        # Fingerprinting Analysis
+        if self._check_fingerprinting(request_data):
+            detection_methods.append('fingerprinting')
+            bot_score += 0.3
+        
+        # Machine Learning Detection
+        ml_result = self._ml_detection(request_data)
+        if ml_result['is_bot']:
+            detection_methods.append('machine_learning')
+            bot_score += ml_result['confidence']
+        
+        is_bot = bot_score >= 0.6
+        risk_score = min(bot_score, 1.0)
+        
+        return BotDetectionResult(
+            is_bot=is_bot,
+            confidence=bot_score,
+            bot_type=bot_type,
+            detection_methods=detection_methods,
+            risk_score=risk_score,
+            details=self._get_detection_details(request_data)
+        )
+    
+    def _check_user_agent(self, user_agent: str) -> bool:
+        """Check user agent for bot indicators."""
+        bot_patterns = [
+            r'bot', r'crawler', r'spider', r'scraper',
+            r'headless', r'phantom', r'selenium',
+            r'python-requests', r'curl', r'wget'
+        ]
+        
+        user_agent_lower = user_agent.lower()
+        return any(re.search(pattern, user_agent_lower) for pattern in bot_patterns)
+    
+    def _check_behavioral_patterns(self, request_data: Dict[str, any]) -> bool:
+        """Analyze behavioral patterns for bot detection."""
+        # Check request frequency
+        ip = request_data.get('ip', '')
+        current_time = time.time()
+        
+        if ip not in self.rate_limiters:
+            self.rate_limiters[ip] = []
+        
+        # Clean old requests (older than 1 minute)
+        self.rate_limiters[ip] = [
+            req_time for req_time in self.rate_limiters[ip]
+            if current_time - req_time < 60
+        ]
+        
+        # Add current request
+        self.rate_limiters[ip].append(current_time)
+        
+        # Check if too many requests
+        if len(self.rate_limiters[ip]) > 30:  # More than 30 requests per minute
+            return True
+        
+        return False
+    
+    def _check_rate_limiting(self, ip: str) -> bool:
+        """Check if IP is rate limited."""
+        # Implementation for rate limiting check
+        return False
+    
+    def _check_fingerprinting(self, request_data: Dict[str, any]) -> bool:
+        """Check for browser fingerprinting inconsistencies."""
+        # Check for missing or suspicious headers
+        headers = request_data.get('headers', {})
+        
+        # Missing common headers
+        missing_headers = ['accept-language', 'accept-encoding', 'dnt']
+        missing_count = sum(1 for header in missing_headers if header not in headers)
+        
+        if missing_count >= 2:
+            return True
+        
+        return False
+    
+    def _ml_detection(self, request_data: Dict[str, any]) -> Dict[str, any]:
+        """Machine learning based bot detection."""
+        # Feature extraction
+        features = self._extract_features(request_data)
+        
+        # ML model prediction (placeholder)
+        # In real implementation, use trained model
+        prediction = self._predict_with_model(features)
+        
+        return {
+            'is_bot': prediction > 0.5,
+            'confidence': prediction
+        }
+    
+    def _extract_features(self, request_data: Dict[str, any]) -> List[float]:
+        """Extract features for ML model."""
+        features = []
+        
+        # Request frequency
+        features.append(len(self.rate_limiters.get(request_data.get('ip', ''), [])))
+        
+        # User agent length
+        features.append(len(request_data.get('user_agent', '')))
+        
+        # Number of headers
+        features.append(len(request_data.get('headers', {})))
+        
+        # Request method (GET=0, POST=1, etc.)
+        method_map = {'GET': 0, 'POST': 1, 'PUT': 2, 'DELETE': 3}
+        features.append(method_map.get(request_data.get('method', 'GET'), 0))
+        
+        return features
+    
+    def _predict_with_model(self, features: List[float]) -> float:
+        """Predict bot probability using ML model."""
+        # Placeholder implementation
+        # In real implementation, load and use trained model
+        return 0.3  # Default low probability
+```
+
+### Traffic Interception & Analysis
+```python
+# ✅ Traffic Interceptor Service
+class TrafficInterceptor:
+    """Advanced traffic interception and analysis service."""
+    
+    def __init__(self, config: Dict[str, any]):
+        self.config = config
+        self.filters = self._load_filters()
+        self.analyzers = self._load_analyzers()
+        self.storage = self._init_storage()
+    
+    def intercept_request(self, request_data: Dict[str, any]) -> Dict[str, any]:
+        """Intercept and analyze incoming request."""
+        try:
+            # Apply security filters
+            filtered_data = self._apply_security_filters(request_data)
+            
+            # Perform traffic analysis
+            analysis = self._analyze_traffic(filtered_data)
+            
+            # Check for threats
+            threat_analysis = self._detect_threats(filtered_data, analysis)
+            
+            # Store analysis results
+            self._store_analysis(analysis, threat_analysis)
+            
+            # Apply rate limiting
+            rate_limit_result = self._apply_rate_limiting(request_data)
+            
+            return {
+                'allowed': rate_limit_result['allowed'],
+                'analysis': analysis,
+                'threats': threat_analysis,
+                'rate_limit': rate_limit_result
+            }
+            
+        except Exception as e:
+            logger.error(f"Traffic interception failed: {e}")
+            raise
+    
+    def _apply_security_filters(self, data: Dict[str, any]) -> Dict[str, any]:
+        """Apply security filters to traffic data."""
+        filtered = data.copy()
+        
+        for filter_rule in self.filters:
+            if filter_rule.should_apply(data):
+                filtered = filter_rule.apply(filtered)
+        
+        return filtered
+    
+    def _analyze_traffic(self, data: Dict[str, any]) -> Dict[str, any]:
+        """Analyze traffic patterns and characteristics."""
+        analysis = {
+            'timestamp': time.time(),
+            'request_size': len(str(data)),
+            'method': data.get('method', 'GET'),
+            'path': data.get('path', ''),
+            'headers_count': len(data.get('headers', {})),
+            'user_agent': data.get('user_agent', ''),
+            'ip_address': data.get('ip', ''),
+            'geolocation': self._get_geolocation(data.get('ip', '')),
+            'traffic_pattern': self._analyze_pattern(data)
+        }
+        
+        return analysis
+    
+    def _detect_threats(self, data: Dict[str, any], analysis: Dict[str, any]) -> Dict[str, any]:
+        """Detect potential security threats."""
+        threats = {
+            'sql_injection': self._check_sql_injection(data),
+            'xss_attack': self._check_xss_attack(data),
+            'path_traversal': self._check_path_traversal(data),
+            'suspicious_patterns': self._check_suspicious_patterns(data),
+            'risk_score': 0.0
+        }
+        
+        # Calculate overall risk score
+        threat_count = sum(1 for threat in threats.values() if threat and isinstance(threat, bool))
+        threats['risk_score'] = min(threat_count * 0.25, 1.0)
+        
+        return threats
+    
+    def _check_sql_injection(self, data: Dict[str, any]) -> bool:
+        """Check for SQL injection attempts."""
+        sql_patterns = [
+            r'(\b(union|select|insert|update|delete|drop|create|alter)\b)',
+            r'(\b(or|and)\b\s+\d+\s*=\s*\d+)',
+            r'(\b(union|select)\b.*\bfrom\b)',
+            r'(\b(union|select)\b.*\bwhere\b)'
+        ]
+        
+        request_string = str(data).lower()
+        return any(re.search(pattern, request_string) for pattern in sql_patterns)
+    
+    def _check_xss_attack(self, data: Dict[str, any]) -> bool:
+        """Check for XSS attack attempts."""
+        xss_patterns = [
+            r'<script[^>]*>.*?</script>',
+            r'javascript:',
+            r'on\w+\s*=',
+            r'<iframe[^>]*>',
+            r'<object[^>]*>'
+        ]
+        
+        request_string = str(data)
+        return any(re.search(pattern, request_string, re.IGNORECASE) for pattern in xss_patterns)
+    
+    def _check_path_traversal(self, data: Dict[str, any]) -> bool:
+        """Check for path traversal attempts."""
+        path_patterns = [
+            r'\.\./',
+            r'\.\.\\',
+            r'%2e%2e%2f',
+            r'%2e%2e%5c'
+        ]
+        
+        path = data.get('path', '')
+        return any(re.search(pattern, path) for pattern in path_patterns)
+    
+    def _check_suspicious_patterns(self, data: Dict[str, any]) -> bool:
+        """Check for other suspicious patterns."""
+        suspicious_patterns = [
+            r'admin',
+            r'config',
+            r'backup',
+            r'\.env',
+            r'\.git',
+            r'wp-admin',
+            r'phpmyadmin'
+        ]
+        
+        request_string = str(data).lower()
+        return any(re.search(pattern, request_string) for pattern in suspicious_patterns)
+    
+    def _apply_rate_limiting(self, data: Dict[str, any]) -> Dict[str, any]:
+        """Apply rate limiting based on IP and user."""
+        ip = data.get('ip', '')
+        user_id = data.get('user_id')
+        
+        # Implementation for rate limiting
+        return {
+            'allowed': True,
+            'remaining_requests': 100,
+            'reset_time': time.time() + 3600
+        }
+    
+    def _get_geolocation(self, ip: str) -> Dict[str, any]:
+        """Get geolocation information for IP."""
+        # Placeholder implementation
+        return {
+            'country': 'Unknown',
+            'city': 'Unknown',
+            'latitude': 0.0,
+            'longitude': 0.0
+        }
+    
+    def _analyze_pattern(self, data: Dict[str, any]) -> str:
+        """Analyze traffic pattern."""
+        method = data.get('method', 'GET')
+        path = data.get('path', '')
+        
+        if method == 'GET' and '/api/' in path:
+            return 'api_access'
+        elif method == 'POST' and '/login' in path:
+            return 'authentication'
+        elif method == 'GET' and '/static/' in path:
+            return 'static_resource'
+        else:
+            return 'general_traffic'
+```
+
+### Domain Verification Logic
+```python
+# ✅ Verification Rules
+class VerificationRule:
+    def __init__(self, name, weight, condition):
+        self.name = name
+        self.weight = weight
+        self.condition = condition
+    
+    def evaluate(self, domain_data):
+        return self.condition(domain_data)
+
+class DomainVerificationEngine:
+    def __init__(self):
+        self.rules = [
+            VerificationRule("DNS Resolution", 0.3, self._check_dns),
+            VerificationRule("SSL Certificate", 0.2, self._check_ssl),
+            VerificationRule("Whois Data", 0.2, self._check_whois),
+            VerificationRule("Reputation Check", 0.3, self._check_reputation)
+        ]
+    
+    def verify_domain(self, domain):
+        results = {}
+        total_score = 0
+        
+        for rule in self.rules:
+            try:
+                rule_result = rule.evaluate(domain)
+                results[rule.name] = rule_result
+                total_score += rule.weight if rule_result else 0
+            except Exception as e:
+                logger.error(f"Rule {rule.name} failed: {e}")
+                results[rule.name] = False
+        
+        return {
+            'verified': total_score >= 0.7,
+            'confidence': total_score,
+            'details': results
+        }
+```
+
+### Traffic Interception Patterns
+```python
+# ✅ Traffic Capture
+class TrafficInterceptor:
+    def __init__(self, config):
+        self.config = config
+        self.filters = self._load_filters()
+    
+    def intercept_request(self, request_data):
+        """Intercept and analyze incoming request."""
+        try:
+            # Apply filters
+            filtered_data = self._apply_filters(request_data)
+            
+            # Analyze traffic
+            analysis = self._analyze_traffic(filtered_data)
+            
+            # Store results
+            self._store_analysis(analysis)
+            
+            return analysis
+        except Exception as e:
+            logger.error(f"Traffic interception failed: {e}")
+            raise
+    
+    def _apply_filters(self, data):
+        """Apply configured filters to traffic data."""
+        filtered = data
+        for filter_rule in self.filters:
+            if filter_rule.should_apply(data):
+                filtered = filter_rule.apply(filtered)
+        return filtered
+```
+
+---
+
+## 📋 Quick Reference
+
+### File Naming
+- **React Components**: `PascalCase.jsx` (e.g., `BotDetectionDashboard.jsx`, `TrafficAnalyzer.jsx`)
+- **Python Files**: `snake_case.py` (e.g., `bot_detection_service.py`, `traffic_interceptor.py`)
+- **Directories**: `kebab-case` (e.g., `bot-detection/`, `traffic-analysis/`)
+
+### Code Style
+- **JavaScript**: camelCase variables, PascalCase components
+- **Python**: snake_case variables, PascalCase classes
+- **Constants**: UPPER_SNAKE_CASE (both languages)
+
+### SaaS Bot Redirection Patterns
+```python
+# ✅ Bot Redirection Result
+{
+    'bot_id': 'uuid-12345',
+    'original_url': 'https://example.com',
+    'redirect_url': 'https://credit-page.com?bot_id=uuid-12345',
+    'credit_page_url': 'https://credit-page.com',
+    'redirect_reason': 'bot_detected',
+    'timestamp': 1640995200,
+    'session_data': {...}
+}
+```
+
+### Subscription Management Patterns
+```python
+# ✅ Subscription Status
+{
+    'status': 'active',
+    'plan': 'Premium',
+    'limits': {
+        'bot_redirects': 10000,
+        'credit_pages': 5
+    },
+    'usage': {
+        'bot_redirects': 7500,
+        'credit_pages': 3
+    },
+    'next_billing': 1640995200
+}
+```
+
+### Revenue & Billing Patterns
+```python
+# ✅ Revenue Statistics
+{
+    'totalRevenue': 1250.50,
+    'conversionRate': 8.5,
+    'creditPages': [
+        {
+            'name': 'Premium Credit Page',
+            'revenue': 850.25,
+            'conversions': 125,
+            'conversionRate': 12.5
+        }
+    ],
+    'monthlyGrowth': 15.2
+}
+```
+
+### API Response Format
+```json
+{
+  "success": true,
+  "data": { /* response data */ },
+  "message": "Operation completed successfully",
+  "timestamp": "2024-01-01T00:00:00Z"
+}
+```
+
+### Error Response Format
+```json
+{
+  "success": false,
+  "error": "Error description",
+  "code": "ERROR_CODE",
+  "timestamp": "2024-01-01T00:00:00Z"
+}
+```
+
+---
+
+*This rule file ensures consistent development practices across the boot-interceptor project. Update as needed when new patterns emerge.*
+description:
+globs:
+alwaysApply: true
+---

@@ -92,6 +92,10 @@ def create_app(config_name=None):
     from app.admin import admin as admin_blueprint
     app.register_blueprint(admin_blueprint, url_prefix='/admin')
     
+    # Clean admin routes
+    from app.admin.clean_routes import clean_admin
+    app.register_blueprint(clean_admin, url_prefix='/clean-admin')
+    
     from app.interceptor import interceptor as interceptor_blueprint
     app.register_blueprint(interceptor_blueprint, url_prefix='/interceptor')
     

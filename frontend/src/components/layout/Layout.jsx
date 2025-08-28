@@ -9,7 +9,10 @@ const Layout = () => {
   const location = useLocation()
   const { user } = useSelector((state) => state.auth)
   const [showUserGuide, setShowUserGuide] = useState(false)
-  const [hasSeenGuide, setHasSeenGuide] = useState(false)
+  const [hasSeenGuide, setHasSeenGuide] = useState(() => {
+    // Initialize from localStorage on component mount
+    return localStorage.getItem('botInterceptor_guide_completed') === 'true'
+  })
 
   // Get current page from location
   const getCurrentPage = () => {
@@ -18,7 +21,7 @@ const Layout = () => {
   }
 
   useEffect(() => {
-    // Show user guide for new users or when visiting certain pages for the first time
+    // Only show guide for new users who haven't completed it
     const shouldShowGuide = !hasSeenGuide && (
       getCurrentPage() === 'dashboard' || 
       getCurrentPage() === 'domains' || 
@@ -26,7 +29,12 @@ const Layout = () => {
     )
     
     if (shouldShowGuide) {
-      setShowUserGuide(true)
+      // Add a small delay to ensure the page is fully loaded
+      const timer = setTimeout(() => {
+        setShowUserGuide(true)
+      }, 1000)
+      
+      return () => clearTimeout(timer)
     }
   }, [location.pathname, hasSeenGuide])
 
@@ -42,11 +50,15 @@ const Layout = () => {
     localStorage.setItem('botInterceptor_guide_completed', 'true')
   }
 
+  const handleShowHelp = () => {
+    setShowUserGuide(true)
+  }
+
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header />
+        <Header onShowHelp={handleShowHelp} />
         <main className="flex-1 overflow-y-auto bg-gray-50">
           <div className="container mx-auto px-6 py-6">
             <Outlet />
@@ -54,7 +66,7 @@ const Layout = () => {
         </main>
       </div>
       
-      {/* User Guide */}
+      {/* User Guide - Only show for new users or when help is requested */}
       {showUserGuide && (
         <UserGuide
           currentPage={getCurrentPage()}

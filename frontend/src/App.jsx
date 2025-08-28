@@ -61,6 +61,7 @@ import AdminSecurityOperations from './pages/admin/AdminSecurityOperations'
 import SystemHealth from './pages/admin/SystemHealth'
 import ClientManagement from './pages/admin/ClientManagement'
 import UserManagement from './pages/admin/UserManagement'
+import DatabaseManager from './components/admin/DatabaseManager'
 import NotFound from './pages/NotFound'
 import TestAuth from './pages/TestAuth'
 
@@ -201,6 +202,9 @@ function App() {
           } />
           <Route path="admin/client-management" element={
             user?.role === 'admin' || user?.role === 'super_admin' ? <ClientManagement /> : <Navigate to="/dashboard" replace />
+          } />
+          <Route path="admin/database" element={
+            user?.role === 'admin' || user?.role === 'super_admin' ? <DatabaseManager /> : <Navigate to="/dashboard" replace />
           } />
           
           {/* Test Authentication Route */}

@@ -17,12 +17,14 @@ import {
   Filter, Download, Share2, Maximize2
 } from 'lucide-react'
 import { analyticsAPI, domainsAPI, rulesAPI } from '../services/api'
+import { safeAccess, validators, sanitizers, transformers } from '../utils/dataValidator'
 import RealTimeDashboard from '../components/dashboard/RealTimeDashboard'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
 import Badge from '../components/common/Badge'
 import LoadingSpinner from '../components/common/LoadingSpinner'
 import Skeleton from '../components/common/Skeleton'
+import WelcomeBanner from '../components/common/WelcomeBanner'
 
 const Dashboard = () => {
   const { user } = useSelector((state) => state.auth)
@@ -33,6 +35,9 @@ const Dashboard = () => {
   const [refreshing, setRefreshing] = useState(false)
   const [timeRange, setTimeRange] = useState('24h')
   const [activeTab, setActiveTab] = useState('overview')
+  const [showWelcomeBanner, setShowWelcomeBanner] = useState(() => {
+    return localStorage.getItem('botInterceptor_welcome_banner_seen') !== 'true'
+  })
   const [realTimeData, setRealTimeData] = useState({
     systemHealth: { cpu: 0, memory: 0, network: 0 },
     activeThreats: 0,
@@ -58,28 +63,55 @@ const Dashboard = () => {
     }
   }, [timeRange])
 
-  const updateRealTimeData = () => {
-    // Simulate real-time data updates
-    setRealTimeData(prev => ({
-      systemHealth: {
-        cpu: Math.max(0, Math.min(100, prev.systemHealth.cpu + (Math.random() - 0.5) * 10)),
-        memory: Math.max(0, Math.min(100, prev.systemHealth.memory + (Math.random() - 0.5) * 8)),
-        network: Math.max(0, Math.min(100, prev.systemHealth.network + (Math.random() - 0.5) * 15))
-      },
-      activeThreats: Math.max(0, prev.activeThreats + Math.floor((Math.random() - 0.8) * 3)),
-      liveTraffic: Math.max(0, prev.liveTraffic + Math.floor((Math.random() - 0.5) * 20)),
-      uptime: '99.9%'
-    }))
-    
-    // Simulate alerts
-    if (Math.random() > 0.9) {
-      setAlertsCount(prev => prev + 1)
+  const handleWelcomeDismiss = () => {
+    setShowWelcomeBanner(false)
+    localStorage.setItem('botInterceptor_welcome_banner_seen', 'true')
+  }
+
+  const handleGetStarted = (action) => {
+    switch (action) {
+      case 'Add Domain':
+        navigate('/domains')
+        break
+      case 'Create Rules':
+        navigate('/rules')
+        break
+      case 'View Analytics':
+        navigate('/analytics')
+        break
+      default:
+        break
+    }
+  }
+
+  const updateRealTimeData = async () => {
+    try {
+      // Get real-time data from API instead of simulating
+      const response = await analyticsAPI.getRealTimeAnalytics()
+      const data = response.data || {}
+      
+      setRealTimeData({
+        systemHealth: {
+          cpu: sanitizers.sanitizeNumber(data.cpu_usage, 0),
+          memory: sanitizers.sanitizeNumber(data.memory_usage, 0),
+          network: sanitizers.sanitizeNumber(data.network_usage, 0)
+        },
+        activeThreats: sanitizers.sanitizeNumber(data.active_threats, 0),
+        liveTraffic: sanitizers.sanitizeNumber(data.live_traffic, 0),
+        uptime: data.uptime || '99.9%'
+      })
+      
+      setAlertsCount(sanitizers.sanitizeNumber(data.alerts_count, 0))
+    } catch (error) {
+      console.error('Failed to update real-time data:', error)
+      // Don't show error toast for real-time updates to avoid spam
     }
   }
 
   const loadDashboardData = async () => {
     setLoading(true)
     setError(null)
+    
     try {
       const [analyticsResponse, domainsResponse, rulesResponse] = await Promise.all([
         analyticsAPI.getDashboardStats(timeRange),
@@ -87,44 +119,65 @@ const Dashboard = () => {
         rulesAPI.getRules()
       ])
       
-      // Transform analytics data from backend format
-      const responseData = analyticsResponse.data
-      const analytics = responseData.analytics || {}
-      const overview = analytics.overview || {}
+      // Validate and sanitize analytics data
+      const analyticsData = analyticsResponse.data || {}
+      const analytics = safeAccess.get(analyticsData, 'analytics', {})
+      const overview = safeAccess.get(analytics, 'overview', {})
       
-      const domains = domainsResponse.data.domains || domainsResponse.data || []
-      const rules = rulesResponse.data.rules || rulesResponse.data || []
+      // Validate and sanitize domains data
+      const domainsData = domainsResponse.data || {}
+      const domains = safeAccess.get(domainsData, 'domains', [])
       
-      // Transform to expected dashboard format
+      // Validate and sanitize rules data
+      const rulesData = rulesResponse.data || {}
+      const rules = safeAccess.get(rulesData, 'rules', [])
+      
+      // Transform to expected dashboard format with validation
       const transformedData = {
         summary: {
-          totalRequests: overview.total_requests || 0,
-          totalBlocked: overview.blocked_requests || 0,
-          botTraffic: overview.bot_requests || 0,
-          revenue: 0 // Calculate from blocked requests if needed
+          totalRequests: sanitizers.sanitizeNumber(overview.total_requests, 0),
+          totalBlocked: sanitizers.sanitizeNumber(overview.blocked_requests, 0),
+          botTraffic: sanitizers.sanitizeNumber(overview.bot_requests, 0),
+          revenue: sanitizers.sanitizeNumber(overview.revenue, 0)
         },
-        trafficData: analytics.hourly_pattern || [],
-        botDistribution: analytics.bot_types || [],
-        recentActivity: [
-          {
-            id: 1,
-            type: 'traffic',
-            description: 'Traffic monitoring active',
-            time: new Date().toLocaleTimeString(),
-            severity: 'info'
-          }
-        ],
-        domains,
-        rules
+        trafficData: sanitizers.sanitizeArray(analytics.hourly_pattern, []),
+        botDistribution: sanitizers.sanitizeArray(analytics.bot_types, []),
+        recentActivity: sanitizers.sanitizeArray(analytics.recent_activity, []),
+        domains: Array.isArray(domains) ? domains : [],
+        rules: Array.isArray(rules) ? rules : []
+      }
+      
+      // Validate the transformed data structure
+      if (!validators.isObject(transformedData.summary)) {
+        throw new Error('Invalid summary data structure')
+      }
+      
+      if (!validators.isArray(transformedData.trafficData)) {
+        throw new Error('Invalid traffic data structure')
+      }
+      
+      if (!validators.isArray(transformedData.botDistribution)) {
+        throw new Error('Invalid bot distribution structure')
       }
       
       setDashboardData(transformedData)
     } catch (error) {
       console.error('Dashboard loading error:', error)
-      setError('Failed to load dashboard data')
-      toast.error('Failed to load dashboard data')
       
-      // Fallback data to prevent crashes
+      // Provide user-friendly error message
+      let errorMessage = 'Failed to load dashboard data'
+      if (error.response?.status === 404) {
+        errorMessage = 'Dashboard data not available'
+      } else if (error.response?.status === 500) {
+        errorMessage = 'Server error while loading dashboard'
+      } else if (error.code === 'ECONNREFUSED') {
+        errorMessage = 'Unable to connect to server'
+      }
+      
+      setError(errorMessage)
+      toast.error(errorMessage)
+      
+      // Set fallback data to prevent crashes
       setDashboardData({
         summary: {
           totalRequests: 0,
@@ -145,22 +198,28 @@ const Dashboard = () => {
 
   const handleRefresh = async () => {
     setRefreshing(true)
-    await loadDashboardData()
-    setRefreshing(false)
-    toast.success('Dashboard refreshed!')
+    try {
+      await loadDashboardData()
+      toast.success('Dashboard refreshed successfully!')
+    } catch (error) {
+      console.error('Refresh failed:', error)
+      toast.error('Failed to refresh dashboard')
+    } finally {
+      setRefreshing(false)
+    }
   }
 
   const formatNumber = (num) => {
-    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`
-    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`
-    return num?.toString() || '0'
+    const sanitizedNum = sanitizers.sanitizeNumber(num, 0)
+    return transformers.formatNumber(sanitizedNum, { thousandsSeparator: ',' })
   }
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount || 0)
+    const sanitizedAmount = sanitizers.sanitizeNumber(amount, 0)
+    return transformers.formatNumber(sanitizedAmount, { 
+      decimals: 2, 
+      currency: true 
+    })
   }
 
   if (loading) {
@@ -211,6 +270,24 @@ const Dashboard = () => {
     )
   }
 
+  // Ensure we have valid data before rendering
+  if (!dashboardData || !validators.isObject(dashboardData.summary)) {
+    return (
+      <Card className="text-center py-12">
+        <AlertTriangle className="h-16 w-16 mx-auto mb-4 text-yellow-500" />
+        <h3 className="text-xl font-semibold mb-2 text-gray-900">
+          Dashboard data unavailable
+        </h3>
+        <p className="mb-6 text-gray-600">
+          The dashboard data could not be loaded. Please try refreshing the page.
+        </p>
+        <Button onClick={loadDashboardData} variant="primary">
+          Refresh Dashboard
+        </Button>
+      </Card>
+    )
+  }
+
   const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899']
 
   return (
@@ -220,6 +297,15 @@ const Dashboard = () => {
       </Helmet>
       
       <main role="main" className="space-y-6">
+        {/* Welcome Banner for New Users */}
+        {showWelcomeBanner && (
+          <WelcomeBanner
+            user={user}
+            onDismiss={handleWelcomeDismiss}
+            onGetStarted={handleGetStarted}
+          />
+        )}
+        
         {/* Enhanced Header */}
         <motion.div 
           className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-lg p-6 border border-blue-200"
@@ -230,7 +316,7 @@ const Dashboard = () => {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
             <div className="mb-4 lg:mb-0">
               <h1 className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
-                Welcome back, {user?.firstName || 'User'}! 
+                Welcome back, {safeAccess.get(user, 'firstName', 'User')}! 
                 <motion.span 
                   className="inline-block ml-2"
                   animate={{ rotate: [0, 20, 0] }}
@@ -251,15 +337,21 @@ const Dashboard = () => {
                 </div>
                 <div className="flex items-center space-x-2">
                   <Wifi className="h-4 w-4 text-blue-600" />
-                  <span className="text-sm text-blue-600 font-medium">{realTimeData.liveTraffic} req/min</span>
+                  <span className="text-sm text-blue-600 font-medium">
+                    {realTimeData.liveTraffic} req/min
+                  </span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Shield className="h-4 w-4 text-red-600" />
-                  <span className="text-sm text-red-600 font-medium">{realTimeData.activeThreats} active threats</span>
+                  <span className="text-sm text-red-600 font-medium">
+                    {realTimeData.activeThreats} active threats
+                  </span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span className="text-sm text-green-600 font-medium">Uptime: {realTimeData.uptime}</span>
+                  <span className="text-sm text-green-600 font-medium">
+                    Uptime: {realTimeData.uptime}
+                  </span>
                 </div>
               </div>
             </div>
@@ -422,7 +514,7 @@ const Dashboard = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <p className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
-                      {formatNumber(dashboardData?.summary?.totalRequests)}
+                      {formatNumber(dashboardData.summary.totalRequests)}
                     </p>
                     <div className="flex items-center justify-center mt-3">
                       <ArrowUp className="h-4 w-4 mr-1" style={{ color: '#10B981' }} />
@@ -444,7 +536,7 @@ const Dashboard = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <p className="text-3xl font-bold" style={{ color: '#EF4444' }}>
-                      {formatNumber(dashboardData?.summary?.totalBlocked)}
+                      {formatNumber(dashboardData.summary.totalBlocked)}
                     </p>
                     <div className="flex items-center justify-center mt-3">
                       <ShieldCheck className="h-4 w-4 mr-1" style={{ color: '#10B981' }} />
@@ -466,7 +558,7 @@ const Dashboard = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <p className="text-3xl font-bold" style={{ color: '#F59E0B' }}>
-                      {formatNumber(dashboardData?.summary?.botTraffic)}
+                      {formatNumber(dashboardData.summary.botTraffic)}
                     </p>
                     <div className="flex items-center justify-center mt-3">
                       <Bot className="h-4 w-4 mr-1" style={{ color: '#F59E0B' }} />
@@ -488,7 +580,7 @@ const Dashboard = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <p className="text-3xl font-bold" style={{ color: '#10B981' }}>
-                      {formatCurrency(dashboardData?.summary?.revenue)}
+                      {formatCurrency(dashboardData.summary.revenue)}
                     </p>
                     <div className="flex items-center justify-center mt-3">
                       <DollarSign className="h-4 w-4 mr-1" style={{ color: '#10B981' }} />
@@ -507,54 +599,66 @@ const Dashboard = () => {
               {/* Traffic Chart */}
               <Card header="Traffic Overview" animation="fade-in-up" delay={0.4}>
                 <div data-testid="traffic-chart" className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={dashboardData?.trafficData || []}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border-secondary)" />
-                      <XAxis dataKey="time" stroke="var(--text-secondary)" />
-                      <YAxis stroke="var(--text-secondary)" />
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: 'var(--primary-bg)',
-                          border: '1px solid var(--border-primary)',
-                          color: 'var(--text-primary)'
-                        }}
-                      />
-                      <Legend />
-                      <Line type="monotone" dataKey="requests" stroke="#3B82F6" strokeWidth={2} />
-                      <Line type="monotone" dataKey="bots" stroke="#EF4444" strokeWidth={2} />
-                    </LineChart>
-                  </ResponsiveContainer>
+                  {dashboardData.trafficData && dashboardData.trafficData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={dashboardData.trafficData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="var(--border-secondary)" />
+                        <XAxis dataKey="time" stroke="var(--text-secondary)" />
+                        <YAxis stroke="var(--text-secondary)" />
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: 'var(--primary-bg)',
+                            border: '1px solid var(--border-primary)',
+                            color: 'var(--text-primary)'
+                          }}
+                        />
+                        <Legend />
+                        <Line type="monotone" dataKey="requests" stroke="#3B82F6" strokeWidth={2} />
+                        <Line type="monotone" dataKey="bots" stroke="#EF4444" strokeWidth={2} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-gray-500">
+                      No traffic data available
+                    </div>
+                  )}
                 </div>
               </Card>
 
               {/* Bot Distribution Chart */}
               <Card header="Bot Distribution" animation="fade-in-up" delay={0.5}>
                 <div data-testid="bot-distribution-chart" className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={dashboardData?.botDistribution || []}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        {(dashboardData?.botDistribution || []).map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: 'var(--primary-bg)',
-                          border: '1px solid var(--border-primary)',
-                          color: 'var(--text-primary)'
-                        }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
+                  {dashboardData.botDistribution && dashboardData.botDistribution.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={dashboardData.botDistribution}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {dashboardData.botDistribution.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: 'var(--primary-bg)',
+                            border: '1px solid var(--border-primary)',
+                            color: 'var(--text-primary)'
+                          }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-gray-500">
+                      No bot distribution data available
+                    </div>
+                  )}
                 </div>
               </Card>
             </div>
@@ -562,26 +666,32 @@ const Dashboard = () => {
             {/* Recent Activity */}
             <Card header="Recent Activity" animation="fade-in-up" delay={0.6}>
               <div className="space-y-4">
-                {dashboardData?.recentActivity?.slice(0, 5).map((activity, index) => (
-                  <div key={index} className="flex items-center space-x-4 p-3 rounded-lg transition-all duration-200 hover:bg-opacity-50" style={{ backgroundColor: 'var(--accent-bg)' }}>
-                    <div className="p-2 rounded-full" style={{ backgroundColor: 'var(--primary-bg)' }}>
-                      {activity.type === 'threat' && <Shield className="h-4 w-4" style={{ color: '#EF4444' }} />}
-                      {activity.type === 'traffic' && <Globe className="h-4 w-4" style={{ color: '#3B82F6' }} />}
-                      {activity.type === 'bot' && <Bot className="h-4 w-4" style={{ color: '#F59E0B' }} />}
+                {dashboardData.recentActivity && dashboardData.recentActivity.length > 0 ? (
+                  dashboardData.recentActivity.slice(0, 5).map((activity, index) => (
+                    <div key={index} className="flex items-center space-x-4 p-3 rounded-lg transition-all duration-200 hover:bg-opacity-50" style={{ backgroundColor: 'var(--accent-bg)' }}>
+                      <div className="p-2 rounded-full" style={{ backgroundColor: 'var(--primary-bg)' }}>
+                        {activity.type === 'threat' && <Shield className="h-4 w-4" style={{ color: '#EF4444' }} />}
+                        {activity.type === 'traffic' && <Globe className="h-4 w-4" style={{ color: '#3B82F6' }} />}
+                        {activity.type === 'bot' && <Bot className="h-4 w-4" style={{ color: '#F59E0B' }} />}
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                          {safeAccess.get(activity, 'description', 'No description')}
+                        </p>
+                        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                          {safeAccess.get(activity, 'time', 'Unknown time')}
+                        </p>
+                      </div>
+                      <Badge variant={safeAccess.get(activity, 'severity') === 'high' ? 'danger' : safeAccess.get(activity, 'severity') === 'medium' ? 'warning' : 'info'}>
+                        {safeAccess.get(activity, 'severity', 'info')}
+                      </Badge>
                     </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                        {activity.description}
-                      </p>
-                      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                        {activity.time}
-                      </p>
-                    </div>
-                    <Badge variant={activity.severity === 'high' ? 'danger' : activity.severity === 'medium' ? 'warning' : 'info'}>
-                      {activity.severity}
-                    </Badge>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    No recent activity available
                   </div>
-                ))}
+                )}
               </div>
             </Card>
           </>

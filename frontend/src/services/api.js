@@ -171,7 +171,7 @@ export const analyticsAPI = {
   getTrafficAnalytics: (params) => api.get('/analytics/traffic', { params }),
   getBotAnalytics: (params = {}) => api.get('/analytics/bots', { params }),
   getPerformanceAnalytics: (params) => api.get('/analytics/performance', { params }),
-  getRealTimeAnalytics: (domainId) => api.get(`/analytics/realtime/${domainId}`),
+  getRealTimeAnalytics: (domainId) => api.get(domainId ? `/analytics/realtime/${domainId}` : '/analytics/realtime'),
   getHistoricalAnalytics: (params) => api.get('/analytics/historical', { params }),
   getCustomAnalytics: (params) => api.get('/analytics/custom', { params }),
   exportAnalytics: (params) => api.get('/analytics/export', { params }),
@@ -215,7 +215,17 @@ export const adminAPI = {
   createTenant: (tenantData) => api.post('/admin/tenants', tenantData),
   updateTenant: (id, tenantData) => api.put(`/admin/tenants/${id}`, tenantData),
   deleteTenant: (id) => api.delete(`/admin/tenants/${id}`),
-  getSystemStats: () => api.get('/admin/system-stats'),
+  getSystemStats: () => api.get('/clean-admin/system-stats'),
+  getSystemHealth: () => api.get('/admin/system-health'),
+  getSystemAlerts: () => api.get('/admin/system-alerts'),
+  getTableData: (tableName) => api.get(`/clean-admin/database/tables/${tableName}`),
+  exportTableData: (tableName) => api.get(`/clean-admin/database/tables/${tableName}/export`),
+  backupDatabase: () => api.post('/clean-admin/database/backup'),
+  getDatabaseSchema: () => api.get('/admin/database/schema'),
+  getDatabaseInfo: () => api.get('/clean-admin/database/info'),
+  runDatabaseQuery: (query) => api.post('/admin/database/query', { query }),
+  optimizeDatabase: () => api.post('/admin/database/optimize'),
+  repairDatabase: () => api.post('/admin/database/repair'),
 }
 
 // Bot Profiles API

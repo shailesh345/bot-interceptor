@@ -3,19 +3,20 @@ import { useSelector, useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
-import { Menu, User, LogOut, HelpCircle, ChevronDown } from 'lucide-react'
+import { Menu, User, LogOut, HelpCircle, ChevronDown, BookOpen, Video, MessageCircle } from 'lucide-react'
 import { logoutUser } from '../../store/slices/authSlice'
 import { toggleSidebar } from '../../store/slices/uiSlice'
 import NotificationBell from '../common/NotificationBell'
 import NotificationCenter from '../notifications/NotificationCenter'
 import ThemeToggle from '../common/ThemeToggle'
 
-const Header = () => {
+const Header = ({ onShowHelp }) => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const { user } = useSelector((state) => state.auth)
   const [showNotifications, setShowNotifications] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const [showHelpMenu, setShowHelpMenu] = useState(false)
 
   const handleLogout = () => {
     dispatch(logoutUser())
@@ -29,6 +30,45 @@ const Header = () => {
   const handleCloseNotifications = () => {
     setShowNotifications(false)
   }
+
+  const handleShowHelp = () => {
+    if (onShowHelp) {
+      onShowHelp()
+    } else {
+      toast('Help guide will be available soon!', {
+        icon: 'ℹ️',
+        position: 'top-center'
+      })
+    }
+    setShowHelpMenu(false)
+  }
+
+  const helpOptions = [
+    {
+      icon: BookOpen,
+      title: 'Getting Started Guide',
+      description: 'Interactive tutorial for new users',
+      action: handleShowHelp
+    },
+    {
+      icon: Video,
+      title: 'Video Tutorials',
+      description: 'Step-by-step video guides',
+      action: () => {
+        toast('Video tutorials coming soon!', { icon: '🎥' })
+        setShowHelpMenu(false)
+      }
+    },
+    {
+      icon: MessageCircle,
+      title: 'Support Chat',
+      description: 'Get help from our team',
+      action: () => {
+        toast('Support chat coming soon!', { icon: '💬' })
+        setShowHelpMenu(false)
+      }
+    }
+  ]
 
   return (
     <>
@@ -105,31 +145,70 @@ const Header = () => {
             className="flex items-center space-x-2"
           >
             {/* Help Button */}
-            <motion.button
-              onClick={() => {
-                toast('Help guide will be available soon!', {
-                  icon: 'ℹ️',
-                  position: 'top-center'
-                })
-              }}
-              className="
-                p-2 rounded-lg transition-all duration-200
-                bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-black
-                border border-gray-300 hover:border-gray-400
-                focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2
-                hover:scale-105 active:scale-95 shadow-sm hover:shadow-md
-                group relative overflow-hidden
-              "
-              title="Help & Documentation"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full"
-                transition={{ duration: 0.6, ease: "easeInOut" }}
-              />
-              <HelpCircle className="w-4 h-4 relative z-10" />
-            </motion.button>
+            <div className="relative">
+              <motion.button
+                onClick={() => setShowHelpMenu(!showHelpMenu)}
+                className="
+                  p-2 rounded-lg transition-all duration-200
+                  bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-black
+                  border border-gray-300 hover:border-gray-400
+                  focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2
+                  hover:scale-105 active:scale-95 shadow-sm hover:shadow-md
+                  group relative overflow-hidden
+                "
+                title="Help & Documentation"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full"
+                  transition={{ duration: 0.6, ease: "easeInOut" }}
+                />
+                <HelpCircle className="w-4 h-4 relative z-10" />
+              </motion.button>
+
+              {/* Help Dropdown Menu */}
+              {showHelpMenu && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                  className="
+                    absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg
+                    border border-gray-200 py-2 z-50
+                  "
+                >
+                  <div className="px-4 py-2 border-b border-gray-100">
+                    <p className="text-sm font-medium text-gray-900">Help & Support</p>
+                    <p className="text-xs text-gray-500">Get assistance and learn more</p>
+                  </div>
+                  
+                  <div className="py-1">
+                    {helpOptions.map((option, index) => (
+                      <motion.button
+                        key={index}
+                        onClick={option.action}
+                        className="
+                          w-full px-4 py-3 text-left text-gray-700
+                          hover:bg-gray-50 hover:text-black transition-colors
+                          flex items-start space-x-3
+                        "
+                        whileHover={{ backgroundColor: '#f9fafb' }}
+                      >
+                        <div className="p-2 bg-blue-100 rounded-lg">
+                          <option.icon className="w-4 h-4 text-blue-600" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-900">{option.title}</p>
+                          <p className="text-xs text-gray-500">{option.description}</p>
+                        </div>
+                      </motion.button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </div>
 
             {/* Theme Toggle */}
             <ThemeToggle />
@@ -284,11 +363,14 @@ const Header = () => {
         onClose={handleCloseNotifications}
       />
 
-      {/* Click outside to close user menu */}
-      {showUserMenu && (
+      {/* Click outside to close menus */}
+      {(showUserMenu || showHelpMenu) && (
         <div
           className="fixed inset-0 z-30"
-          onClick={() => setShowUserMenu(false)}
+          onClick={() => {
+            setShowUserMenu(false)
+            setShowHelpMenu(false)
+          }}
         />
       )}
     </>

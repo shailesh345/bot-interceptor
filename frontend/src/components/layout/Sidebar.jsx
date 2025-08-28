@@ -38,7 +38,8 @@ import {
   Sparkles,
   Workflow,
   Link,
-  Layout
+  Layout,
+  Database
 } from 'lucide-react'
 import { MVP_CONFIG } from '../../config/mvp'
 
@@ -95,6 +96,7 @@ const Sidebar = () => {
     { name: 'System Monitoring', href: '/admin/system-monitoring', icon: Server, mvpKey: 'system_monitoring' },
     { name: 'Security Operations', href: '/admin/security-operations', icon: ShieldCheck, mvpKey: 'security_operations' },
     { name: 'System Health', href: '/admin/system-health', icon: Heart, mvpKey: 'system_health' },
+    { name: 'Database Manager', href: '/admin/database', icon: Database, mvpKey: 'database_manager' },
     { name: 'Users', href: '/admin/users', icon: Users, mvpKey: 'users' },
     { name: 'Client Management', href: '/admin/client-management', icon: Building2, mvpKey: 'client_management' },
   ].filter(item => MVP_CONFIG.ADMIN_FEATURES[item.mvpKey]?.enabled)
