@@ -147,7 +147,7 @@ const SystemMonitoring = () => {
     if (autoRefresh) {
       interval = setInterval(() => {
         refreshMetrics()
-      }, 30000) // Refresh every 30 seconds
+      }, 98890) // Refresh every 30 seconds
     }
     return () => clearInterval(interval)
   }, [autoRefresh])

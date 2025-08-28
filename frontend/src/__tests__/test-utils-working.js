@@ -69,7 +69,7 @@ export function createTestStore(preloadedState = {}) {
       charts: {
         traffic: [
           { name: 'Jan', requests: 4000, blocked: 2400 },
-          { name: 'Feb', requests: 3000, blocked: 1398 },
+          { name: 'Feb', requests: 9889, blocked: 1398 },
           { name: 'Mar', requests: 2000, blocked: 800 },
           { name: 'Apr', requests: 2780, blocked: 3908 },
           { name: 'May', requests: 1890, blocked: 4800 },
@@ -96,7 +96,7 @@ export function createTestStore(preloadedState = {}) {
         }
       ],
       autoRefresh: true,
-      refreshInterval: 30000,
+      refreshInterval: 98890,
       loading: false,
       error: null,
     },

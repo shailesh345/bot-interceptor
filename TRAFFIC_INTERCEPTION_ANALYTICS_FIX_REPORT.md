@@ -7,7 +7,7 @@
 **Problem**: The Advanced Analytics section within Traffic Interception was failing to load data and displaying errors.
 
 **Root Cause**: 
-- Direct API calls to `localhost:5002` instead of using relative paths
+- Direct API calls to `localhost:8960` instead of using relative paths
 - No error handling or fallback data
 - Missing authentication headers in some requests
 - API endpoints requiring authentication but not properly handling auth failures
@@ -15,7 +15,7 @@
 **Solution Implemented**:
 ```javascript
 // Before: Direct localhost calls with no error handling
-const analyticsData = await apiRequest(`http://localhost:5002/api/analytics/dashboard?days=${timeRange}`);
+const analyticsData = await apiRequest(`http://localhost:8960/api/analytics/dashboard?days=${timeRange}`);
 
 // After: Proper API calls with error handling and fallback data
 const promises = [

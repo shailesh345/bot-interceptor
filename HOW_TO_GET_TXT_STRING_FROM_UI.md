@@ -114,7 +114,7 @@ The interface provides:
    ```
 
 2. **Open browser:**
-   - Go to `http://localhost:3000`
+   - Go to `http://localhost:9889`
    - Navigate to **Domains** page
    - Click **"Add Domain"** → Enter your domain
    - Click **"Get TXT String"** button
@@ -168,7 +168,7 @@ The interface handles all the complexity and provides a smooth, professional exp
 
 If you encounter any issues:
 1. Check the browser console for errors
-2. Ensure both backend (port 5002) and frontend (port 3000) are running
+2. Ensure both backend (port 8960) and frontend (port 9889) are running
 3. Try the demo data if the API isn't responding
 4. The UI includes helpful error messages and fallbacks
 

@@ -12,7 +12,7 @@ The frontend application has been systematically cleaned to eliminate console er
 - **Result**: Proper environment variable handling across the application
 
 ### 2. **WebSocket Configuration** ✅ FIXED  
-- **Updated**: WebSocket service to use correct backend port (127.0.0.1:5002)
+- **Updated**: WebSocket service to use correct backend port (127.0.0.1:8960)
 - **Fixed**: HMR configuration in `vite.config.js`
 - **Result**: Stable WebSocket connections without errors
 
@@ -68,9 +68,9 @@ The frontend application has been systematically cleaned to eliminate console er
 ## 📊 **CURRENT STATUS**
 
 ### **Server Status** ✅ RUNNING
-- **Frontend**: http://127.0.0.1:3000 ✅ Active
-- **Backend**: http://127.0.0.1:5002 ✅ Active
-- **WebSocket**: ws://127.0.0.1:5002 ✅ Configured
+- **Frontend**: http://127.0.0.1:9889 ✅ Active
+- **Backend**: http://127.0.0.1:8960 ✅ Active
+- **WebSocket**: ws://127.0.0.1:8960 ✅ Configured
 - **Environment**: Production-ready configuration
 
 ### **Console Cleanup Progress** ✅ MAJOR IMPROVEMENT

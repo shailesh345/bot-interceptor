@@ -72,7 +72,7 @@ class ProxyInterceptor:
                 config = {
                     'id': domain.id,
                     'domain_name': domain.domain_name,
-                    'target_url': f"http://localhost:3000",  # Default target
+                    'target_url': f"http://localhost:9889",  # Default target
                     'ssl_enabled': domain.ssl_enabled,
                     'cdn_enabled': domain.cdn_enabled,
                     'traffic_enabled': domain.traffic_enabled,

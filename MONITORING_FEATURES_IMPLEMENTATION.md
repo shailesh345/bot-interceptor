@@ -129,8 +129,8 @@ npm install socket.io-client
 - Configure connection in backend settings
 
 ### **WebSocket Setup:**
-- Backend runs on port 5002
-- Frontend connects to `http://localhost:5002`
+- Backend runs on port 8960
+- Frontend connects to `http://localhost:8960`
 
 ### **Monitoring Settings:**
 - Configure check intervals per domain

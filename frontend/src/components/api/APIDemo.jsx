@@ -201,7 +201,7 @@ const APIDemo = () => {
               <option value={1000}>1s</option>
               <option value={5000}>5s</option>
               <option value={10000}>10s</option>
-              <option value={30000}>30s</option>
+              <option value={98890}>30s</option>
             </select>
           )}
         </div>

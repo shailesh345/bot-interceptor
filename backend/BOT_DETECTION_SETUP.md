@@ -103,7 +103,7 @@ Check rule performance through the API:
 ```bash
 # Get rule statistics
 curl -H "Authorization: Bearer <token>" \
-     http://localhost:5002/api/rules/<rule_id>
+     http://localhost:8960/api/rules/<rule_id>
 ```
 
 ### Traffic Logs
@@ -130,14 +130,14 @@ Test with different user agents:
 
 ```bash
 # Test AI bot blocking
-curl -H "User-Agent: GPTBot/1.0" http://localhost:5002/traffic/test
+curl -H "User-Agent: GPTBot/1.0" http://localhost:8960/traffic/test
 
 # Test scraping bot blocking
-curl -H "User-Agent: Python-urllib/3.8" http://localhost:5002/traffic/test
+curl -H "User-Agent: Python-urllib/3.8" http://localhost:8960/traffic/test
 
 # Test legitimate traffic
 curl -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" \
-     http://localhost:5002/traffic/test
+     http://localhost:8960/traffic/test
 ```
 
 ## 🔒 Security Features

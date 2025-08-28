@@ -105,7 +105,7 @@ SECRET_KEY=$(openssl rand -hex 32)
 DATABASE_URL=postgresql://traffic_user:secure_password@localhost:5432/traffic_interceptor
 REDIS_URL=redis://localhost:6379/0
 JWT_SECRET_KEY=$(openssl rand -hex 32)
-CORS_ORIGINS=http://localhost:3000,http://localhost:5001
+CORS_ORIGINS=http://localhost:9889,http://localhost:8960
 EOF
     print_success "Created .env file with secure keys"
 else

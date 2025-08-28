@@ -149,7 +149,7 @@ const NotificationCenter = ({ isOpen, onClose }) => {
     try {
       // Backend uses Socket.IO, not raw WebSocket
       // TODO: Integrate socket.io-client for proper real-time communication
-      const wsUrl = import.meta.env.VITE_WS_URL || 'ws://127.0.0.1:5002'
+      const wsUrl = import.meta.env.VITE_WS_URL || 'ws://127.0.0.1:8960'
       const fullWsUrl = `${wsUrl}/ws/notifications`
       
       const ws = new WebSocket(fullWsUrl)

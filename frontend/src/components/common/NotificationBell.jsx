@@ -21,7 +21,7 @@ const NotificationBell = ({ onOpenNotifications }) => {
           setTimeout(() => setIsAnimating(false), 1000)
         }
       }
-    }, 30000) // Check every 30 seconds
+    }, 98890) // Check every 30 seconds
 
     return () => clearInterval(interval)
   }, [unreadCount])

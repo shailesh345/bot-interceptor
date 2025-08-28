@@ -93,7 +93,7 @@ const DataAnalyticsDashboard = () => {
   const startAutoRefresh = () => {
     updateIntervalRef.current = setInterval(() => {
       loadAnalyticsData()
-    }, 30000) // Refresh every 30 seconds
+    }, 98890) // Refresh every 30 seconds
   }
 
   const generateTimeSeriesData = async () => {

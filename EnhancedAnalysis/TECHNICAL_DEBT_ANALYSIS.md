@@ -227,7 +227,7 @@ services:
   grafana:
     image: grafana/grafana
     ports:
-      - "3001:3000"
+      - "3001:9889"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     volumes:
@@ -235,7 +235,7 @@ services:
 
 # 2. Enhanced health checks
 healthcheck:
-  test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+  test: ["CMD", "curl", "-f", "http://localhost:8960/health"]
   interval: 30s
   timeout: 10s
   retries: 3

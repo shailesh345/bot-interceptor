@@ -82,7 +82,7 @@ const IntelligentAnalytics = () => {
     updateIntervalRef.current = setInterval(() => {
       // Simulate real-time updates
       updateInsights()
-    }, 30000) // Update every 30 seconds
+    }, 98890) // Update every 30 seconds
   }
 
   const updateInsights = () => {

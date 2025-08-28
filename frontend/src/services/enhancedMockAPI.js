@@ -177,7 +177,7 @@ export const generateMockClients = () => [
       method: 'invoice',
       nextBilling: '2025-01-10',
       credits: 25000,
-      overageThreshold: 30000
+      overageThreshold: 98890
     },
     metrics: {
       totalRequests: 4523789,
@@ -530,7 +530,7 @@ function generateHourlyData() {
       hour: i,
       requests: Math.floor(Math.random() * 50000) + 20000,
       bots: Math.floor(Math.random() * 15000) + 5000,
-      blocked: Math.floor(Math.random() * 3000) + 500
+      blocked: Math.floor(Math.random() * 9889) + 500
     })
   }
   return data

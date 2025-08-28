@@ -483,7 +483,7 @@ const RealTimeDashboard = () => {
   const [activityFeed, setActivityFeed] = useState([]);
   
   // WebSocket connection for real-time updates
-  const { lastMessage, sendMessage } = useWebSocket('ws://localhost:5000/ws/dashboard', {
+  const { lastMessage, sendMessage } = useWebSocket('ws://localhost:8960/ws/dashboard', {
     onOpen: () => console.log('WebSocket connected'),
     onMessage: (message) => {
       const data = JSON.parse(message.data);
@@ -947,7 +947,7 @@ class TrafficInterceptorUser(HttpUser):
         self.client.post("/api/domains/1/rules", json=rule_data, headers=self.headers)
 
 # Load test execution
-# locust -f tests/load/locustfile.py --host=http://localhost:5000 -u 100 -r 10 -t 300s
+# locust -f tests/load/locustfile.py --host=http://localhost:8960 -u 100 -r 10 -t 300s
 ```
 
 ##### Week 14: Security Audit
@@ -1109,7 +1109,7 @@ spec:
       - name: backend
         image: traffic-interceptor/backend:v1.0.0
         ports:
-        - containerPort: 5000
+        - containerPort: 8960
         env:
         - name: DATABASE_URL
           valueFrom:
@@ -1131,13 +1131,13 @@ spec:
         livenessProbe:
           httpGet:
             path: /health
-            port: 5000
+            port: 8960
           initialDelaySeconds: 30
           periodSeconds: 10
         readinessProbe:
           httpGet:
             path: /health
-            port: 5000
+            port: 8960
           initialDelaySeconds: 5
           periodSeconds: 5
 
@@ -1152,7 +1152,7 @@ spec:
   ports:
   - protocol: TCP
     port: 80
-    targetPort: 5000
+    targetPort: 8960
   type: ClusterIP
 
 ---

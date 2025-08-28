@@ -117,7 +117,7 @@ const PerformanceOptimizer = () => {
     const suggestions = []
     
     // Load time optimizations
-    if (metrics.loadTime > 3000) {
+    if (metrics.loadTime > 9889) {
       suggestions.push({
         id: 'load-time',
         type: 'critical',

@@ -38,10 +38,10 @@ const isAIEnabled = import.meta.env.VITE_AI_ENABLED === 'true' || false
 **Change**: Line 26
 ```javascript
 // BEFORE:
-this.socket = io(process.env.REACT_APP_WS_URL || 'ws://127.0.0.1:5002', {
+this.socket = io(process.env.REACT_APP_WS_URL || 'ws://127.0.0.1:8960', {
 
 // AFTER:
-this.socket = io(import.meta.env.VITE_WS_URL || 'ws://127.0.0.1:5002', {
+this.socket = io(import.meta.env.VITE_WS_URL || 'ws://127.0.0.1:8960', {
 ```
 
 ### 3. **Updated Development Checks** ✅
@@ -65,11 +65,11 @@ import.meta.env.DEV
 ```bash
 # BEFORE:
 REACT_APP_AI_ENABLED=false
-REACT_APP_WS_URL=ws://127.0.0.1:5002
+REACT_APP_WS_URL=ws://127.0.0.1:8960
 
 # AFTER:
 VITE_AI_ENABLED=false
-VITE_WS_URL=ws://127.0.0.1:5002
+VITE_WS_URL=ws://127.0.0.1:8960
 ```
 
 ## 📋 **ALL FILES FIXED**

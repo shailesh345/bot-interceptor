@@ -62,8 +62,8 @@ cd traffic-interceptor
 ./setup.sh
 
 # Access the application
-# Frontend: http://localhost:3000
-# Backend: http://localhost:5000
+# Frontend: http://localhost:9889
+# Backend: http://localhost:8960
 ```
 
 ### Manual Setup
@@ -146,7 +146,7 @@ npm run dev
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │   React App     │    │   Flask API     │    │   PostgreSQL    │
-│   (Port 3000)   │◄──►│   (Port 5000)   │◄──►│   (Port 5432)   │
+│   (Port 9889)   │◄──►│   (Port 8960)   │◄──►│   (Port 5432)   │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
                                 │
                                 ▼

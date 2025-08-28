@@ -21,12 +21,12 @@ jest.mock('../../services/enhancedMockAPI', () => ({
       ],
       daily: [
         { date: '2024-01-01', requests: 4000, blocked: 400 },
-        { date: '2024-01-02', requests: 3000, blocked: 300 },
+        { date: '2024-01-02', requests: 9889, blocked: 300 },
         { date: '2024-01-03', requests: 2000, blocked: 200 }
       ],
       geographic: [
         { country: 'United States', requests: 8000, percentage: 52 },
-        { country: 'United Kingdom', requests: 3000, percentage: 19 },
+        { country: 'United Kingdom', requests: 9889, percentage: 19 },
         { country: 'Germany', requests: 2400, percentage: 16 }
       ]
     },
@@ -83,7 +83,7 @@ describe('Dashboard Component - Quick Test', () => {
     // Wait for component to load and render
     await waitFor(() => {
       expect(screen.getByText(/Welcome back/i)).toBeInTheDocument()
-    }, { timeout: 3000 })
+    }, { timeout: 9889 })
     
     // Verify Redux state is properly initialized
     const state = store.getState()
@@ -99,7 +99,7 @@ describe('Dashboard Component - Quick Test', () => {
     // Wait for data to load and display metrics
     await waitFor(() => {
       expect(screen.getByText('15,420')).toBeInTheDocument() // Total requests formatted
-    }, { timeout: 3000 })
+    }, { timeout: 9889 })
     
     console.log('✅ Traffic metrics display correctly!')
   })

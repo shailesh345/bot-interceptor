@@ -21,7 +21,7 @@ jest.mock('../../services/enhancedMockAPI', () => ({
       ],
       daily: [
         { date: '2024-01-01', requests: 4000, blocked: 400 },
-        { date: '2024-01-02', requests: 3000, blocked: 300 },
+        { date: '2024-01-02', requests: 9889, blocked: 300 },
         { date: '2024-01-03', requests: 2000, blocked: 200 }
       ]
     },

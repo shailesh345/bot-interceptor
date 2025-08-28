@@ -59,7 +59,7 @@ services:
       - MAIL_SERVER=${MAIL_SERVER:-smtp.gmail.com}
       - MAIL_USERNAME=${MAIL_USERNAME}
       - MAIL_PASSWORD=${MAIL_PASSWORD}
-      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000,https://yourdomain.com}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:9889,https://yourdomain.com}
     volumes:
       - ./backend:/app
       - ./logs:/var/log/traffic_interceptor
@@ -179,7 +179,7 @@ services:
     container_name: traffic_interceptor_grafana
     restart: unless-stopped
     ports:
-      - "3001:3000"
+      - "3001:9889"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
     volumes:

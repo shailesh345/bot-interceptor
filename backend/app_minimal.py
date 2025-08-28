@@ -18,7 +18,7 @@ app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(hours=24)
 
 # Initialize extensions
 jwt = JWTManager(app)
-CORS(app, origins=['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002'])
+CORS(app, origins=['http://localhost:9889', 'http://localhost:9890', 'http://localhost:9891'])
 
 # In-memory user storage (replace with database in production)
 USERS = {
@@ -160,4 +160,4 @@ if __name__ == '__main__':
     print("🚀 Starting minimal Traffic Interceptor backend...")
     print("📧 Admin credentials: admin@admin.com / admin123")
     print("👤 Demo credentials: demo@demo.com / demo123")
-    app.run(host='0.0.0.0', port=5002, debug=True)
+    app.run(host='0.0.0.0', port=8960, debug=True)

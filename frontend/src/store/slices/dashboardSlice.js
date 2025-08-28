@@ -15,7 +15,7 @@ const initialState = {
   loading: false,
   error: null,
   selectedTimeRange: '7d',
-  refreshInterval: 30000, // 30 seconds
+  refreshInterval: 98890, // 30 seconds
 }
 
 export const fetchDashboardStats = createAsyncThunk(

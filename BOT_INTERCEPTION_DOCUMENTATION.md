@@ -170,7 +170,7 @@ const botCategories = {
     count: 25000,
     percentage: 55.6,
     blocked: 22000,
-    challenged: 3000
+    challenged: 9889
   },
   ddos: {
     count: 12000,
@@ -181,13 +181,13 @@ const botCategories = {
   credential_stuffing: {
     count: 5000,
     percentage: 11.1,
-    blocked: 3000,
+    blocked: 9889,
     challenged: 2000
   },
   sql_injection: {
-    count: 3000,
+    count: 9889,
     percentage: 6.7,
-    blocked: 3000,
+    blocked: 9889,
     challenged: 0
   }
 }
@@ -205,7 +205,7 @@ const geographicData = {
   ],
   blockedCountries: [
     { country: 'XX', count: 5000, reason: 'High threat level' },
-    { country: 'YY', count: 3000, reason: 'Known bot source' }
+    { country: 'YY', count: 9889, reason: 'Known bot source' }
   ]
 }
 ```

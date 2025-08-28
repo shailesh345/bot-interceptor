@@ -27,7 +27,7 @@ variant: 'ghost'
 - **Result**: Proper configuration management across the application
 
 ### 3. **WebSocket Configuration** ✅ OPTIMIZED
-- **Fixed**: WebSocket URL pointing to correct backend port (5002)
+- **Fixed**: WebSocket URL pointing to correct backend port (8960)
 - **Optimized**: HMR configuration for local development
 - **Result**: Stable real-time connections without errors
 
@@ -54,9 +54,9 @@ variant: 'ghost'
 
 ### **Server Status** ✅ ALL RUNNING
 ```
-✅ Frontend: http://127.0.0.1:3000 - ACTIVE & RESPONSIVE
-✅ Backend:  http://127.0.0.1:5002 - ACTIVE & PROCESSING REQUESTS  
-✅ WebSocket: ws://127.0.0.1:5002 - CONFIGURED & CONNECTED
+✅ Frontend: http://127.0.0.1:9889 - ACTIVE & RESPONSIVE
+✅ Backend:  http://127.0.0.1:8960 - ACTIVE & PROCESSING REQUESTS  
+✅ WebSocket: ws://127.0.0.1:8960 - CONFIGURED & CONNECTED
 ```
 
 ### **Build Status** ✅ CLEAN

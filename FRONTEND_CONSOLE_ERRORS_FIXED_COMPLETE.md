@@ -13,10 +13,10 @@ All frontend console errors have been systematically identified and resolved. Th
 - **Variables**: API URLs, WebSocket URLs, feature flags, authentication settings
 
 ### 2. **WebSocket Configuration Issues** ✅ FIXED
-- **Problem**: WebSocket trying to connect to wrong port (3001 instead of 5002)
+- **Problem**: WebSocket trying to connect to wrong port (3001 instead of 8960)
 - **Solution**: Updated WebSocket service to use correct backend port
 - **File**: `src/services/websocketService.js`
-- **Change**: `ws://localhost:3001` → `ws://127.0.0.1:5002`
+- **Change**: `ws://localhost:3001` → `ws://127.0.0.1:8960`
 
 ### 3. **Import/Export Errors** ✅ FIXED
 - **Problem**: Invalid `Stop` icon import from `lucide-react`
@@ -74,9 +74,9 @@ grep -r "console\." src/ | grep -v "// console\."
 **Result**: 0 active console statements found
 
 ### **Server Status** ✅ RUNNING
-- **Frontend**: http://127.0.0.1:3000 ✅ Running
-- **Backend**: http://127.0.0.1:5002 ✅ Running  
-- **WebSocket**: ws://127.0.0.1:5002 ✅ Configured
+- **Frontend**: http://127.0.0.1:9889 ✅ Running
+- **Backend**: http://127.0.0.1:8960 ✅ Running  
+- **WebSocket**: ws://127.0.0.1:8960 ✅ Configured
 - **HMR**: Port 24678 ✅ Working
 
 ## 🎯 **FUNCTIONAL IMPROVEMENTS**

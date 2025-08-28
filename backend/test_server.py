@@ -8,7 +8,7 @@ import sys
 
 def test_server():
     """Test if the server is responding"""
-    base_url = "http://localhost:5002"
+    base_url = "http://localhost:8960"
     
     print("Testing Traffic Interceptor API Server...")
     print(f"Base URL: {base_url}")

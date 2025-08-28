@@ -8,18 +8,18 @@ You reported that "**Most of the things not working on billing page**" with exte
 
 **Problem**: All billing API calls were returning 404 errors:
 ```
-GET http://127.0.0.1:3000/api/billing/subscription 404 (NOT FOUND)
-GET http://127.0.0.1:3000/api/billing/invoices 404 (NOT FOUND)
-GET http://127.0.0.1:3000/api/billing/payment-methods 404 (NOT FOUND)
-GET http://127.0.0.1:3000/api/billing/usage?period=current 404 (NOT FOUND)
+GET http://127.0.0.1:9889/api/billing/subscription 404 (NOT FOUND)
+GET http://127.0.0.1:9889/api/billing/invoices 404 (NOT FOUND)
+GET http://127.0.0.1:9889/api/billing/payment-methods 404 (NOT FOUND)
+GET http://127.0.0.1:9889/api/billing/usage?period=current 404 (NOT FOUND)
 ```
 
-**Root Cause**: Frontend was trying to call `localhost:3000` (frontend port) instead of the backend port.
+**Root Cause**: Frontend was trying to call `localhost:9889` (frontend port) instead of the backend port.
 
 **Solution**: 
 - ✅ Fixed API configuration in `frontend/src/services/api.js`
-- ✅ Updated baseURL to point to `http://localhost:5002/api` (correct backend port)
-- ✅ Started backend server on correct port (5002 as per app.py)
+- ✅ Updated baseURL to point to `http://localhost:8960/api` (correct backend port)
+- ✅ Started backend server on correct port (8960 as per app.py)
 
 ### **2. React Infinite Re-render Errors - FIXED ✅**
 
@@ -101,7 +101,7 @@ Warning: Received `true` for a non-boolean attribute `global`.
 const api = axios.create({
   baseURL: process.env.NODE_ENV === 'production' 
     ? '/api' 
-    : 'http://localhost:5002/api', // Fixed port
+    : 'http://localhost:8960/api', // Fixed port
   headers: {
     'Content-Type': 'application/json',
   },
@@ -185,7 +185,7 @@ plans = [
 ✅ Protected routes accessible
 
 # Backend Server
-✅ Running on: http://localhost:5002
+✅ Running on: http://localhost:8960
 ✅ CORS configured for frontend
 ✅ All endpoints responding
 ```
@@ -206,8 +206,8 @@ plans = [
 
 ## 🔧 **Servers Running**
 ```bash
-✅ Backend: http://localhost:5002 (Flask/SocketIO)
-✅ Frontend: http://localhost:3000 (React/Vite)
+✅ Backend: http://localhost:8960 (Flask/SocketIO)
+✅ Frontend: http://localhost:9889 (React/Vite)
 ✅ Database: SQLite with sample billing data
 ```
 

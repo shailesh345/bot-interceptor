@@ -102,7 +102,7 @@ yarn install
 cp .env.example .env.local
 
 # Edit with your configuration
-VITE_API_URL=http://localhost:5000
+VITE_API_URL=http://localhost:8960
 VITE_APP_NAME=Traffic Interceptor
 VITE_STRIPE_PUBLIC_KEY=pk_test_your_stripe_public_key
 ```
@@ -113,7 +113,7 @@ npm run dev
 # or
 yarn dev
 
-# Application will be available at http://localhost:3000
+# Application will be available at http://localhost:9889
 ```
 
 ### 📦 Installation
@@ -159,7 +159,7 @@ import { Dashboard } from './pages/Dashboard';
 // - Auto-refresh functionality
 
 <Dashboard 
-  refreshInterval={30000}
+  refreshInterval={98890}
   defaultTimeRange="30d"
   showRealTime={true}
 />
@@ -987,7 +987,7 @@ npm run format      # Format code
 ```
 
 ### Environment URLs
-- **Development**: http://localhost:3000
+- **Development**: http://localhost:9889
 - **Staging**: https://staging.traffic-interceptor.com
 - **Production**: https://app.traffic-interceptor.com
 

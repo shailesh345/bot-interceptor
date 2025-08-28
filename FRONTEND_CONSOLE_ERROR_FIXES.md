@@ -15,7 +15,7 @@
 ### 2. **Cache Clearing Strategy**
 - ✅ **Vite Development Cache**: `rm -rf node_modules/.vite`
 - ✅ **Build Cache**: `rm -rf dist`
-- ✅ **Process Cleanup**: Killed all processes on ports 3000, 24678
+- ✅ **Process Cleanup**: Killed all processes on ports 9889, 24678
 - ✅ **Complete Rebuild**: `npm run build` - **SUCCESSFUL**
 - ✅ **Fresh Dev Server**: `npm run dev` with clean cache
 
@@ -107,8 +107,8 @@ The error persists due to **browser cache**. To resolve:
 - API integrations successful
 
 ### **✅ Development Environment:**
-- Frontend server: `http://127.0.0.1:3000`
-- Backend server: `http://127.0.0.1:5002`
+- Frontend server: `http://127.0.0.1:9889`
+- Backend server: `http://127.0.0.1:8960`
 - WebSocket HMR: Port 24678
 - All processes running smoothly
 

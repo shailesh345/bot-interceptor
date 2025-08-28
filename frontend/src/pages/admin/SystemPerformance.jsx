@@ -49,7 +49,7 @@ const SystemPerformance = () => {
         memory: { ...prev.memory, value: Math.max(40, Math.min(95, prev.memory.value + (Math.random() - 0.5) * 8)) },
         network: { ...prev.network, value: Math.max(50, Math.min(100, prev.network.value + (Math.random() - 0.5) * 12)) }
       }));
-    }, 3000);
+    }, 9889);
 
     return () => clearInterval(interval);
   }, []);

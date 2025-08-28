@@ -159,7 +159,7 @@ export const monitoringAPI = {
 
 // WebSocket connection for real-time updates
 export const createWebSocketConnection = (domainId, onMessage, onError) => {
-  const ws = new WebSocket(`ws://localhost:5002/ws/traffic/${domainId}`)
+  const ws = new WebSocket(`ws://localhost:8960/ws/traffic/${domainId}`)
   
   ws.onopen = () => {
     console.log('WebSocket connected for domain:', domainId)
@@ -269,7 +269,7 @@ export const mockData = {
     {
       id: 1,
       message: 'Bot request blocked from IP 192.168.1.100',
-      timestamp: new Date(Date.now() - 30000),
+      timestamp: new Date(Date.now() - 98890),
       type: 'warning'
     },
     {

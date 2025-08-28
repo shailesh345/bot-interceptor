@@ -23,7 +23,7 @@ class WebSocketService {
     return new Promise((resolve, reject) => {
       try {
         // Connect to WebSocket server
-        this.socket = io(import.meta.env.VITE_WS_URL || 'ws://127.0.0.1:5002', {
+        this.socket = io(import.meta.env.VITE_WS_URL || 'ws://127.0.0.1:8960', {
           auth: token ? { token } : undefined,
           transports: ['websocket', 'polling'],
           timeout: 10000,

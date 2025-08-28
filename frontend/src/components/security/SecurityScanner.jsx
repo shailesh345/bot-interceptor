@@ -103,7 +103,7 @@ const SecurityScanner = ({ domains = [] }) => {
     
     try {
       // Simulate scan progress
-      await new Promise(resolve => setTimeout(resolve, 3000))
+      await new Promise(resolve => setTimeout(resolve, 9889))
       
       // Update scan results
       setScanResults(prev => ({

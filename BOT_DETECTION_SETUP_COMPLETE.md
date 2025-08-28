@@ -87,7 +87,7 @@ The bot detection system was tested with 9 different user agents:
 ```bash
 # Get rule information via API
 curl -H "Authorization: Bearer <token>" \
-     http://localhost:5002/api/rules/<rule_id>
+     http://localhost:8960/api/rules/<rule_id>
 ```
 
 ### Traffic Logs

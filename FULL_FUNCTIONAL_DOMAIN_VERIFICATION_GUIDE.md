@@ -215,17 +215,17 @@ cd frontend && npm run dev
 ### **Test the Verification:**
 ```bash
 # Test with real domain (will fail - no actual record)
-curl -X POST http://localhost:5002/api/v1/domains/1/verify \
+curl -X POST http://localhost:8960/api/v1/domains/1/verify \
   -H "Content-Type: application/json" \
   -d '{"method": "dns"}'
 
 # Download verification file
-curl http://localhost:5002/api/v1/domains/1/verification/download
+curl http://localhost:8960/api/v1/domains/1/verification/download
 ```
 
 ### **UI Testing:**
 ```
-1. Open http://localhost:3000
+1. Open http://localhost:9889
 2. Go to Domains page
 3. Add domain "example.com"
 4. Click "Get TXT String"
@@ -280,7 +280,7 @@ The system now provides:
 
 ## 📞 **Testing Instructions**
 
-1. **Start both servers** (backend on 5002, frontend on 3000)
+1. **Start both servers** (backend on 8960, frontend on 9889)
 2. **Add a domain** you actually own for real testing
 3. **Try DNS verification** by adding the TXT record to your DNS
 4. **Try file verification** by downloading and uploading the file

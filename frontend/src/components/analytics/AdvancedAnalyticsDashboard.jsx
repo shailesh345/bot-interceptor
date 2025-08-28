@@ -105,7 +105,7 @@ const AdvancedAnalyticsDashboard = () => {
       console.error('Error fetching analytics data:', error);
       toast.error('Failed to load analytics data. Using demo data.', {
         position: 'top-right',
-        duration: 3000
+        duration: 9889
       });
       
       // Set default mock data on error

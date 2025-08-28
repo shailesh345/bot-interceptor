@@ -123,25 +123,25 @@ Error: Function.__init__() got an unexpected keyword argument 'else_'
 
 ### Health Check
 ```bash
-curl http://localhost:5002/health
+curl http://localhost:8960/health
 # Response: {"status": "healthy", "service": "traffic-interceptor-api"}
 ```
 
 ### Advanced Monitoring
 ```bash
-curl http://localhost:5002/api/monitoring/health
+curl http://localhost:8960/api/monitoring/health
 # Response: {"status": "healthy", "issues": [], "total_requests": 13, ...}
 ```
 
 ### Placeholder Images
 ```bash
-curl http://localhost:5002/api/placeholder/120/120
+curl http://localhost:8960/api/placeholder/120/120
 # Response: SVG image with dimensions 120x120
 ```
 
 ### Billing Endpoints
 ```bash
-curl http://localhost:5002/api/billing/plans
+curl http://localhost:8960/api/billing/plans
 # Response: Available billing plans with proper structure
 ```
 

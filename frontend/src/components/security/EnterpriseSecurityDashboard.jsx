@@ -122,7 +122,7 @@ const EnterpriseSecurityDashboard = () => {
   const startAutoRefresh = () => {
     updateIntervalRef.current = setInterval(() => {
       loadSecurityData()
-    }, 30000) // Refresh every 30 seconds
+    }, 98890) // Refresh every 30 seconds
   }
 
   // Mock data generators

@@ -29,7 +29,7 @@ To get the TXT string for your hosting provider, you need to:
 
 ```bash
 # Get verification info for domain ID 1
-curl -X GET "http://localhost:5002/api/v1/domains/1/verification" \
+curl -X GET "http://localhost:8960/api/v1/domains/1/verification" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -132,7 +132,7 @@ You can test the API endpoint right now:
 cd backend && python app.py
 
 # Test the verification endpoint
-curl "http://localhost:5002/api/v1/domains/1/verification"
+curl "http://localhost:8960/api/v1/domains/1/verification"
 ```
 
 ## 🎯 Example Output

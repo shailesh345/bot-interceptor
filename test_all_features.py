@@ -10,7 +10,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "http://localhost:5002"
+BACKEND_URL = "http://localhost:8960"
 FRONTEND_URL = "http://localhost:3001"
 
 def test_backend_health():

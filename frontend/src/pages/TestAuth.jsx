@@ -34,7 +34,7 @@ const TestAuth = () => {
 
   const fetchDomains = async () => {
     try {
-      const data = await apiRequest('http://localhost:5002/api/v1/domains');
+      const data = await apiRequest('http://localhost:8960/api/v1/domains');
       setDomains(data.domains || []);
     } catch (err) {
       setError(err.message);

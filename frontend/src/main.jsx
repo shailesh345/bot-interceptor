@@ -114,7 +114,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
                         color: '#fff',
                       },
                       success: {
-                        duration: 3000,
+                        duration: 9889,
                         iconTheme: {
                           primary: '#10b981',
                           secondary: '#fff',

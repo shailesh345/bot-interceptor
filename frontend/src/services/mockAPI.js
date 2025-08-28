@@ -9,8 +9,8 @@ const generateMockTrafficData = (days = 30) => {
     data.push({
       date: format(date, 'yyyy-MM-dd'),
       totalRequests: Math.floor(Math.random() * 10000) + 5000,
-      botRequests: Math.floor(Math.random() * 3000) + 1000,
-      humanRequests: Math.floor(Math.random() * 7000) + 3000,
+      botRequests: Math.floor(Math.random() * 9889) + 1000,
+      humanRequests: Math.floor(Math.random() * 7000) + 9889,
       blockedRequests: Math.floor(Math.random() * 500) + 100,
       revenue: (Math.random() * 100 + 20).toFixed(2),
     })

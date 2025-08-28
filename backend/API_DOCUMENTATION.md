@@ -7,7 +7,7 @@ The Traffic Interceptor API is a comprehensive REST API for managing traffic int
 ## Base URL
 
 ```
-http://localhost:5002
+http://localhost:8960
 ```
 
 ## Authentication
@@ -24,14 +24,14 @@ Authorization: Bearer <your_jwt_token>
 
 Visit the real-time API testing interface:
 ```
-http://localhost:5002/test-api
+http://localhost:8960/test-api
 ```
 
 ### 2. Swagger Documentation
 
 Access the interactive Swagger documentation:
 ```
-http://localhost:5002/docs
+http://localhost:8960/docs
 ```
 
 ### 3. Quick Login
@@ -428,7 +428,7 @@ The API includes WebSocket support for real-time updates:
 
 **Connection:**
 ```
-ws://localhost:5002/socket.io
+ws://localhost:8960/socket.io
 ```
 
 **Events:**
@@ -443,7 +443,7 @@ ws://localhost:5002/socket.io
 const axios = require('axios');
 
 const api = axios.create({
-  baseURL: 'http://localhost:5002',
+  baseURL: 'http://localhost:8960',
   headers: {
     'Content-Type': 'application/json'
   }
@@ -468,7 +468,7 @@ const getDomains = async (token) => {
 ```python
 import requests
 
-BASE_URL = 'http://localhost:5002'
+BASE_URL = 'http://localhost:8960'
 
 def login(username, password):
     response = requests.post(f'{BASE_URL}/auth/login', json={
@@ -487,20 +487,20 @@ def get_domains(token):
 
 **Login:**
 ```bash
-curl -X POST http://localhost:5002/auth/login \
+curl -X POST http://localhost:8960/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username": "admin", "password": "admin123"}'
 ```
 
 **Get Domains:**
 ```bash
-curl -X GET http://localhost:5002/domains \
+curl -X GET http://localhost:8960/domains \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 **Create Domain:**
 ```bash
-curl -X POST http://localhost:5002/domains \
+curl -X POST http://localhost:8960/domains \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"domain_name": "example.com"}'
@@ -535,11 +535,11 @@ python app.py
 
 ### Testing
 
-Use the interactive testing interface at `http://localhost:5002/test-api` or the Swagger documentation at `http://localhost:5002/docs`.
+Use the interactive testing interface at `http://localhost:8960/test-api` or the Swagger documentation at `http://localhost:8960/docs`.
 
 ## Support
 
 For API support and questions:
-- Interactive testing: `http://localhost:5002/test-api`
-- Swagger documentation: `http://localhost:5002/docs`
-- Health check: `http://localhost:5002/health`
+- Interactive testing: `http://localhost:8960/test-api`
+- Swagger documentation: `http://localhost:8960/docs`
+- Health check: `http://localhost:8960/health`

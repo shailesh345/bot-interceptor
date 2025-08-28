@@ -223,7 +223,7 @@ services:
 # Nginx load balancer configuration
 upstream traffic_interceptor {
     server localhost:5001;
-    server localhost:5002;
+    server localhost:8960;
     server localhost:5003;
 }
 

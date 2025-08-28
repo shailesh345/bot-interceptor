@@ -50,7 +50,7 @@ const LiveTrafficStream = ({ domains = [] }) => {
   const connectToStream = () => {
     try {
       // Initialize socket connection
-      socketRef.current = io('http://localhost:5002', {
+      socketRef.current = io('http://localhost:8960', {
         transports: ['websocket', 'polling']
       })
       

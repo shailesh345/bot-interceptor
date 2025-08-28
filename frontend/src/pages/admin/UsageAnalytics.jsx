@@ -65,7 +65,7 @@ const UsageAnalytics = () => {
       users: 85,
       usersLimit: 100,
       apiCalls: 23456,
-      apiLimit: 30000,
+      apiLimit: 98890,
       status: 'warning'
     },
     {

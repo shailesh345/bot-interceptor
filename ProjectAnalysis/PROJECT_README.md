@@ -99,9 +99,9 @@ traffic-interceptor/
    ```
 
 6. **Access the application**
-   - Frontend: http://localhost:3000
-   - Backend API: http://localhost:5000
-   - Admin Dashboard: http://localhost:3000/admin
+   - Frontend: http://localhost:9889
+- Backend API: http://localhost:8960
+- Admin Dashboard: http://localhost:9889/admin
 
 ### Local Development Setup
 

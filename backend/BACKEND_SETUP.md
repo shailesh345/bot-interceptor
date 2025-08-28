@@ -51,7 +51,7 @@ python start_backend.py
 python app.py
 
 # Option 3: Use Flask CLI
-flask run --host=0.0.0.0 --port=5001
+flask run --host=0.0.0.0 --port=8960
 ```
 
 ## 🔧 Configuration

@@ -61,7 +61,7 @@ The Traffic Interceptor SaaS platform MVP is now **100% FUNCTIONAL** with all cr
 
 ### Backend Services ✅
 ```
-Flask Application (Port 5002)
+Flask Application (Port 8960)
 ├── Authentication Service ✅
 ├── Domain Management Service ✅
 ├── Rules Engine Service ✅
@@ -74,7 +74,7 @@ Flask Application (Port 5002)
 
 ### Frontend Application ✅
 ```
-React SPA (Port 3000)
+React SPA (Port 9889)
 ├── Component Architecture ✅
 ├── State Management (Redux) ✅
 ├── API Integration Layer ✅
@@ -255,8 +255,8 @@ SQLite Database
 
 ### Immediate Launch (Day 1)
 1. **Deploy to Production Environment**
-   - Backend service on port 5002
-   - Frontend service on port 3000
+   - Backend service on port 8960
+   - Frontend service on port 9889
    - Database with existing user accounts
 
 2. **Enable Core Features**

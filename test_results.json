@@ -1,0 +1,80 @@
+{
+  "test_date": "2025-08-29T00:41:11.294575",
+  "total_tests": 10,
+  "passed_tests": 9,
+  "success_rate": 90.0,
+  "results": [
+    {
+      "test": "Backend Health Check",
+      "status": "PASS",
+      "timestamp": "2025-08-29 00:41:11",
+      "details": "Status: healthy"
+    },
+    {
+      "test": "API Health Check",
+      "status": "PASS",
+      "timestamp": "2025-08-29 00:41:11",
+      "details": "Status: healthy"
+    },
+    {
+      "test": "Traffic Interception",
+      "status": "PASS",
+      "timestamp": "2025-08-29 00:41:11",
+      "details": "Requires authentication (expected)"
+    },
+    {
+      "test": "Analytics Endpoints",
+      "status": "PASS",
+      "timestamp": "2025-08-29 00:41:11",
+      "details": "Status code: 404"
+    },
+    {
+      "test": "Billing Endpoints",
+      "status": "PASS",
+      "timestamp": "2025-08-29 00:41:11",
+      "details": "Status code: 404"
+    },
+    {
+      "test": "Security Endpoints",
+      "status": "PASS",
+      "timestamp": "2025-08-29 00:41:11",
+      "details": "Status code: 404"
+    },
+    {
+      "test": "Frontend Accessibility",
+      "status": "FAIL",
+      "timestamp": "2025-08-29 00:41:11",
+      "details": "Error: HTTPConnectionPool(host='localhost', port=9889): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x104466850>: Failed to establish a new connection: [Errno 61] Connection refused'))"
+    },
+    {
+      "test": "System Performance",
+      "status": "PASS",
+      "timestamp": "2025-08-29 00:41:11",
+      "details": "Response time: 1.81ms"
+    },
+    {
+      "test": "ML Bot Detection - Bot User Agent",
+      "status": "PASS",
+      "timestamp": "2025-08-29 00:41:11",
+      "details": "Status: 401"
+    },
+    {
+      "test": "ML Bot Detection - Human User Agent",
+      "status": "PASS",
+      "timestamp": "2025-08-29 00:41:11",
+      "details": "Status: 401"
+    },
+    {
+      "test": "ML Bot Detection - Selenium Bot",
+      "status": "PASS",
+      "timestamp": "2025-08-29 00:41:11",
+      "details": "Status: 401"
+    },
+    {
+      "test": "API Endpoints Structure",
+      "status": "PASS",
+      "timestamp": "2025-08-29 00:41:11",
+      "details": "Success rate: 100.0% (10/10)"
+    }
+  ]
+}

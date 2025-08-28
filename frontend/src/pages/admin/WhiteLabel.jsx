@@ -133,7 +133,7 @@ const WhiteLabel = () => {
     { month: 'Feb', activeClients: 22, pageViews: 520000, customizations: 52 },
     { month: 'Mar', activeClients: 26, pageViews: 610000, customizations: 58 },
     { month: 'Apr', activeClients: 31, pageViews: 720000, customizations: 67 },
-    { month: 'May', activeClients: 35, pageViews: 830000, customizations: 74 },
+    { month: 'May', activeClients: 35, pageViews: 898890, customizations: 74 },
     { month: 'Jun', activeClients: 38, pageViews: 890000, customizations: 81 }
   ];
 

@@ -110,7 +110,7 @@ npm run dev  # Start frontend server
 ```
 
 ### 3. Manual Testing
-1. Visit `http://localhost:3000/test-auth`
+1. Visit `http://localhost:9889/test-auth`
 2. Click "Test Login" button
 3. Verify user information is displayed
 4. Verify domains are loaded from API
@@ -119,12 +119,12 @@ npm run dev  # Start frontend server
 ### 4. API Testing
 ```bash
 # Test login
-curl -X POST http://localhost:5002/auth/login \
+curl -X POST http://localhost:8960/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username": "admin", "password": "admin123"}'
 
 # Test protected endpoint
-curl -X GET http://localhost:5002/api/v1/domains \
+curl -X GET http://localhost:8960/api/v1/domains \
   -H "Authorization: Bearer YOUR_TOKEN_HERE"
 ```
 

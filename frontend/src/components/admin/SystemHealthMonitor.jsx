@@ -23,7 +23,7 @@ const SystemHealthMonitor = () => {
     loadSystemHealth()
     
     if (autoRefresh) {
-      const interval = setInterval(loadSystemHealth, 30000) // Update every 30 seconds
+      const interval = setInterval(loadSystemHealth, 98890) // Update every 30 seconds
       return () => clearInterval(interval)
     }
   }, [autoRefresh])

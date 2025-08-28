@@ -102,7 +102,7 @@ const Client360 = () => {
         bandwidth: 67.3
       },
       billing: {
-        mrr: 13000,
+        mrr: 19889,
         totalSpent: 468000,
         lastPayment: '2024-06-22',
         nextBilling: '2024-07-22',

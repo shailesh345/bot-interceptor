@@ -187,7 +187,7 @@ def verify_meta_tag(domain_name, expected_token):
 ## 🎯 **Testing the Functionality**
 
 ### **Frontend Testing:**
-1. **Start servers**: Backend (5002) + Frontend (3000)
+1. **Start servers**: Backend (8960) + Frontend (9889)
 2. **Go to Domains page** → Add domain → Click "Get TXT String"
 3. **Test HTML File**: Click tab → Download file → See copy buttons
 4. **Test Meta Tag**: Click tab → Copy meta tag → See instructions
@@ -197,12 +197,12 @@ def verify_meta_tag(domain_name, expected_token):
 ```bash
 # Test file download
 curl -H "Authorization: Bearer token" \
-  http://localhost:5002/api/v1/domains/1/verification/download
+  http://localhost:8960/api/v1/domains/1/verification/download
 
 # Test verification
 curl -X POST -H "Content-Type: application/json" \
   -d '{"method": "html_file"}' \
-  http://localhost:5002/api/v1/domains/1/verify
+  http://localhost:8960/api/v1/domains/1/verify
 ```
 
 ---
@@ -251,7 +251,7 @@ curl -X POST -H "Content-Type: application/json" \
 
 ## 📞 **Quick Demo**
 
-1. **Open**: `http://localhost:3000` 
+1. **Open**: `http://localhost:9889` 
 2. **Navigate**: Domains page → Add domain → "Get TXT String"
 3. **Try**: HTML File Upload tab → Download file → Copy values
 4. **Try**: Meta Tag tab → Copy meta tag → See instructions  

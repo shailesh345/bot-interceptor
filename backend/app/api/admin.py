@@ -214,7 +214,7 @@ def get_analytics_overview():
             'geographic': {
                 'top_countries': [
                     {'country': 'United States', 'requests': 45000},
-                    {'country': 'Germany', 'requests': 23000},
+                    {'country': 'Germany', 'requests': 29889},
                     {'country': 'United Kingdom', 'requests': 18000}
                 ]
             },

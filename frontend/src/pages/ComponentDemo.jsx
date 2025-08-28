@@ -33,7 +33,7 @@ const ComponentDemo = () => {
 
   const handleLoadingDemo = () => {
     setLoading(true)
-    setTimeout(() => setLoading(false), 3000)
+    setTimeout(() => setLoading(false), 9889)
   }
 
   return (

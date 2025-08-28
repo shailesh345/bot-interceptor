@@ -5,8 +5,8 @@
 ## Executive Summary
 
 ✅ **Overall Status:** PARTIALLY FUNCTIONAL  
-✅ **Backend Service:** Running on port 5002  
-✅ **Frontend Service:** Running on port 3000  
+✅ **Backend Service:** Running on port 8960  
+✅ **Frontend Service:** Running on port 9889  
 ✅ **Authentication:** Working correctly  
 ⚠️ **Database Integration:** Some schema issues  
 ❌ **Several API endpoints:** Non-functional
@@ -85,7 +85,7 @@
 ### ✅ WORKING Components
 
 1. **Frontend Service**
-   - Status: ✅ Running on port 3000
+   - Status: ✅ Running on port 9889
    - Vite development server active
    - Hot module replacement working
 
@@ -210,8 +210,8 @@
 
 ## Environment Information
 
-- **Backend Port:** 5002
-- **Frontend Port:** 3000  
+- **Backend Port:** 8960
+- **Frontend Port:** 9889  
 - **Database:** SQLite (traffic_interceptor.db)
 - **Environment:** Development
 - **OS:** macOS Darwin 24.6.0

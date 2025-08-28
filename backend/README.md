@@ -222,7 +222,7 @@ JWT_REFRESH_TOKEN_EXPIRES=30
 # API Configuration
 API_RATE_LIMIT=1000
 API_RATE_LIMIT_PERIOD=3600
-CORS_ORIGINS=http://localhost:3000,https://yourdomain.com
+CORS_ORIGINS=http://localhost:9889,https://yourdomain.com
 
 # Monitoring & Logging
 LOG_LEVEL=INFO
@@ -725,10 +725,10 @@ RUN useradd --create-home --shell /bin/bash app
 USER app
 
 # Expose port
-EXPOSE 5000
+EXPOSE 8960
 
 # Start application
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "run:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8960", "--workers", "4", "run:app"]
 ```
 
 #### Docker Compose
@@ -740,7 +740,7 @@ services:
   backend:
     build: .
     ports:
-      - "5000:5000"
+      - "8960:8960"
     environment:
       - DATABASE_URL=postgresql://postgres:password@db:5432/traffic_interceptor
       - REDIS_URL=redis://redis:6379/0
@@ -1047,10 +1047,10 @@ supervisorctl restart all     # Restart all services
 ```
 
 ### Environment URLs
-- **Development**: http://localhost:5000
-- **API Documentation**: http://localhost:5000/docs
-- **Health Check**: http://localhost:5000/health
-- **Metrics**: http://localhost:5000/metrics
+- **Development**: http://localhost:8960
+- **API Documentation**: http://localhost:8960/docs
+- **Health Check**: http://localhost:8960/health
+- **Metrics**: http://localhost:8960/metrics
 
 ### Support Contacts
 - **Technical Issues**: dev-team@traffic-interceptor.com

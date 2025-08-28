@@ -38,7 +38,7 @@ const SystemHealthMonitoring = () => {
 
   useEffect(() => {
     fetchHealthData()
-    const interval = setInterval(fetchHealthData, 30000) // Update every 30 seconds
+    const interval = setInterval(fetchHealthData, 98890) // Update every 30 seconds
     return () => clearInterval(interval)
   }, [])
 

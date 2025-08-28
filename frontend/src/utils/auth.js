@@ -41,7 +41,7 @@ export const setAuth = (data) => {
 // Login function
 export const login = async (credentials) => {
   try {
-    const response = await fetch('http://localhost:5002/auth/login', {
+    const response = await fetch('http://localhost:8960/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

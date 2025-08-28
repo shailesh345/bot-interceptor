@@ -21,7 +21,7 @@ Navigate to the Domain & Rule Management section in your dashboard. You'll see:
 
 ### 2. System Requirements
 
-- ✅ Backend server running (port 5002)
+- ✅ Backend server running (port 8960)
 - ✅ Database initialized with bot detection rules
 - ✅ Admin user authenticated
 - ✅ Domain `shaileshdwivedi.in` already configured

@@ -199,7 +199,7 @@ const WorkflowAutomationEngine = () => {
         workflowId,
         workflowName: workflows.find(w => w.id === workflowId)?.name || 'Unknown',
         startTime: date.toISOString(),
-        endTime: new Date(date.getTime() + Math.random() * 300000).toISOString(),
+        endTime: new Date(date.getTime() + Math.random() * 988900).toISOString(),
         status,
         duration: Math.floor(Math.random() * 300) + 30,
         stepsCompleted: Math.floor(Math.random() * 15) + 1,
