@@ -29,6 +29,7 @@ from .advanced_security import advanced_security
 from .business_intelligence import business_intelligence
 from .webhook_management import webhook_management
 from .edge_computing import edge_computing
+from .system_health import system_health
 
 # Register Phase 2 blueprints
 api.register_blueprint(domains_bp, url_prefix='/v1')
@@ -53,10 +54,16 @@ api.register_blueprint(advanced_security, url_prefix='/advanced-security')
 api.register_blueprint(business_intelligence, url_prefix='/business-intelligence')
 api.register_blueprint(webhook_management, url_prefix='/webhook-management')
 api.register_blueprint(edge_computing, url_prefix='/edge-computing')
+api.register_blueprint(system_health, url_prefix='/system')
 
 @api.route('/health')
 def health_check():
     return {'status': 'healthy', 'timestamp': datetime.utcnow().isoformat()}
+
+@api.route('/system/health')
+def system_health_check():
+    """System health check endpoint for backward compatibility"""
+    return {'status': 'healthy', 'service': 'traffic-interceptor-api', 'timestamp': datetime.utcnow().isoformat()}
 
 def get_current_user():
     """Helper function to get current user from JWT token"""
@@ -157,9 +164,9 @@ def get_domains():
                 'domain_name': domain.domain_name,
                 'is_verified': domain.is_verified,
                 'status': domain.status,
-                'ssl_enabled': domain.ssl_enabled,
-                'created_at': domain.created_at.isoformat(),
-                'updated_at': domain.updated_at.isoformat(),
+                'ssl_enabled': getattr(domain, 'ssl_enabled', False),
+                'created_at': domain.created_at.isoformat() if domain.created_at else None,
+                'updated_at': domain.updated_at.isoformat() if domain.updated_at else None,
                 'verification_token': domain.verification_token,
                 'stats': domain_stats.get(domain.id, {})
             } for domain in domains.items],
@@ -177,7 +184,14 @@ def get_domains():
         print(f"ERROR in get_domains: {str(e)}")
         import traceback
         traceback.print_exc()
-        return jsonify({'message': f'Internal server error: {str(e)}'}), 500
+        
+        # Provide more specific error messages
+        if 'no such column' in str(e).lower():
+            return jsonify({'message': 'Database schema mismatch. Please run database migration.'}), 500
+        elif 'no such table' in str(e).lower():
+            return jsonify({'message': 'Database tables not found. Please initialize the database.'}), 500
+        else:
+            return jsonify({'message': 'Internal server error. Please check server logs.'}), 500
 
 @api.route('/domains', methods=['POST'])
 @jwt_required()

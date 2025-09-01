@@ -1,0 +1,241 @@
+@startuml Traffic Interceptor - Domains + Rules + Traffic Interception Architecture
+
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "YS Display Regular Regular"
+skinparam defaultFontSize 12
+skinparam rectangle {
+    BackgroundColor #F8FAFC
+    BorderColor #1E293B
+    BorderThickness 2
+    RoundCorner 15
+}
+skinparam arrow {
+    Color #64748B
+    Thickness 2
+    LineStyle dashed
+}
+
+title **Traffic Interceptor SaaS Platform**\n**Domains + Rules + Traffic Interception - Hierarchical Architecture**
+
+package "**Frontend Layer**" as Frontend {
+    package "**Core Dashboard**" as Dashboard {
+        rectangle "Dashboard Overview" as DashboardMain
+        rectangle "Real-time Metrics" as RTMetrics
+        rectangle "KPI Cards" as KPICards
+        rectangle "Quick Actions" as QuickActions
+        rectangle "Welcome Banner" as WelcomeBanner
+        
+        rectangle "Analytics Dashboard" as AnalyticsMain
+        rectangle "6-Tab Navigation" as TabNav
+        rectangle "Overview Tab" as OverviewTab
+        rectangle "Traffic Analysis Tab" as TrafficTab
+        rectangle "Bot Intelligence Tab" as BotTab
+        rectangle "Revenue Analytics Tab" as RevenueTab
+        rectangle "Geographic Data Tab" as GeoTab
+        rectangle "Real-time Tab" as RealTimeTab
+        
+        rectangle "Advanced Charts" as Charts
+        rectangle "Line Charts" as LineCharts
+        rectangle "Bar Charts" as BarCharts
+        rectangle "Pie Charts" as PieCharts
+        rectangle "Area Charts" as AreaCharts
+        rectangle "Geographic Maps" as GeoMaps
+        
+        rectangle "Data Export" as DataExport
+    }
+    
+    package "**Domain Management**" as DomainFrontend {
+        rectangle "Domain Dashboard" as DomainMain
+        rectangle "Domain List View" as DomainList
+        rectangle "Domain Details" as DomainDetails
+        rectangle "Domain Statistics" as DomainStats
+        rectangle "Domain Actions" as DomainActions
+        
+        rectangle "Domain Operations" as DomainOps
+        rectangle "Add Domain Form" as AddDomain
+        rectangle "Edit Domain Form" as EditDomain
+        rectangle "Domain Verification" as DomainVerify
+        rectangle "Domain Configuration" as DomainConfig
+        
+        rectangle "Domain Monitoring" as DomainMonitoring
+        rectangle "Health Monitoring" as HealthMonitor
+        rectangle "SSL Certificate Status" as SSLStatus
+        rectangle "CDN Configuration" as CDNConfig
+        rectangle "Traffic Settings" as TrafficSettings
+    }
+    
+    package "**Rules Engine Frontend**" as RulesFrontend {
+        rectangle "Rules Dashboard" as RulesMain
+        rectangle "Rules List View" as RulesList
+        rectangle "Rule Statistics" as RuleStats
+        rectangle "Rule Management" as RuleManagement
+        rectangle "Rule Testing" as RuleTesting
+        
+        rectangle "Rule Builder" as RuleBuilder
+        rectangle "Rule Form" as RuleForm
+        rectangle "Condition Builder" as ConditionBuilder
+        rectangle "Action Builder" as ActionBuilder
+        rectangle "Rule Templates" as RuleTemplates
+        
+        rectangle "Rule Types" as RuleTypes
+        rectangle "Bot Detection Rules" as BotRules
+        rectangle "Rate Limiting Rules" as RateRules
+        rectangle "Geo-blocking Rules" as GeoRules
+        rectangle "Content Protection Rules" as ContentRules
+        rectangle "Whitelist Rules" as WhitelistRules
+        rectangle "Blacklist Rules" as BlacklistRules
+    }
+    
+    package "**Traffic Interception Frontend**" as TrafficFrontend {
+        rectangle "Traffic Dashboard" as TrafficMain
+        rectangle "Live Traffic Feed" as LiveTraffic
+        rectangle "Traffic Metrics" as TrafficMetrics
+        rectangle "Real-time Alerts" as TrafficAlerts
+        rectangle "Performance Monitoring" as PerfMonitor
+        
+        rectangle "Traffic Operations" as TrafficOps
+        rectangle "Traffic Processing" as TrafficProcessing
+        rectangle "Bot Detection Display" as BotDetection
+        rectangle "Threat Analysis" as ThreatAnalysis
+        rectangle "Response Actions" as ResponseActions
+        
+        rectangle "Traffic Analytics" as TrafficAnalytics
+        rectangle "Traffic Patterns" as TrafficPatterns
+        rectangle "Geographic Distribution" as GeoDistribution
+        rectangle "Bot Classification" as BotClassification
+        rectangle "Security Metrics" as SecurityMetrics
+    }
+}
+
+package "**Backend Layer**" as Backend {
+    package "**API Gateway**" as APIGateway {
+        rectangle "Authentication Service" as AuthService
+        rectangle "Rate Limiting" as RateLimit
+        rectangle "Request Routing" as RequestRouting
+        rectangle "Response Caching" as ResponseCache
+    }
+    
+    package "**Domain Management Backend**" as DomainBackend {
+        rectangle "Domain Service" as DomainService
+        rectangle "Domain CRUD Operations" as DomainCRUD
+        rectangle "Domain Validation" as DomainValidation
+        rectangle "Domain Verification Engine" as DomainVerifyEngine
+        rectangle "Domain Health Monitoring" as DomainHealth
+        
+        rectangle "Domain Verification" as DomainVerification
+        rectangle "DNS Verification" as DNSVerify
+        rectangle "SSL Certificate Check" as SSLCheck
+        rectangle "Domain Ownership Validation" as OwnershipCheck
+        rectangle "Verification Token Management" as TokenMgmt
+        
+        rectangle "Domain Configuration" as DomainConfigBackend
+        rectangle "SSL Management" as SSLMgmt
+        rectangle "CDN Configuration" as CDNMgmt
+        rectangle "Traffic Settings" as TrafficSettingsBackend
+        rectangle "Monitoring Configuration" as MonitoringConfig
+    }
+    
+    package "**Rules Engine Backend**" as RulesBackend {
+        rectangle "Rules Service" as RulesService
+        rectangle "Rule CRUD Operations" as RuleCRUD
+        rectangle "Rule Validation" as RuleValidation
+        rectangle "Rule Priority Management" as RulePriority
+        rectangle "Rule Testing Framework" as RuleTestingBackend
+        
+        rectangle "Rule Processing Engine" as RuleEngine
+        rectangle "Condition Evaluator" as ConditionEvaluator
+        rectangle "Action Executor" as ActionExecutor
+        rectangle "Rule Chaining" as RuleChaining
+        rectangle "Rule Caching" as RuleCache
+        
+        rectangle "Rule Templates" as RuleTemplatesBackend
+        rectangle "Bot Detection Templates" as BotTemplates
+        rectangle "Rate Limiting Templates" as RateTemplates
+        rectangle "Security Templates" as SecurityTemplates
+        rectangle "Custom Rule Builder" as CustomBuilder
+    }
+    
+    package "**Traffic Interception Backend**" as TrafficBackend {
+        rectangle "Traffic Interceptor" as TrafficInterceptor
+        rectangle "Request Interception" as RequestIntercept
+        rectangle "Bot Detection Engine" as BotDetectionEngine
+        rectangle "Geographic Analysis" as GeoAnalysis
+        rectangle "Threat Detection" as ThreatDetection
+        
+        rectangle "Traffic Processor" as TrafficProcessor
+        rectangle "Request Processing" as RequestProcessing
+        rectangle "Response Generation" as ResponseGeneration
+        rectangle "Performance Monitoring" as PerfMonitoring
+        rectangle "Error Handling" as ErrorHandling
+        
+        rectangle "Traffic Analytics" as TrafficAnalyticsBackend
+        rectangle "Traffic Logging" as TrafficLogging
+        rectangle "Analytics Calculation" as AnalyticsCalc
+        rectangle "Real-time Metrics" as RealTimeMetrics
+        rectangle "Data Aggregation" as DataAggregation
+    }
+    
+    package "**Data Layer**" as DataLayer {
+        rectangle "Database Models" as DBModels
+        rectangle "Domain Model" as DomainModel
+        rectangle "Rule Model" as RuleModel
+        rectangle "Traffic Log Model" as TrafficLogModel
+        rectangle "User Model" as UserModel
+        rectangle "Tenant Model" as TenantModel
+        
+        rectangle "Cache Layer" as CacheLayer
+        rectangle "Redis Cache" as RedisCache
+        rectangle "Rule Cache" as RuleCacheBackend
+        rectangle "Session Cache" as SessionCache
+        rectangle "Analytics Cache" as AnalyticsCache
+    }
+}
+
+package "**External Services**" as External {
+    rectangle "DNS Services" as DNSServices
+    rectangle "SSL Certificate Authorities" as SSLCA
+    rectangle "CDN Providers" as CDNProviders
+    rectangle "GeoIP Services" as GeoIPServices
+    rectangle "Bot Intelligence APIs" as BotAPIs
+}
+
+' Frontend Dependencies
+DashboardMain --> AnalyticsMain
+DomainMain --> DomainOps
+DomainMain --> DomainMonitoring
+RulesMain --> RuleBuilder
+RulesMain --> RuleTypes
+TrafficMain --> TrafficOps
+TrafficMain --> TrafficAnalytics
+
+' Backend Dependencies
+APIGateway --> DomainBackend
+APIGateway --> RulesBackend
+APIGateway --> TrafficBackend
+DomainBackend --> DataLayer
+RulesBackend --> DataLayer
+TrafficBackend --> DataLayer
+
+' Frontend to Backend Dependencies
+DashboardMain --> APIGateway
+AnalyticsMain --> APIGateway
+DomainFrontend --> DomainBackend
+RulesFrontend --> RulesBackend
+TrafficFrontend --> TrafficBackend
+
+' External Service Dependencies
+DomainBackend --> External
+TrafficBackend --> External
+
+' Data Flow Dependencies
+TrafficBackend --> RulesBackend
+RulesBackend --> DomainBackend
+DomainBackend --> TrafficBackend
+
+' Cross-cutting Dependencies
+AuthService --> DataLayer
+RateLimit --> CacheLayer
+ResponseCache --> CacheLayer
+
+@enduml
