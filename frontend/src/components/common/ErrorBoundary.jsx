@@ -102,8 +102,8 @@ class ErrorBoundary extends React.Component {
           >
             {/* Error Header */}
             <div className="text-center mb-6">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
-                <Bug className="w-8 h-8 text-red-600" />
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+                <Bug className="w-8 h-8 text-black" />
               </div>
               <h1 className="text-2xl font-bold text-gray-900 mb-2">
                 Something went wrong

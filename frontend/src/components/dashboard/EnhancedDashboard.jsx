@@ -33,7 +33,7 @@ const EnhancedDashboard = () => {
       change: '+12%',
       changeType: 'positive',
       icon: Shield,
-      color: 'bg-blue-500',
+      color: 'bg-black',
       description: 'Security rules protecting your domains'
     },
     {
@@ -42,7 +42,7 @@ const EnhancedDashboard = () => {
       change: '+2',
       changeType: 'positive',
       icon: Globe,
-      color: 'bg-green-500',
+      color: 'bg-gray-800',
       description: 'Domains under protection'
     },
     {
@@ -51,7 +51,7 @@ const EnhancedDashboard = () => {
       change: '+18%',
       changeType: 'positive',
       icon: Activity,
-      color: 'bg-orange-500',
+      color: 'bg-gray-700',
       description: 'Malicious requests blocked today'
     },
     {
@@ -60,7 +60,7 @@ const EnhancedDashboard = () => {
       change: '+2%',
       changeType: 'positive',
       icon: CheckCircle,
-      color: 'bg-emerald-500',
+      color: 'bg-gray-900',
       description: 'Overall system performance'
     }
   ]
@@ -72,7 +72,7 @@ const EnhancedDashboard = () => {
       message: 'New rate limiting rule created for example.com',
       time: '2 minutes ago',
       icon: Shield,
-      color: 'text-blue-600'
+      color: 'bg-black'
     },
     {
       id: 2,
@@ -80,7 +80,7 @@ const EnhancedDashboard = () => {
       message: 'Bot attack detected and blocked from 192.168.1.100',
       time: '5 minutes ago',
       icon: Bot,
-      color: 'text-red-600'
+      color: 'bg-gray-800'
     },
     {
       id: 3,
@@ -88,7 +88,7 @@ const EnhancedDashboard = () => {
       message: 'Unusual traffic spike detected on api.example.com',
       time: '12 minutes ago',
       icon: TrendingUp,
-      color: 'text-orange-600'
+      color: 'bg-gray-700'
     },
     {
       id: 4,
@@ -96,7 +96,7 @@ const EnhancedDashboard = () => {
       message: 'ML model updated with new threat patterns',
       time: '1 hour ago',
       icon: Brain,
-      color: 'text-purple-600'
+      color: 'bg-gray-600'
     }
   ]
 
@@ -106,28 +106,28 @@ const EnhancedDashboard = () => {
       description: 'Add new security rule',
       icon: Shield,
       href: '/rules',
-      color: 'bg-blue-500 hover:bg-blue-600'
+      color: 'bg-black hover:bg-gray-800'
     },
     {
       title: 'Add Domain',
       description: 'Protect new domain',
       icon: Globe,
       href: '/domains',
-      color: 'bg-green-500 hover:bg-green-600'
+      color: 'bg-gray-800 hover:bg-gray-700'
     },
     {
       title: 'View Analytics',
       description: 'Check traffic patterns',
       icon: BarChart3,
       href: '/analytics',
-      color: 'bg-purple-500 hover:bg-purple-600'
+      color: 'bg-gray-700 hover:bg-gray-600'
     },
     {
       title: 'System Status',
       description: 'Monitor health',
       icon: Activity,
       href: '/monitoring',
-      color: 'bg-orange-500 hover:bg-orange-600'
+      color: 'bg-gray-600 hover:bg-gray-500'
     }
   ]
 
@@ -142,12 +142,12 @@ const EnhancedDashboard = () => {
           <p className="text-3xl font-bold text-black mt-2">{stat.value}</p>
           <div className="flex items-center mt-2">
             {stat.changeType === 'positive' ? (
-              <ArrowUpRight className="h-4 w-4 text-green-500" />
+              <ArrowUpRight className="h-4 w-4 text-black" />
             ) : (
-              <ArrowDownRight className="h-4 w-4 text-red-500" />
+              <ArrowDownRight className="h-4 w-4 text-gray-600" />
             )}
             <span className={`text-sm font-medium ml-1 ${
-              stat.changeType === 'positive' ? 'text-green-600' : 'text-red-600'
+              stat.changeType === 'positive' ? 'text-black' : 'text-gray-600'
             }`}>
               {stat.change}
             </span>
@@ -236,7 +236,7 @@ const EnhancedDashboard = () => {
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-black">Recent Activity</h2>
-              <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+              <button className="text-sm text-black hover:text-gray-600 font-medium">
                 View All
               </button>
             </div>
@@ -281,11 +281,11 @@ const EnhancedDashboard = () => {
           <h2 className="text-xl font-semibold text-black">Performance Overview</h2>
           <div className="flex items-center space-x-2">
             <div className="flex items-center space-x-1">
-              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+              <div className="w-3 h-3 bg-black rounded-full"></div>
               <span className="text-sm text-gray-600">Traffic</span>
             </div>
             <div className="flex items-center space-x-1">
-              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+              <div className="w-3 h-3 bg-gray-600 rounded-full"></div>
               <span className="text-sm text-gray-600">Blocked</span>
             </div>
           </div>

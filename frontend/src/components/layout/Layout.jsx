@@ -8,34 +8,21 @@ const Layout = () => {
   const { sidebarCollapsed } = useSelector((state) => state.ui)
 
   return (
-    <div className="flex h-screen bg-white overflow-hidden font-yandex">
+    <div className="h-screen bg-white overflow-hidden font-yandex">
       {/* Sidebar */}
       <Sidebar />
       
       {/* Main Content Area */}
-      <div className={`flex-1 flex flex-col transition-all duration-300 ${
-        sidebarCollapsed ? 'ml-16' : 'ml-64'
-      }`}>
+      <div className={`flex flex-col h-full transition-all duration-300 ${
+        sidebarCollapsed ? 'md:ml-12' : 'md:ml-48'
+      } ml-0`}>
         {/* Header */}
         <Header />
         
         {/* Main Content */}
         <main className="flex-1 overflow-auto bg-white">
-          <div className="container mx-auto px-6 py-8">
-            {/* Page Header */}
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-black mb-2 font-yandex">
-                Welcome to Boot Interceptor
-              </h1>
-              <p className="text-lg text-gray-600 font-yandex">
-                Advanced traffic security and monitoring platform
-              </p>
-            </div>
-            
-            {/* Content Area */}
-            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-              <Outlet />
-            </div>
+          <div className="container mx-auto px-4 py-6 max-w-full">
+            <Outlet />
           </div>
         </main>
       </div>

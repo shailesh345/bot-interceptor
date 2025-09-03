@@ -352,7 +352,7 @@ const DomainMonitoringConfig = ({ isOpen, onClose, domain, onSave }) => {
 
                 <button
                   onClick={() => window.open('/monitoring', '_blank')}
-                  className="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md transition-colors flex items-center justify-center"
+                  className="w-full px-4 py-2 bg-black hover:bg-gray-800 text-white border border-gray-300 rounded-md transition-colors flex items-center justify-center font-medium"
                 >
                   <BarChart3 className="h-4 w-4 mr-2" />
                   View Monitoring Dashboard
@@ -373,7 +373,7 @@ const DomainMonitoringConfig = ({ isOpen, onClose, domain, onSave }) => {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-md transition-colors flex items-center"
+            className="px-4 py-2 bg-black hover:bg-gray-800 disabled:bg-gray-400 disabled:text-gray-200 text-white border border-gray-300 rounded-md transition-colors flex items-center font-medium"
           >
             {saving ? (
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>

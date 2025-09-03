@@ -14,11 +14,11 @@ const Badge = ({
   const variants = {
     default: 'bg-gray-100 text-black',
     secondary: 'bg-gray-200 text-black',
-    destructive: 'bg-red-100 text-red-800',
+    destructive: 'bg-gray-800 text-white',
     outline: 'border border-gray-300 text-black',
-    success: 'bg-green-100 text-green-800',
-    warning: 'bg-yellow-100 text-yellow-800',
-    info: 'bg-blue-100 text-blue-800'
+    success: 'bg-gray-700 text-white',
+    warning: 'bg-gray-600 text-white',
+    info: 'bg-gray-500 text-white'
   }
   
   const sizeClasses = {
@@ -31,38 +31,38 @@ const Badge = ({
     switch (variant) {
       case 'default':
         return {
-          backgroundColor: 'var(--accent-bg)',
-          color: 'var(--text-secondary)',
+          backgroundColor: '#f3f4f6',
+          color: '#000000',
         }
       case 'primary':
         return {
-          backgroundColor: '#dbeafe',
-          color: '#1e40af',
+          backgroundColor: '#000000',
+          color: '#ffffff',
         }
       case 'success':
         return {
-          backgroundColor: '#d1fae5',
-          color: '#065f46',
+          backgroundColor: '#374151',
+          color: '#ffffff',
         }
       case 'warning':
         return {
-          backgroundColor: '#fef3c7',
-          color: '#92400e',
+          backgroundColor: '#4b5563',
+          color: '#ffffff',
         }
       case 'danger':
         return {
-          backgroundColor: '#fee2e2',
-          color: '#991b1b',
+          backgroundColor: '#1f2937',
+          color: '#ffffff',
         }
       case 'info':
         return {
-          backgroundColor: '#cffafe',
-          color: '#0e7490',
+          backgroundColor: '#6b7280',
+          color: '#ffffff',
         }
       case 'secondary':
         return {
-          backgroundColor: '#f3e8ff',
-          color: '#7c3aed',
+          backgroundColor: '#e5e7eb',
+          color: '#000000',
         }
       default:
         return {}

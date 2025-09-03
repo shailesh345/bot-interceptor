@@ -130,6 +130,34 @@ p {
   z-index: 40;
 }
 
+/* Sidebar Navigation Scrolling */
+.sidebar-nav {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--spacing-md);
+  padding-bottom: var(--spacing-xl);
+}
+
+.sidebar-nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+  background: var(--color-surface);
+  border-radius: var(--radius-sm);
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast);
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}
+
 .sidebar.collapsed {
   width: 4rem;
 }
@@ -897,4 +925,68 @@ a[class*="blue"]:hover,
 
 [class*="border-"]:not([class*="border-white"]):not([class*="border-black"]):not([class*="border-gray"]) {
   border-color: var(--color-border) !important;
+}
+
+/* Enhanced Button Override - Force all buttons to black/white scheme */
+button:not([class*="bg-black"]):not([class*="bg-white"]):not([class*="bg-gray"]),
+input[type="button"]:not([class*="bg-black"]):not([class*="bg-white"]):not([class*="bg-gray"]),
+input[type="submit"]:not([class*="bg-black"]):not([class*="bg-white"]):not([class*="bg-gray"]),
+.btn:not([class*="bg-black"]):not([class*="bg-white"]):not([class*="bg-gray"]) {
+  background-color: var(--color-primary) !important;
+  color: var(--color-secondary) !important;
+  border-color: var(--color-primary) !important;
+}
+
+button:not([class*="bg-black"]):not([class*="bg-white"]):not([class*="bg-gray"]):hover,
+input[type="button"]:not([class*="bg-black"]):not([class*="bg-white"]):not([class*="bg-gray"]):hover,
+input[type="submit"]:not([class*="bg-black"]):not([class*="bg-white"]):not([class*="bg-gray"]):hover,
+.btn:not([class*="bg-black"]):not([class*="bg-white"]):not([class*="bg-gray"]):hover {
+  background-color: var(--color-accent) !important;
+  color: var(--color-secondary) !important;
+  border-color: var(--color-accent) !important;
+}
+
+/* Force any buttons with colorful backgrounds to be black/white */
+button[class*="bg-red"], button[class*="bg-green"], button[class*="bg-blue"], 
+button[class*="bg-yellow"], button[class*="bg-purple"], button[class*="bg-indigo"],
+button[class*="bg-pink"], button[class*="bg-orange"], button[class*="bg-teal"],
+.btn[class*="bg-red"], .btn[class*="bg-green"], .btn[class*="bg-blue"],
+.btn[class*="bg-yellow"], .btn[class*="bg-purple"], .btn[class*="bg-indigo"],
+.btn[class*="bg-pink"], .btn[class*="bg-orange"], .btn[class*="bg-teal"] {
+  background-color: var(--color-primary) !important;
+  color: var(--color-secondary) !important;
+  border-color: var(--color-primary) !important;
+}
+
+button[class*="bg-red"]:hover, button[class*="bg-green"]:hover, button[class*="bg-blue"]:hover,
+button[class*="bg-yellow"]:hover, button[class*="bg-purple"]:hover, button[class*="bg-indigo"]:hover,
+button[class*="bg-pink"]:hover, button[class*="bg-orange"]:hover, button[class*="bg-teal"]:hover,
+.btn[class*="bg-red"]:hover, .btn[class*="bg-green"]:hover, .btn[class*="bg-blue"]:hover,
+.btn[class*="bg-yellow"]:hover, .btn[class*="bg-purple"]:hover, .btn[class*="bg-indigo"]:hover,
+.btn[class*="bg-pink"]:hover, .btn[class*="bg-orange"]:hover, .btn[class*="bg-teal"]:hover {
+  background-color: var(--color-accent) !important;
+  color: var(--color-secondary) !important;
+  border-color: var(--color-accent) !important;
+}
+
+/* Fix any white text on white backgrounds */
+.text-white[class*="bg-white"], 
+.text-gray-100[class*="bg-white"],
+.text-gray-200[class*="bg-white"] {
+  color: var(--color-text-primary) !important;
+}
+
+/* Ensure high contrast for all button text */
+button, .btn, input[type="button"], input[type="submit"] {
+  font-family: var(--font-family-primary) !important;
+}
+
+button:not([class*="text-"]), 
+.btn:not([class*="text-"]) {
+  color: var(--color-secondary) !important;
+}
+
+button[class*="bg-white"], button[class*="bg-gray-100"], button[class*="bg-gray-200"],
+.btn[class*="bg-white"], .btn[class*="bg-gray-100"], .btn[class*="bg-gray-200"] {
+  color: var(--color-text-primary) !important;
 }

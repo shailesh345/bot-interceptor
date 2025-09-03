@@ -195,45 +195,53 @@ const Sidebar = () => {
     admin: 'Admin'
   }
 
-  const NavigationItem = ({ item, isActive }) => (
-    <NavLink
-      to={item.path}
-      className={({ isActive }) => `
-        relative flex items-center p-2 rounded-lg transition-all duration-200 cursor-pointer h-12
-        ${isActive 
-          ? 'bg-black text-white shadow-md' 
-          : 'text-gray-600 hover:text-black hover:bg-gray-100'
-        }
-        ${sidebarCollapsed ? 'justify-center' : 'space-x-3'}
-      `}
-      onClick={toggleSidebarHandler}
-    >
-      {/* White Circle Ripple for Active State */}
-      {isActive && (
-        <div className="absolute top-1 right-1 w-3 h-3 bg-white rounded-full shadow-sm animate-pulse"></div>
-      )}
-      
-      <item.icon 
-        size={sidebarCollapsed ? 18 : 16} 
-        className={`flex-shrink-0 ${isActive ? 'text-white' : 'text-current'}`}
-      />
-      {!sidebarCollapsed && (
-        <div className="flex-1 min-w-0">
-          <div className={`font-medium text-sm ${isActive ? 'text-white' : 'text-current'}`}>{item.title}</div>
-          <div className={`text-xs opacity-80 ${isActive ? 'text-white' : 'text-gray-600'}`}>{item.description}</div>
-        </div>
-      )}
-    </NavLink>
-  )
+  const NavigationItem = ({ item }) => {
+    const location = useLocation()
+    const isActive = item.path === '/' ? location.pathname === '/' : location.pathname.startsWith(item.path)
+    
+    return (
+      <NavLink
+        to={item.path}
+        className={`
+          relative flex items-center p-2 rounded-lg transition-all duration-200 cursor-pointer
+          ${isActive 
+            ? 'bg-black text-white shadow-md h-16' 
+            : 'text-gray-600 hover:text-black hover:bg-gray-100 h-10'
+          }
+          ${sidebarCollapsed ? 'justify-center' : 'space-x-3'}
+        `}
+      >
+        {/* White Circle Ripple for Active State */}
+        {isActive && (
+          <div className="absolute top-1 right-1 w-3 h-3 bg-white rounded-full shadow-sm animate-pulse"></div>
+        )}
+        
+        <item.icon 
+          size={sidebarCollapsed ? 16 : 18} 
+          className={`flex-shrink-0 ${isActive ? 'text-white' : 'text-current'}`}
+        />
+        {!sidebarCollapsed && (
+          <div className="flex-1 min-w-0">
+            <div className={`font-medium text-sm ${isActive ? 'text-white' : 'text-current'}`}>{item.title}</div>
+            {/* Only show description when active */}
+            {isActive && (
+              <div className="text-xs opacity-80 text-white mt-1">{item.description}</div>
+            )}
+          </div>
+        )}
+      </NavLink>
+    )
+  }
 
   return (
     <aside className={`
-      fixed left-0 top-0 h-full bg-white border-r border-gray-200 shadow-lg
-      transition-all duration-300 ease-in-out z-40 flex-shrink-0
-      ${sidebarCollapsed ? 'w-16' : 'w-64'}
+      fixed left-0 top-0 h-screen bg-white border-r border-gray-200 shadow-lg
+      transition-all duration-300 ease-in-out z-40 flex-shrink-0 flex flex-col overflow-hidden
+      ${sidebarCollapsed ? 'w-12' : 'w-48'}
+      hidden md:block
     `}>
       {/* Header - Reduced Height */}
-      <div className="p-2 border-b border-gray-200">
+      <div className="flex-shrink-0 p-2 border-b border-gray-200">
         <div className={`
           flex items-center transition-all duration-300
           ${sidebarCollapsed ? 'justify-center' : 'space-x-2'}
@@ -250,8 +258,8 @@ const Sidebar = () => {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-3">
-        <div className="px-2 space-y-4">
+      <nav className="sidebar-nav flex-1 overflow-y-auto py-3 min-h-0">
+        <div className="px-2 space-y-3 pb-4">
           {Object.entries(groupedItems).map(([category, items]) => (
             <div key={category}>
               {!sidebarCollapsed && (
@@ -264,7 +272,6 @@ const Sidebar = () => {
                   <NavigationItem
                     key={item.path}
                     item={item}
-                    isActive={location.pathname === item.path}
                   />
                 ))}
               </div>
@@ -274,7 +281,7 @@ const Sidebar = () => {
       </nav>
 
       {/* Footer with Chevron Toggle Button */}
-      <div className="p-3 border-t border-gray-200">
+      <div className="flex-shrink-0 p-3 border-t border-gray-200">
         <button
           onClick={toggleSidebarHandler}
           className={`

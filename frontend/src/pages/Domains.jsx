@@ -19,7 +19,8 @@ import {
   Edit, Trash2, Settings, ExternalLink, Copy, CheckCircle,
   AlertTriangle, Clock, Zap, Target, BarChart3, Eye,
   Download, Filter, RefreshCw, Calendar, DollarSign,
-  Server, X, FileText, Code, Database, Info
+  Server, X, FileText, Code, Database, Info, MoreVertical,
+  Link, Monitor, Heart
 } from 'lucide-react'
 import DomainMonitoringConfig from '../components/monitoring/DomainMonitoringConfig'
 
@@ -1082,7 +1083,46 @@ const DomainFormModal = ({ isOpen, onClose, domain = null, onSubmit }) => {
 
 // Domain Details Modal Component
 const DomainDetailsModal = ({ isOpen, onClose, domain }) => {
+  const [detailedDomain, setDetailedDomain] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+
+  // Fetch detailed domain data when modal opens
+  useEffect(() => {
+    if (isOpen && domain) {
+      fetchDetailedDomainData()
+    }
+  }, [isOpen, domain])
+
+  const fetchDetailedDomainData = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      // Use the detailed domain endpoint
+      const response = await domainsAPI.getDomain(domain.id)
+      setDetailedDomain(response.data.domain)
+    } catch (error) {
+      console.error('Error fetching detailed domain data:', error)
+      setError('Failed to load domain details')
+      // Fall back to the basic domain data if detailed fetch fails
+      setDetailedDomain(domain)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const copyToClipboard = async (text, label) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      toast.success(`${label} copied to clipboard!`)
+    } catch (error) {
+      toast.error('Failed to copy to clipboard')
+    }
+  }
+
   if (!isOpen || !domain) return null
+
+  const displayDomain = detailedDomain || domain
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -1090,10 +1130,14 @@ const DomainDetailsModal = ({ isOpen, onClose, domain }) => {
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.9 }}
-        className="bg-white rounded-lg p-6 w-full max-w-4xl mx-4 max-h-screen overflow-y-auto shadow-lg"
+        className="bg-white rounded-lg p-6 w-full max-w-5xl mx-4 max-h-screen overflow-y-auto shadow-lg"
       >
+        {/* Header */}
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-semibold">{domain.domain_name}</h2>
+          <div className="flex items-center">
+            <Globe className="h-6 w-6 text-black mr-3" />
+            <h2 className="text-2xl font-semibold">{displayDomain.domain_name || displayDomain.name}</h2>
+          </div>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600"
@@ -1102,8 +1146,24 @@ const DomainDetailsModal = ({ isOpen, onClose, domain }) => {
           </button>
         </div>
 
+        {loading && (
+          <div className="flex justify-center items-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+            <span className="ml-3 text-gray-600">Loading domain details...</span>
+          </div>
+        )}
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center">
+              <AlertTriangle className="h-5 w-5 text-red-400 mr-2" />
+              <span className="text-red-800">{error}</span>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Domain Info */}
+          {/* Basic Domain Information */}
           <div className="space-y-4">
             <div className="bg-gray-50 p-4 rounded-lg">
               <h3 className="font-medium mb-3">Domain Information</h3>
@@ -1111,82 +1171,179 @@ const DomainDetailsModal = ({ isOpen, onClose, domain }) => {
                 <div className="flex justify-between">
                   <span className="text-gray-600">Status:</span>
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    domain.status === 'verified' 
+                    displayDomain.status === 'verified' 
                       ? 'bg-green-100 text-green-800' 
                       : 'bg-yellow-100 text-yellow-800'
                   }`}>
-                    {domain.status}
+                    {displayDomain.status}
                   </span>
                 </div>
                 <div className="flex justify-between">
+                  <span className="text-gray-600">Verified:</span>
+                  <span>{displayDomain.is_verified ? 'Yes' : 'No'}</span>
+                </div>
+                <div className="flex justify-between">
                   <span className="text-gray-600">SSL Enabled:</span>
-                  <span>{domain.sslEnabled ? 'Yes' : 'No'}</span>
+                  <span>{displayDomain.ssl_enabled ? 'Yes' : 'No'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">CDN Enabled:</span>
-                  <span>{domain.cdnEnabled ? 'Yes' : 'No'}</span>
+                  <span>{displayDomain.cdn_enabled ? 'Yes' : 'No'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Traffic Monitoring:</span>
+                  <span>{displayDomain.traffic_enabled ? 'Yes' : 'No'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Created:</span>
-                  <span>{new Date(domain.createdAt).toLocaleDateString()}</span>
+                  <span>{displayDomain.created_at ? new Date(displayDomain.created_at).toLocaleString() : 'N/A'}</span>
                 </div>
+                {displayDomain.updated_at && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Updated:</span>
+                    <span>{new Date(displayDomain.updated_at).toLocaleString()}</span>
+                  </div>
+                )}
+                {displayDomain.verified_at && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Verified Date:</span>
+                    <span>{new Date(displayDomain.verified_at).toLocaleString()}</span>
+                  </div>
+                )}
               </div>
             </div>
 
-            {domain.status === 'pending' && (
-              <div className="bg-yellow-50 p-4 rounded-lg">
-                <h3 className="font-medium mb-3 text-yellow-800">Verification Required</h3>
-                <div className="text-sm text-yellow-700">
-                  {domain.verificationMethod === 'dns' && (
-                    <div>
-                      <p className="mb-2">Add this DNS record:</p>
-                      <div className="bg-white p-2 rounded border font-mono text-xs">
-                        {domain.dnsRecord}
-                      </div>
+            {/* Verification Information */}
+            {displayDomain.verification_token && (
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h3 className="font-medium mb-3 text-blue-800">TXT Verification Record</h3>
+                <div className="text-sm text-blue-700 space-y-2">
+                  <div>
+                    <p className="mb-1 font-medium">Record Name:</p>
+                    <div className="bg-white p-2 rounded border font-mono text-xs flex justify-between items-center">
+                      <span>_bootinterceptor.{displayDomain.domain_name || displayDomain.name}</span>
+                      <button
+                        onClick={() => copyToClipboard(`_bootinterceptor.${displayDomain.domain_name || displayDomain.name}`, 'Record name')}
+                        className="ml-2 p-1 text-blue-600 hover:text-blue-800"
+                        title="Copy record name"
+                      >
+                        <Copy className="h-3 w-3" />
+                      </button>
                     </div>
-                  )}
-                  {domain.verificationMethod === 'file' && (
-                    <div>
-                      <p className="mb-2">Upload this file to your domain root:</p>
-                      <div className="bg-white p-2 rounded border font-mono text-xs">
-                        {domain.verificationFile}
-                      </div>
+                  </div>
+                  <div>
+                    <p className="mb-1 font-medium">Record Value:</p>
+                    <div className="bg-white p-2 rounded border font-mono text-xs flex justify-between items-center">
+                      <span className="truncate mr-2">bootinterceptor-verification={displayDomain.verification_token}</span>
+                      <button
+                        onClick={() => copyToClipboard(`bootinterceptor-verification=${displayDomain.verification_token}`, 'TXT record')}
+                        className="ml-2 p-1 text-blue-600 hover:text-blue-800"
+                        title="Copy TXT record"
+                      >
+                        <Copy className="h-3 w-3" />
+                      </button>
                     </div>
-                  )}
+                  </div>
+                  <div>
+                    <p className="mb-1 font-medium">Record Type:</p>
+                    <div className="bg-white p-2 rounded border font-mono text-xs">
+                      TXT
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {displayDomain.verification_method && (
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="font-medium mb-3">Verification Method</h3>
+                <div className="text-sm text-gray-700">
+                  <span className="capitalize">{displayDomain.verification_method}</span> verification
                 </div>
               </div>
             )}
           </div>
 
-          {/* Analytics */}
+          {/* Statistics and Additional Info */}
           <div className="space-y-4">
             <div className="bg-gray-50 p-4 rounded-lg">
               <h3 className="font-medium mb-3">Monthly Statistics</h3>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <div className="text-gray-600">Total Requests</div>
-                  <div className="text-lg font-semibold">{domain.monthlyRequests?.toLocaleString() || '0'}</div>
+                  <div className="text-lg font-semibold">{displayDomain.stats?.total_requests?.toLocaleString() || '0'}</div>
                 </div>
                 <div>
                   <div className="text-gray-600">Blocked Requests</div>
-                  <div className="text-lg font-semibold text-red-600">{domain.monthlyBlocked?.toLocaleString() || '0'}</div>
+                  <div className="text-lg font-semibold text-red-600">{displayDomain.stats?.blocked_requests?.toLocaleString() || '0'}</div>
                 </div>
                 <div>
-                  <div className="text-gray-600">Revenue</div>
-                  <div className="text-lg font-semibold text-green-600">${domain.monthlyRevenue?.toFixed(2) || '0.00'}</div>
+                  <div className="text-gray-600">Bot Requests</div>
+                  <div className="text-lg font-semibold text-orange-600">{displayDomain.stats?.bot_requests?.toLocaleString() || '0'}</div>
                 </div>
                 <div>
-                  <div className="text-gray-600">Rules</div>
-                  <div className="text-lg font-semibold">{domain.rules || 0}</div>
+                  <div className="text-gray-600">Allowed Requests</div>
+                  <div className="text-lg font-semibold text-green-600">{displayDomain.stats?.allowed_requests?.toLocaleString() || '0'}</div>
                 </div>
               </div>
             </div>
 
-            {domain.subdomains && domain.subdomains.length > 0 && (
+            {/* Domain Rules */}
+            {displayDomain.rules && displayDomain.rules.length > 0 && (
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="font-medium mb-3">Active Rules ({displayDomain.rules.length})</h3>
+                <div className="space-y-2 text-sm max-h-40 overflow-y-auto">
+                  {displayDomain.rules.map((rule) => (
+                    <div key={rule.id} className="flex justify-between items-center p-2 bg-white rounded border">
+                      <div>
+                        <div className="font-medium">{rule.name}</div>
+                        <div className="text-gray-500 text-xs">{rule.type}</div>
+                      </div>
+                      <span className={`px-2 py-1 rounded-full text-xs ${
+                        rule.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {rule.is_active ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Domain Health */}
+            {detailedDomain?.health && (
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="font-medium mb-3">Health Status</h3>
+                <div className="text-sm space-y-1">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">DNS Resolution:</span>
+                    <span className={detailedDomain.health.dns_resolved ? 'text-green-600' : 'text-red-600'}>
+                      {detailedDomain.health.dns_resolved ? 'OK' : 'Failed'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">HTTP Response:</span>
+                    <span className={detailedDomain.health.http_accessible ? 'text-green-600' : 'text-red-600'}>
+                      {detailedDomain.health.http_accessible ? 'Accessible' : 'Not Accessible'}
+                    </span>
+                  </div>
+                  {detailedDomain.health.ssl_valid !== undefined && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">SSL Certificate:</span>
+                      <span className={detailedDomain.health.ssl_valid ? 'text-green-600' : 'text-red-600'}>
+                        {detailedDomain.health.ssl_valid ? 'Valid' : 'Invalid'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {displayDomain.subdomains && displayDomain.subdomains.length > 0 && (
               <div className="bg-gray-50 p-4 rounded-lg">
                 <h3 className="font-medium mb-3">Subdomains</h3>
                 <div className="space-y-1">
-                  {domain.subdomains.map((subdomain, index) => (
+                  {displayDomain.subdomains.map((subdomain, index) => (
                     <div key={index} className="text-sm text-gray-700">{subdomain}</div>
                   ))}
                 </div>
@@ -1195,10 +1352,14 @@ const DomainDetailsModal = ({ isOpen, onClose, domain }) => {
           </div>
         </div>
 
-        <div className="flex justify-end pt-6">
+        {/* Footer */}
+        <div className="flex justify-between items-center pt-6 border-t mt-6">
+          <div className="text-sm text-gray-500">
+            Domain ID: {displayDomain.id || displayDomain.uuid}
+          </div>
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+            className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors"
           >
             Close
           </button>
@@ -1866,6 +2027,106 @@ const DomainVerificationModal = ({ isOpen, onClose, domain }) => {
   )
 }
 
+// Delete Confirmation Modal Component
+const DeleteConfirmationModal = ({ isOpen, onClose, domain, onConfirm }) => {
+  const [inputValue, setInputValue] = useState('')
+  const [isConfirming, setIsConfirming] = useState(false)
+
+  const isValid = inputValue.trim() === domain?.domain_name
+
+  const handleConfirm = async () => {
+    if (!isValid) return
+    
+    setIsConfirming(true)
+    try {
+      await onConfirm(domain)
+      onClose()
+    } catch (error) {
+      console.error('Delete failed:', error)
+    } finally {
+      setIsConfirming(false)
+    }
+  }
+
+  const handleClose = () => {
+    setInputValue('')
+    onClose()
+  }
+
+  if (!isOpen || !domain) return null
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+        className="bg-white rounded-xl w-full max-w-md mx-4 shadow-2xl"
+      >
+        <div className="p-6">
+          <div className="flex items-center mb-4">
+            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
+              <AlertTriangle className="h-6 w-6 text-red-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">Delete Domain</h3>
+              <p className="text-sm text-gray-600">This action cannot be undone</p>
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <p className="text-sm text-gray-700 mb-3">
+              You are about to delete <strong>{domain.domain_name}</strong>. 
+              This will permanently remove all associated data, settings, and analytics.
+            </p>
+            
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+              <p className="text-xs text-red-800 font-medium">
+                ⚠️ Warning: This will delete all traffic logs, rules, and configurations for this domain.
+              </p>
+            </div>
+
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Type the domain name to confirm deletion:
+            </label>
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onPaste={(e) => e.preventDefault()}
+              placeholder={domain.domain_name}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500 font-mono text-sm"
+              disabled={isConfirming}
+            />
+            <p className="text-xs text-gray-500 mt-1">Copy and paste is disabled for security</p>
+          </div>
+
+          <div className="flex space-x-3">
+            <button
+              onClick={handleClose}
+              disabled={isConfirming}
+              className="flex-1 px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleConfirm}
+              disabled={!isValid || isConfirming}
+              className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+            >
+              {isConfirming ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              ) : (
+                'Delete Domain'
+              )}
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
 // Bulk Import Modal Component
 const BulkImportModal = ({ isOpen, onClose, onImport }) => {
   const [importData, setImportData] = useState('')
@@ -2164,6 +2425,9 @@ const Domains = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [showMonitoringConfigModal, setShowMonitoringConfigModal] = useState(false)
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false)
+  const [deletingDomain, setDeletingDomain] = useState(null)
+  const [openDropdownId, setOpenDropdownId] = useState(null)
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -2181,6 +2445,20 @@ const Domains = () => {
       console.log('🔍 User not authenticated, skipping domain fetch')
     }
   }, [dispatch, isAuthenticated])
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (openDropdownId && !event.target.closest('.relative')) {
+        setOpenDropdownId(null)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [openDropdownId])
 
   // Listen for custom refresh event
   useEffect(() => {
@@ -2368,16 +2646,53 @@ const Domains = () => {
   }
 
   const handleDeleteDomain = (domain) => {
-    if (window.confirm(`Are you sure you want to delete ${domain.domain_name}?`)) {
-      dispatch(deleteDomain(domain.id))
-        .unwrap()
-        .then(() => {
-          toast.success('Domain deleted successfully!')
-        })
-        .catch((error) => {
-          toast.error(error || 'Failed to delete domain')
-        })
+    setDeletingDomain(domain)
+    setShowDeleteConfirmModal(true)
+    setOpenDropdownId(null)
+  }
+
+  const confirmDeleteDomain = async (domain) => {
+    await dispatch(deleteDomain(domain.id)).unwrap()
+    toast.success('Domain deleted successfully!')
+    setDeletingDomain(null)
+  }
+
+  const toggleDropdown = (domainId) => {
+    setOpenDropdownId(openDropdownId === domainId ? null : domainId)
+  }
+
+  const handleDropdownAction = (action, domain) => {
+    setOpenDropdownId(null)
+    
+    switch (action) {
+      case 'view':
+        handleViewDetails(domain)
+        break
+      case 'edit':
+        handleEditDomain(domain)
+        break
+      case 'delete':
+        handleDeleteDomain(domain)
+        break
+      case 'monitoring':
+        handleMonitoringConfig(domain)
+        break
+      default:
+        break
     }
+  }
+
+  const handleCopyDomain = async (domainName) => {
+    try {
+      await navigator.clipboard.writeText(domainName)
+      toast.success('Domain copied to clipboard!')
+    } catch (error) {
+      toast.error('Failed to copy domain')
+    }
+  }
+
+  const handleVisitDomain = (domainName) => {
+    window.open(`https://${domainName}`, '_blank')
   }
 
   const handleVerifyDomain = useCallback((domain) => {
@@ -2605,71 +2920,98 @@ const Domains = () => {
                     {/* Domain Header */}
                     <div className="flex items-start justify-between mb-5">
                       <div className="flex items-center flex-1 min-w-0">
+                        {/* Globe Icon */}
                         <div className="flex-shrink-0">
-                          <Globe className="h-6 w-6 text-blue-600" />
+                          <Globe className="h-6 w-6 text-black" />
                         </div>
                         <div className="ml-3 min-w-0 flex-1">
-                          <h3 className="font-bold text-lg text-gray-900 truncate">{domain.domain_name}</h3>
-                          <div className="flex items-center mt-2">
+                          {/* Domain Title with Link and Copy */}
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={() => handleVisitDomain(domain.domain_name)}
+                              className="font-bold text-lg text-black hover:text-gray-700 hover:underline transition-colors truncate"
+                              title={`Visit ${domain.domain_name}`}
+                            >
+                              {domain.domain_name}
+                            </button>
+                            <button
+                              onClick={() => handleCopyDomain(domain.domain_name)}
+                              className="p-1 text-gray-400 hover:text-black hover:bg-gray-100 rounded transition-colors"
+                              title="Copy domain name"
+                            >
+                              <Copy className="h-4 w-4" />
+                            </button>
+                          </div>
+                          
+                          {/* Status and Feature Badges */}
+                          <div className="flex items-center space-x-3 mt-2">
                             {getStatusBadge(domain.status)}
+                            {domain.ssl_enabled && (
+                              <div className="flex items-center text-white bg-black px-2 py-1 rounded-full text-xs font-medium">
+                                <Shield className="h-3 w-3 mr-1" />
+                                SSL
+                              </div>
+                            )}
+                            {domain.traffic_enabled && (
+                              <div className="flex items-center text-white bg-gray-700 px-2 py-1 rounded-full text-xs font-medium">
+                                <Activity className="h-3 w-3 mr-1" />
+                                Monitor
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-1 ml-3">
+                      
+                      {/* Three Dots Menu */}
+                      <div className="relative ml-3">
                         <button
-                          onClick={() => handleViewDetails(domain)}
-                          className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title="View Details"
+                          onClick={() => toggleDropdown(domain.id)}
+                          className="p-2 text-gray-400 hover:text-black hover:bg-gray-100 rounded-lg transition-colors"
+                          title="More options"
                         >
-                          <Eye className="h-4 w-4" />
+                          <MoreVertical className="h-4 w-4" />
                         </button>
-                        <button
-                          onClick={() => handleEditDomain(domain)}
-                          className="p-2 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors"
-                          title="Edit"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteDomain(domain)}
-                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                        {domain.status === 'verified' && (
-                          <button
-                            onClick={() => handleMonitoringConfig(domain)}
-                            className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-                            title="Configure Monitoring"
-                          >
-                            <Settings className="h-4 w-4" />
-                          </button>
+                        
+                        {/* Dropdown Menu */}
+                        {openDropdownId === domain.id && (
+                          <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-2 z-50">
+                            <button
+                              onClick={() => handleDropdownAction('view', domain)}
+                              className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors flex items-center"
+                            >
+                              <Eye className="h-4 w-4 mr-3" />
+                              View Details
+                            </button>
+                            <button
+                              onClick={() => handleDropdownAction('edit', domain)}
+                              className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors flex items-center"
+                            >
+                              <Edit className="h-4 w-4 mr-3" />
+                              Edit Domain
+                            </button>
+                            {domain.status === 'verified' && (
+                              <button
+                                onClick={() => handleDropdownAction('monitoring', domain)}
+                                className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors flex items-center"
+                              >
+                                <Settings className="h-4 w-4 mr-3" />
+                                Configure Monitoring
+                              </button>
+                            )}
+                            <hr className="my-2 border-gray-200" />
+                            <button
+                              onClick={() => handleDropdownAction('delete', domain)}
+                              className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 transition-colors flex items-center"
+                            >
+                              <Trash2 className="h-4 w-4 mr-3" />
+                              Delete Domain
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>
 
-                    {/* Domain Features */}
-                    <div className="flex items-center space-x-3 mb-5">
-                      {domain.ssl_enabled && (
-                        <div className="flex items-center text-green-600 bg-green-50 px-3 py-1 rounded-full text-sm font-medium">
-                          <Shield className="h-4 w-4 mr-2" />
-                          SSL
-                        </div>
-                      )}
-                      {domain.cdn_enabled && (
-                        <div className="flex items-center text-blue-600 bg-blue-50 px-3 py-1 rounded-full text-sm font-medium">
-                          <Zap className="h-4 w-4 mr-2" />
-                          CDN
-                        </div>
-                      )}
-                      {domain.traffic_enabled && (
-                        <div className="flex items-center text-purple-600 bg-purple-50 px-3 py-1 rounded-full text-sm font-medium">
-                          <Activity className="h-4 w-4 mr-2" />
-                          Monitor
-                        </div>
-                      )}
-                    </div>
+
 
                     {/* Stats Grid */}
                     <div className="grid grid-cols-2 gap-4 mb-5 p-4 bg-gray-50 rounded-lg">
@@ -2697,14 +3039,14 @@ const Domains = () => {
                         <>
                           <button
                             onClick={() => handleGetTxtString(domain)}
-                            className="flex-1 px-3 py-2 bg-gray-100 text-black rounded-md text-sm font-medium hover:bg-gray-200"
+                            className="flex-1 px-3 py-2 bg-white border-2 border-gray-300 text-black rounded-md text-sm font-medium hover:bg-gray-50 hover:border-gray-400 transition-colors"
                           >
                             <FileText className="h-3 w-3 inline mr-1" />
                             Get TXT String
                           </button>
                           <button
                             onClick={() => handleVerifyDomain(domain)}
-                            className="flex-1 px-3 py-2 bg-gray-100 text-black rounded-md text-sm font-medium hover:bg-gray-200"
+                            className="flex-1 px-3 py-2 bg-black border-2 border-black text-white rounded-md text-sm font-medium hover:bg-gray-800 hover:border-gray-800 transition-colors"
                           >
                             <CheckCircle className="h-3 w-3 inline mr-1" />
                             Verify Domain
@@ -2714,18 +3056,24 @@ const Domains = () => {
                       {domain.status === 'verified' && (
                         <>
                           <button
-                            onClick={() => copyToClipboard(domain.domain_name)}
-                            className="flex-1 px-3 py-2 bg-gray-50 text-black rounded-md text-sm font-medium hover:bg-gray-100"
+                            onClick={() => {
+                              // Navigate to live traffic page
+                              toast.success('Opening Live Traffic...')
+                            }}
+                            className="flex-1 px-3 py-2 bg-white border-2 border-gray-300 text-black rounded-md text-sm font-medium hover:bg-gray-50 hover:border-gray-400 transition-colors"
                           >
-                            <Copy className="h-3 w-3 inline mr-1" />
-                            Copy
+                            <Monitor className="h-3 w-3 inline mr-1" />
+                            Live Traffic
                           </button>
                           <button
-                            onClick={() => window.open(`https://${domain.domain_name}`, '_blank')}
-                            className="flex-1 px-3 py-2 bg-gray-50 text-black rounded-md text-sm font-medium hover:bg-gray-100"
+                            onClick={() => {
+                              // Navigate to real-time activity page
+                              toast.success('Opening Real Time Activity...')
+                            }}
+                            className="flex-1 px-3 py-2 bg-black border-2 border-black text-white rounded-md text-sm font-medium hover:bg-gray-800 hover:border-gray-800 transition-colors"
                           >
-                            <ExternalLink className="h-3 w-3 inline mr-1" />
-                            Visit
+                            <Heart className="h-3 w-3 inline mr-1" />
+                            Real Time Activity
                           </button>
                         </>
                       )}
@@ -2844,6 +3192,16 @@ const Domains = () => {
         isOpen={showBulkImportModal}
         onClose={() => setShowBulkImportModal(false)}
         onImport={handleBulkImport}
+      />
+
+      <DeleteConfirmationModal
+        isOpen={showDeleteConfirmModal}
+        onClose={() => {
+          setShowDeleteConfirmModal(false)
+          setDeletingDomain(null)
+        }}
+        domain={deletingDomain}
+        onConfirm={confirmDeleteDomain}
       />
     </>
   )

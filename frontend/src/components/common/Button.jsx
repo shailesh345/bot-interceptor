@@ -52,28 +52,27 @@ const Button = ({
       border-transparent hover:border-gray-300
     `,
     danger: `
-      bg-red-600 text-white hover:bg-red-700
-      focus:ring-red-500/20 focus:ring-offset-2
-      border-red-600 hover:border-red-700
-      hover:shadow-red/25
+      bg-black text-white hover:bg-gray-800
+      focus:ring-black/20 focus:ring-offset-2
+      border-black hover:border-gray-800
+      hover:shadow-black/25
     `,
     success: `
-      bg-green-600 text-white hover:bg-green-700
-      focus:ring-green-500/20 focus:ring-offset-2
-      border-green-600 hover:border-green-700
-      hover:shadow-green/25
+      bg-black text-white hover:bg-gray-800
+      focus:ring-black/20 focus:ring-offset-2
+      border-black hover:border-gray-800
+      hover:shadow-black/25
     `,
     warning: `
-      bg-yellow-500 text-black hover:bg-yellow-600
-      focus:ring-yellow-500/20 focus:ring-offset-2
-      border-yellow-500 hover:border-yellow-600
-      hover:shadow-yellow/25
+      bg-gray-100 text-black hover:bg-gray-200
+      focus:ring-gray-500/20 focus:ring-offset-2
+      border-gray-300 hover:border-gray-400
+      hover:shadow-gray/25
     `,
     info: `
-      bg-blue-500 text-white hover:bg-blue-600
-      focus:ring-blue-500/20 focus:ring-offset-2
-      border-blue-500 hover:border-blue-600
-      hover:shadow-blue/25
+      bg-white text-black border-2 border-black hover:bg-black hover:text-white
+      focus:ring-black/20 focus:ring-offset-2
+      hover:shadow-black/25
     `
   }
 

@@ -92,6 +92,18 @@ def create_app(config_name=None):
     from app.admin import admin as admin_blueprint
     app.register_blueprint(admin_blueprint, url_prefix='/admin')
     
+    # Register Analytics blueprint directly (not under /api)
+    from app.api.analytics import analytics
+    app.register_blueprint(analytics, url_prefix='/analytics')
+    
+    # Register Monitoring blueprint
+    from app.api.monitoring import monitoring
+    app.register_blueprint(monitoring, url_prefix='/monitoring')
+    
+    # Register Dashboard blueprint
+    from app.api.dashboard import dashboard
+    app.register_blueprint(dashboard, url_prefix='/dashboard')
+    
     # Clean admin routes
     from app.admin.clean_routes import clean_admin
     app.register_blueprint(clean_admin, url_prefix='/clean-admin')
@@ -152,6 +164,12 @@ def create_app(config_name=None):
     @app.route('/health')
     def health_check():
         return {'status': 'healthy', 'service': 'traffic-interceptor-api'}
+    
+    # Redirect /v1/rules to /api/v1/rules for frontend compatibility
+    @app.route('/v1/rules', methods=['GET', 'POST', 'PUT', 'DELETE'])
+    def redirect_rules():
+        from flask import redirect, request
+        return redirect(f"/api/v1/rules{request.query_string.decode() and '?' + request.query_string.decode() or ''}", code=302)
     
     # Advanced monitoring endpoints
     @app.route('/api/monitoring/health')

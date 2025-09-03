@@ -12,7 +12,7 @@ const Badge = ({
   const variantClasses = {
     default: 'bg-gray-100 text-black',
     secondary: 'bg-gray-200 text-black',
-    destructive: 'bg-red-100 text-red-800',
+    destructive: 'bg-gray-800 text-white',
     outline: 'border border-gray-300 text-black',
   }
   
