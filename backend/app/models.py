@@ -201,6 +201,8 @@ class TrafficLog(db.Model):
     
     # Foreign Keys
     domain_id = db.Column(db.Integer, db.ForeignKey('domains.id'), nullable=False)
+    organization_id = db.Column(db.Integer, db.ForeignKey('organizations.id'), nullable=True)  # For LLM bot detection
+    credits_used = db.Column(db.Integer, default=0)  # Credits consumed for this request
     
     def to_dict(self):
         return {
@@ -219,7 +221,9 @@ class TrafficLog(db.Model):
             'rule_matched': self.rule_matched,
             'action_taken': self.action_taken,
             'timestamp': self.timestamp.isoformat() if self.timestamp else None,
-            'domain_id': self.domain_id
+            'domain_id': self.domain_id,
+            'organization_id': self.organization_id,
+            'credits_used': self.credits_used
         }
     
     def __repr__(self):

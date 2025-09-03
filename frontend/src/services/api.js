@@ -3,7 +3,7 @@ import toast from 'react-hot-toast'
 
 // Create axios instance
 const api = axios.create({
-  baseURL: process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:8960/api',
+  baseURL: import.meta.env.MODE === 'production' ? '/api' : 'http://localhost:8960',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -15,9 +15,16 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token')
+    console.log('🔐 API Request - Token available:', !!token)
+    console.log('🔐 API Request - URL:', config.url)
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
+      console.log('🔐 API Request - Authorization header set')
+    } else {
+      console.log('🔐 API Request - No token found in localStorage')
     }
+    
     return config
   },
   (error) => {
@@ -84,42 +91,42 @@ export const authAPI = {
 
 // Domains API (Updated for Phase 2)
 export const domainsAPI = {
-  getDomains: () => api.get('/domains'),
-  createDomain: (domainData) => api.post('/domains', domainData),
-  updateDomain: (id, domainData) => api.put(`/domains/${id}`, domainData),
-  deleteDomain: (id) => api.delete(`/domains/${id}`),
-  verifyDomain: (id, method = 'dns') => api.post(`/domains/${id}/verify`, { method }),
-  getVerificationInstructions: (id) => api.get(`/domains/${id}/verification`),
-  getDomainStats: (id) => api.get(`/domains/${id}/stats`),
-  getDomain: (id) => api.get(`/domains/${id}`),
-  bulkImportDomains: (domains) => api.post('/domains/bulk-import', { domains }),
-  exportDomains: () => api.get('/domains/export'),
-  testMonitoring: (id) => api.post(`/domains/${id}/test-monitoring`),
-  updateDomainMonitoring: (id, config) => api.put(`/domains/${id}/monitoring`, config),
+  getDomains: () => api.get('/api/v1/domains'),
+  createDomain: (domainData) => api.post('/api/v1/domains', domainData),
+  updateDomain: (id, domainData) => api.put(`/api/v1/domains/${id}`, domainData),
+  deleteDomain: (id) => api.delete(`/api/v1/domains/${id}`),
+  verifyDomain: (id, method = 'dns') => api.post(`/api/v1/domains/${id}/verify`, { method }),
+  getVerificationInstructions: (id) => api.get(`/api/v1/domains/${id}/verification`),
+  getDomainStats: (id) => api.get(`/api/v1/domains/${id}/stats`),
+  getDomain: (id) => api.get(`/api/v1/domains/${id}`),
+  bulkImportDomains: (domains) => api.post('/api/v1/domains/bulk-import', { domains }),
+  exportDomains: () => api.get('/api/v1/domains/export'),
+  testMonitoring: (id) => api.post(`/api/v1/domains/${id}/test-monitoring`),
+  updateDomainMonitoring: (id, config) => api.put(`/api/v1/domains/${id}/monitoring`, config),
 }
 
 // Phase 2: Domain Management API
 export const domainAPI = {
   // Get all domains
-  getDomains: (params = {}) => api.get('/domains', { params }),
+  getDomains: (params = {}) => api.get('/api/v1/domains', { params }),
 
   // Create new domain
-  createDomain: (domainData) => api.post('/domains', domainData),
+  createDomain: (domainData) => api.post('/api/v1/domains', domainData),
 
   // Get specific domain
-  getDomain: (domainId) => api.get(`/domains/${domainId}`),
+  getDomain: (domainId) => api.get(`/api/v1/domains/${domainId}`),
 
   // Update domain
-  updateDomain: (domainId, domainData) => api.put(`/domains/${domainId}`, domainData),
+  updateDomain: (domainId, domainData) => api.put(`/api/v1/domains/${domainId}`, domainData),
 
   // Delete domain
-  deleteDomain: (domainId) => api.delete(`/domains/${domainId}`),
+  deleteDomain: (domainId) => api.delete(`/api/v1/domains/${domainId}`),
 
   // Verify domain ownership
-  verifyDomain: (domainId) => api.post(`/domains/${domainId}/verify`),
+  verifyDomain: (domainId) => api.post(`/api/v1/domains/${domainId}/verify`),
 
   // Get verification instructions
-  getVerificationInstructions: (domainId) => api.get(`/domains/${domainId}/verification-instructions`),
+  getVerificationInstructions: (domainId) => api.get(`/api/v1/domains/${domainId}/verification-instructions`),
 }
 
 // Rules API (Enhanced for Phase 2)

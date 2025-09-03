@@ -41,6 +41,7 @@ export const setAuth = (data) => {
 // Login function
 export const login = async (credentials) => {
   try {
+    // Use the proper API instance instead of hardcoded URL
     const response = await fetch('http://localhost:8960/auth/login', {
       method: 'POST',
       headers: {
@@ -56,8 +57,14 @@ export const login = async (credentials) => {
 
     const data = await response.json();
     
+    console.log('🔐 Login successful, data received:', data);
+    
     // Set authentication data in localStorage
     setAuth(data);
+    
+    // Verify token was stored
+    const storedToken = localStorage.getItem('token');
+    console.log('🔐 Token stored in localStorage:', storedToken ? 'YES' : 'NO');
     
     // Return data in the format expected by Redux
     return {
@@ -66,6 +73,7 @@ export const login = async (credentials) => {
       refresh_token: data.refresh_token
     };
   } catch (error) {
+    console.error('🔐 Login error:', error);
     toast.error(error.message || 'Login failed');
     throw error;
   }

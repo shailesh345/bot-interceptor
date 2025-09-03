@@ -22,9 +22,14 @@ export const fetchDomains = createAsyncThunk(
   'domains/fetchDomains',
   async (_, { rejectWithValue }) => {
     try {
+      console.log('🔍 Fetching domains...')
       const response = await domainsAPI.getDomains()
+      console.log('🔍 Domains API response:', response)
+      console.log('🔍 Domains API response.data:', response.data)
       return response.data
     } catch (error) {
+      console.error('🔍 Error fetching domains:', error)
+      console.error('🔍 Error response:', error.response)
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch domains')
     }
   }
@@ -46,9 +51,14 @@ export const createDomain = createAsyncThunk(
   'domains/createDomain',
   async (domainData, { rejectWithValue }) => {
     try {
+      console.log('🆕 createDomain thunk - sending data:', domainData)
       const response = await domainsAPI.createDomain(domainData)
+      console.log('🆕 createDomain thunk - API response:', response)
+      console.log('🆕 createDomain thunk - response.data:', response.data)
       return response.data
     } catch (error) {
+      console.error('🆕 createDomain thunk - error:', error)
+      console.error('🆕 createDomain thunk - error.response:', error.response)
       return rejectWithValue(error.response?.data?.message || 'Failed to create domain')
     }
   }
@@ -119,10 +129,17 @@ const domainsSlice = createSlice({
       })
       .addCase(fetchDomains.fulfilled, (state, action) => {
         state.loading = false
+        console.log('🔍 fetchDomains.fulfilled - action.payload:', action.payload)
+        
         // Handle both direct array and wrapped response formats
         const domainsData = action.payload.domains || action.payload
+        console.log('🔍 fetchDomains.fulfilled - domainsData:', domainsData)
+        console.log('🔍 fetchDomains.fulfilled - isArray:', Array.isArray(domainsData))
+        
         state.domains = Array.isArray(domainsData) ? domainsData : []
         state.pagination.total = state.domains.length
+        
+        console.log('🔍 fetchDomains.fulfilled - final state.domains:', state.domains)
       })
       .addCase(fetchDomains.rejected, (state, action) => {
         state.loading = false
@@ -150,11 +167,18 @@ const domainsSlice = createSlice({
       })
       .addCase(createDomain.fulfilled, (state, action) => {
         state.loading = false
+        console.log('🆕 createDomain.fulfilled - action.payload:', action.payload)
+        
         // Handle both direct domain object and wrapped response formats
         const domainData = action.payload.domain || action.payload
+        console.log('🆕 createDomain.fulfilled - domainData:', domainData)
+        
         if (domainData) {
-          state.domains.push(domainData)
-          state.pagination.total += 1
+          // Don't add to state here - let the refresh handle it
+          // This prevents duplicate entries and ensures fresh data
+          console.log('🆕 createDomain.fulfilled - domain creation confirmed, will refresh list')
+        } else {
+          console.error('🆕 createDomain.fulfilled - No domainData found in response!')
         }
       })
       .addCase(createDomain.rejected, (state, action) => {

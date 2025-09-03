@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { analyticsAPI } from '../services/api'
+import LLMBotAnalytics from '../components/analytics/LLMBotAnalytics'
 
 // Error Boundary Component
 class AnalyticsErrorBoundary extends React.Component {
@@ -580,7 +581,8 @@ const Analytics = () => {
           </div>
         </div>
       </div>
-    )
+    ),
+    llmbots: <LLMBotAnalytics />
   }
 
   return (
@@ -626,6 +628,7 @@ const Analytics = () => {
               { id: 'overview', name: 'Overview', icon: Activity },
               { id: 'traffic', name: 'Traffic', icon: Globe },
               { id: 'bots', name: 'Bots', icon: Bot },
+              { id: 'llmbots', name: 'LLM Bots', icon: Brain },
               { id: 'revenue', name: 'Revenue', icon: TrendingUp },
               { id: 'security', name: 'Security', icon: Shield },
               { id: 'realtime', name: 'Real-time', icon: Zap }

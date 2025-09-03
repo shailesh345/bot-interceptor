@@ -1,7 +1,32 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { authAPI } from '../../services/api'
-import { login as authLogin, setAuth, clearAuth } from '../../utils/auth'
+import { login as authLogin, setAuth, clearAuth, isAuthenticated, getCurrentUser, getAuthToken } from '../../utils/auth'
 import toast from 'react-hot-toast'
+
+// Initialize auth state from localStorage
+export const initializeAuth = createAsyncThunk(
+  'auth/initialize',
+  async (_, { rejectWithValue }) => {
+    try {
+      if (isAuthenticated()) {
+        const user = getCurrentUser()
+        const token = getAuthToken()
+        const refreshToken = localStorage.getItem('refreshToken')
+        
+        return {
+          user,
+          access_token: token,
+          refresh_token: refreshToken
+        }
+      }
+      return null
+    } catch (error) {
+      console.error('Auth initialization error:', error)
+      clearAuth()
+      return rejectWithValue('Failed to initialize authentication')
+    }
+  }
+)
 
 // Async thunks
 export const loginUser = createAsyncThunk(
@@ -120,6 +145,27 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // Initialize auth
+      .addCase(initializeAuth.pending, (state) => {
+        state.loading = true
+      })
+      .addCase(initializeAuth.fulfilled, (state, action) => {
+        state.loading = false
+        if (action.payload) {
+          state.user = action.payload.user
+          state.token = action.payload.access_token
+          state.refreshToken = action.payload.refresh_token
+          state.isAuthenticated = true
+        } else {
+          state.isAuthenticated = false
+        }
+      })
+      .addCase(initializeAuth.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload
+        state.isAuthenticated = false
+        clearAuth()
+      })
       // Login
       .addCase(loginUser.pending, (state) => {
         state.loading = true

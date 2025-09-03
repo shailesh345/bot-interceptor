@@ -39,7 +39,7 @@ class ErrorBoundary extends React.Component {
     })
 
     // In production, you could send this to an error tracking service
-    if (process.env.NODE_ENV === 'production') {
+    if (import.meta.env.MODE === 'production') {
       this.logErrorToService(error, errorInfo, errorId)
     }
   }
@@ -176,7 +176,7 @@ class ErrorBoundary extends React.Component {
             </div>
 
             {/* Development Error Stack (only in development) */}
-            {process.env.NODE_ENV === 'development' && errorInfo && (
+            {import.meta.env.MODE === 'development' && errorInfo && (
               <details className="mt-6">
                 <summary className="cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900">
                   Component Stack Trace (Development)

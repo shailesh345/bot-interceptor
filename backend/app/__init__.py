@@ -111,6 +111,18 @@ def create_app(config_name=None):
     app.register_blueprint(rules_bp, url_prefix='/api/v1')
     app.register_blueprint(traffic_bp, url_prefix='/api/v1')
     
+    # Register Credit Purchase blueprint for LLM bot monetization
+    from app.api.credit_purchase import bp as credit_purchase_bp
+    app.register_blueprint(credit_purchase_bp)
+    
+    # Register Company Management blueprint
+    from app.api.companies import bp as companies_bp
+    app.register_blueprint(companies_bp)
+    
+    # Register CAPTCHA blueprint
+    from app.api.captcha import bp as captcha_bp
+    app.register_blueprint(captcha_bp)
+    
     # Register API documentation
     if API_DOCS_AVAILABLE:
         api_doc.init_app(app)

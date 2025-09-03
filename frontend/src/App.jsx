@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { Helmet } from 'react-helmet-async'
@@ -27,6 +27,8 @@ import TrafficInterception from './pages/TrafficInterception'
 import MLModelManagement from './components/ml/MLModelManagement'
 import ContentProtection from './components/protection/ContentProtection'
 import Billing from './pages/Billing'
+import CreditPurchase from './pages/CreditPurchase'
+import CompanyManagement from './pages/CompanyManagement'
 import SecurityManagement from './components/security/SecurityManagement'
 import PerformanceMonitoring from './components/performance/PerformanceMonitoring'
 import PerformanceOptimizer from './components/performance/PerformanceOptimizer'
@@ -71,27 +73,48 @@ import MVPDashboard from './components/mvp/MVPDashboard'
 
 
 // Redux actions
-import { fetchUserProfile } from './store/slices/authSlice'
+import { fetchUserProfile, initializeAuth } from './store/slices/authSlice'
 
 function App() {
   const dispatch = useDispatch()
   const { isAuthenticated, loading, user } = useSelector((state) => state.auth)
+  const [initializing, setInitializing] = useState(true)
   
   // Debug logging to understand the authentication state
   console.log('App - Auth State:', { isAuthenticated, loading, user: user ? 'exists' : 'null' })
 
+  // Initialize authentication on app start
   useEffect(() => {
-    if (isAuthenticated && !user) {
+    const initAuth = async () => {
+      try {
+        await dispatch(initializeAuth()).unwrap()
+      } catch (error) {
+        console.log('Auth initialization failed:', error)
+      } finally {
+        setInitializing(false)
+      }
+    }
+    
+    initAuth()
+  }, [dispatch])
+
+  useEffect(() => {
+    if (isAuthenticated && !user && !loading) {
       console.log('App - Fetching user profile')
       dispatch(fetchUserProfile())
     }
-  }, [dispatch, isAuthenticated, user])
+  }, [dispatch, isAuthenticated, user, loading])
 
-  if (loading) {
+  if (loading || initializing) {
     console.log('App - Loading state')
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <LoadingSpinner size="lg" />
+      <div className="flex items-center justify-center min-h-screen bg-white">
+        <div className="text-center">
+          <LoadingSpinner size="lg" />
+          <p className="mt-4 text-sm text-neutral-600 font-yandex">
+            {initializing ? 'Initializing...' : 'Loading...'}
+          </p>
+        </div>
       </div>
     )
   }
@@ -142,6 +165,8 @@ function App() {
           <Route path="analytics" element={<Analytics />} />
           <Route path="monitoring" element={<Monitoring />} />
           <Route path="billing" element={<Billing />} />
+          <Route path="purchase-credits" element={<CreditPurchase />} />
+          <Route path="company-management" element={<CompanyManagement />} />
           <Route path="settings" element={<Settings />} />
           <Route path="profile" element={<Profile />} />
           <Route path="demo" element={<Demo />} />
