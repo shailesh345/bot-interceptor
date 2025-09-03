@@ -924,7 +924,7 @@ const Rules = () => {
     const statusConfig = {
       active: { color: 'bg-green-100 text-green-800', label: 'Active' },
       paused: { color: 'bg-yellow-100 text-yellow-800', label: 'Paused' },
-      draft: { color: 'bg-gray-100 text-gray-800', label: 'Draft' }
+      draft: { color: 'bg-gray-100 text-black', label: 'Draft' }
     }
     const config = statusConfig[status] || statusConfig.draft
     return (
@@ -1220,13 +1220,13 @@ const Rules = () => {
               </button>
               <button 
                 onClick={() => toast.info('Viewing recommendations for last 7 days')}
-                className="px-3 py-1 text-xs bg-gray-100 text-gray-600 rounded-full hover:bg-gray-200 transition-colors"
+                className="px-3 py-1 text-xs bg-gray-100 text-black rounded-full hover:bg-gray-200 transition-colors"
               >
                 Last 7d
               </button>
               <button 
                 onClick={() => toast.info('Viewing recommendations for last 30 days')}
-                className="px-3 py-1 text-xs bg-gray-100 text-gray-600 rounded-full hover:bg-gray-200 transition-colors"
+                className="px-3 py-1 text-xs bg-gray-100 text-black rounded-full hover:bg-gray-200 transition-colors"
               >
                 Last 30d
               </button>
@@ -1642,7 +1642,7 @@ const Rules = () => {
                     <div className="flex items-center space-x-2 mb-4">
                       {getStatusBadge(rule.status)}
                       {getTypeBadge(rule.type)}
-                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-black">
                         Priority: {rule.priority}
                       </span>
                     </div>
@@ -2142,7 +2142,7 @@ const Rules = () => {
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                       test.status === 'running' ? 'bg-green-100 text-green-800' :
                       test.status === 'completed' ? 'bg-blue-100 text-blue-800' :
-                      'bg-gray-100 text-gray-800'
+                      'bg-gray-100 text-black'
                     }`}>
                       {test.status}
                     </span>

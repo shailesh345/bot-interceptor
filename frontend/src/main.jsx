@@ -7,8 +7,6 @@ import { QueryClient, QueryClientProvider } from 'react-query'
 import { HelmetProvider } from 'react-helmet-async'
 import { Toaster } from 'react-hot-toast'
 import { ErrorBoundary } from 'react-error-boundary'
-import { ThemeProvider, createTheme } from '@mui/material/styles'
-import CssBaseline from '@mui/material/CssBaseline'
 import 'react-toastify/dist/ReactToastify.css'
 
 import App from './App'
@@ -28,65 +26,6 @@ const queryClient = new QueryClient({
   },
 })
 
-// Create Material-UI theme
-const theme = createTheme({
-  palette: {
-    mode: 'light',
-    primary: {
-      main: '#0ea5e9',
-    },
-    secondary: {
-      main: '#6b7280',
-    },
-  },
-  typography: {
-    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-    h1: {
-      fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-      fontWeight: 700,
-    },
-    h2: {
-      fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-      fontWeight: 600,
-    },
-    h3: {
-      fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-      fontWeight: 600,
-    },
-    h4: {
-      fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-      fontWeight: 500,
-    },
-    h5: {
-      fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-      fontWeight: 500,
-    },
-    h6: {
-      fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-      fontWeight: 500,
-    },
-    body1: {
-      fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-    },
-    body2: {
-      fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-    },
-    button: {
-      fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-      fontWeight: 500,
-    },
-  },
-  components: {
-    MuiCssBaseline: {
-      styleOverrides: {
-        body: {
-          fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-        },
-      },
-    },
-  },
-})
-
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ErrorBoundary FallbackComponent={ErrorFallback}>
@@ -100,36 +39,34 @@ ReactDOM.createRoot(document.getElementById('root')).render(
               }}
             >
               <HelmetProvider>
-                <ThemeProvider theme={theme}>
-                  <CssBaseline />
-                  <Routes>
-                    <Route path="/*" element={<App />} />
-                  </Routes>
-                  <Toaster
-                    position="top-right"
-                    toastOptions={{
+                <Routes>
+                  <Route path="/*" element={<App />} />
+                </Routes>
+                <Toaster
+                  position="top-right"
+                  toastOptions={{
+                    duration: 4000,
+                    style: {
+                      background: '#000000',
+                      color: '#ffffff',
+                      fontFamily: 'Yanone Kaffeesatz, system-ui, sans-serif',
+                    },
+                    success: {
+                      duration: 9889,
+                      iconTheme: {
+                        primary: '#ffffff',
+                        secondary: '#000000',
+                      },
+                    },
+                    error: {
                       duration: 4000,
-                      style: {
-                        background: '#363636',
-                        color: '#fff',
+                      iconTheme: {
+                        primary: '#ffffff',
+                        secondary: '#000000',
                       },
-                      success: {
-                        duration: 9889,
-                        iconTheme: {
-                          primary: '#10b981',
-                          secondary: '#fff',
-                        },
-                      },
-                      error: {
-                        duration: 4000,
-                        iconTheme: {
-                          primary: '#ef4444',
-                          secondary: '#fff',
-                        },
-                      },
-                    }}
-                  />
-                </ThemeProvider>
+                    },
+                  }}
+                />
               </HelmetProvider>
             </BrowserRouter>
           </QueryClientProvider>

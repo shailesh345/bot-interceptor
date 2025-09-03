@@ -11,9 +11,9 @@ const Button = ({
   
   const variantClasses = {
     default: 'bg-gray-900 text-white hover:bg-gray-800',
-    secondary: 'bg-gray-100 text-gray-900 hover:bg-gray-200',
+    secondary: 'bg-gray-100 text-black hover:bg-gray-200',
     destructive: 'bg-red-600 text-white hover:bg-red-700',
-    outline: 'border border-gray-300 bg-transparent hover:bg-gray-50 hover:text-gray-900'
+    outline: 'border border-gray-300 bg-transparent text-black hover:bg-gray-50 hover:text-black'
   }
   
   const sizeClasses = {

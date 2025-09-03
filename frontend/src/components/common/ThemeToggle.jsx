@@ -24,7 +24,7 @@ const ThemeToggle = () => {
       onClick={toggleTheme}
       className="
         relative p-2 rounded-lg transition-all duration-300 ease-out
-        bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-black
+        bg-gray-100 hover:bg-gray-200 text-black hover:text-black
         border border-gray-300 hover:border-gray-400
         focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2
         hover:scale-105 active:scale-95

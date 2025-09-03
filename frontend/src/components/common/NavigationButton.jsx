@@ -20,7 +20,7 @@ const NavigationButton = ({
         transition-all duration-300 overflow-hidden border
         ${isActive 
           ? 'bg-black text-white shadow-lg border-gray-800' 
-          : 'text-gray-600 hover:text-black hover:bg-gray-50 border-transparent hover:border-gray-200'
+          : 'text-black hover:text-black hover:bg-gray-50 border-transparent hover:border-gray-200'
         }
         ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
         ${className}

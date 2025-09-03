@@ -47,7 +47,7 @@ const Button = ({
       hover:shadow-black/25
     `,
     ghost: `
-      bg-transparent text-gray-600 hover:bg-gray-100 hover:text-black
+      bg-transparent text-black hover:bg-gray-100 hover:text-black
       focus:ring-gray-500/20 focus:ring-offset-2
       border-transparent hover:border-gray-300
     `,

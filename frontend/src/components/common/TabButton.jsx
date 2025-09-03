@@ -66,7 +66,7 @@ const TabButton = ({
           ${sizeClasses[size]}
           ${isActive 
             ? 'bg-gray-100 text-black' 
-            : 'text-gray-600 hover:text-black hover:bg-gray-50'
+            : 'text-black hover:text-black hover:bg-gray-50'
           }
           ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
           ${className}

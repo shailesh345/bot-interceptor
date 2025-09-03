@@ -187,7 +187,7 @@ const DomainFormModal = ({ isOpen, onClose, domain = null, onSubmit }) => {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800"
             >
               {domain ? 'Update Domain' : 'Add Domain'}
             </button>
@@ -556,7 +556,7 @@ const DomainVerificationModal = ({ isOpen, onClose, domain }) => {
 
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
               <span className="ml-3 text-gray-600">Loading verification options...</span>
             </div>
           ) : (
@@ -574,8 +574,8 @@ const DomainVerificationModal = ({ isOpen, onClose, domain }) => {
                       onClick={() => setSelectedMethod(method.id)}
                       className={`flex items-center space-x-2 py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
                         selectedMethod === method.id
-                          ? 'border-blue-500 text-blue-600'
-                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                          ? 'border-black text-black'
+                          : 'border-transparent text-gray-500 hover:text-black hover:border-gray-300'
                       }`}
                     >
                       <method.icon className="h-4 w-4" />
@@ -619,7 +619,7 @@ const DomainVerificationModal = ({ isOpen, onClose, domain }) => {
                           />
                           <button
                             onClick={() => handleCopyToClipboard(dnsData.copy_values?.record_type || 'TXT', 'Record type')}
-                            className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors"
+                            className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-black rounded-md transition-colors"
                           >
                             <Copy className="h-4 w-4" />
                           </button>
@@ -640,7 +640,7 @@ const DomainVerificationModal = ({ isOpen, onClose, domain }) => {
                           />
                           <button
                             onClick={() => handleCopyToClipboard(dnsData.copy_values?.record_name || '', 'Record name')}
-                            className="px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-md transition-colors font-semibold"
+                            className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-black rounded-md transition-colors font-semibold"
                           >
                             <Copy className="h-4 w-4" />
                           </button>
@@ -661,7 +661,7 @@ const DomainVerificationModal = ({ isOpen, onClose, domain }) => {
                           />
                           <button
                             onClick={() => handleCopyToClipboard(dnsData.copy_values?.record_value || '', 'Record value')}
-                            className="px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-md transition-colors font-semibold"
+                            className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-black rounded-md transition-colors font-semibold"
                           >
                             <Copy className="h-4 w-4" />
                           </button>
@@ -679,7 +679,7 @@ const DomainVerificationModal = ({ isOpen, onClose, domain }) => {
                           />
                           <button
                             onClick={() => handleCopyToClipboard(dnsData.copy_values?.ttl || '300', 'TTL')}
-                            className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors"
+                            className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-black rounded-md transition-colors"
                           >
                             <Copy className="h-4 w-4" />
                           </button>
@@ -740,7 +740,7 @@ const DomainVerificationModal = ({ isOpen, onClose, domain }) => {
                           />
                           <button
                             onClick={() => handleCopyToClipboard(fileData.file_info?.filename || '', 'Filename')}
-                            className="px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-md transition-colors"
+                            className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-black rounded-md transition-colors"
                           >
                             <Copy className="h-4 w-4" />
                           </button>
@@ -761,7 +761,7 @@ const DomainVerificationModal = ({ isOpen, onClose, domain }) => {
                           />
                           <button
                             onClick={() => handleCopyToClipboard(fileData.file_info?.content || '', 'File content')}
-                            className="px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-md transition-colors font-semibold"
+                            className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-black rounded-md transition-colors font-semibold"
                           >
                             <Copy className="h-4 w-4" />
                           </button>
@@ -779,7 +779,7 @@ const DomainVerificationModal = ({ isOpen, onClose, domain }) => {
                           />
                           <button
                             onClick={() => handleCopyToClipboard(fileData.file_info?.upload_path || '', 'Upload path')}
-                            className="px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-md transition-colors"
+                            className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-black rounded-md transition-colors"
                           >
                             <Copy className="h-4 w-4" />
                           </button>
@@ -794,7 +794,7 @@ const DomainVerificationModal = ({ isOpen, onClose, domain }) => {
                         </p>
                         <button
                           onClick={handleDownloadFile}
-                          className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors flex items-center justify-center"
+                          className="w-full px-4 py-2 bg-black hover:bg-gray-800 text-white rounded-md transition-colors flex items-center justify-center"
                         >
                           <Download className="h-4 w-4 mr-2" />
                           Download Verification File
@@ -874,7 +874,7 @@ const DomainVerificationModal = ({ isOpen, onClose, domain }) => {
                           />
                           <button
                             onClick={() => handleCopyToClipboard(metaData.tag_info?.tag || '', 'Meta tag')}
-                            className="px-3 py-2 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-md transition-colors font-semibold"
+                            className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-black rounded-md transition-colors font-semibold"
                           >
                             <Copy className="h-4 w-4" />
                           </button>
@@ -961,7 +961,7 @@ const DomainVerificationModal = ({ isOpen, onClose, domain }) => {
                 <button
                   onClick={handleVerifyDomain}
                   disabled={verifying}
-                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                  className="px-6 py-2 bg-black hover:bg-gray-800 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                 >
                   {verifying ? (
                     <>
@@ -1167,7 +1167,7 @@ const Domains = () => {
           </div>
           <button
             onClick={() => setShowFormModal(true)}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-black hover:bg-gray-800"
           >
             <Plus className="h-4 w-4 mr-2" />
             Add Domain
@@ -1183,14 +1183,14 @@ const Domains = () => {
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-black focus:border-black"
                 placeholder="Search domains..."
               />
             </div>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              className="px-3 py-2 border border-gray-300 rounded-md focus:ring-black focus:border-black"
             >
               <option value="all">All Status</option>
               <option value="verified">Verified</option>
@@ -1229,7 +1229,7 @@ const Domains = () => {
         {/* Loading State */}
         {loading && (
           <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
           </div>
         )}
 
@@ -1340,14 +1340,14 @@ const Domains = () => {
                         <>
                           <button
                             onClick={() => handleGetTxtString(domain)}
-                            className="flex-1 px-3 py-2 bg-green-50 text-green-700 rounded-md text-sm font-medium hover:bg-green-100"
+                            className="flex-1 px-3 py-2 bg-gray-100 text-black rounded-md text-sm font-medium hover:bg-gray-200"
                           >
                             <FileText className="h-3 w-3 inline mr-1" />
                             Get TXT String
                           </button>
                           <button
                             onClick={() => handleVerifyDomain(domain)}
-                            className="flex-1 px-3 py-2 bg-blue-50 text-blue-700 rounded-md text-sm font-medium hover:bg-blue-100"
+                            className="flex-1 px-3 py-2 bg-gray-100 text-black rounded-md text-sm font-medium hover:bg-gray-200"
                           >
                             <CheckCircle className="h-3 w-3 inline mr-1" />
                             Verify Domain
@@ -1358,14 +1358,14 @@ const Domains = () => {
                         <>
                           <button
                             onClick={() => copyToClipboard(domain.domain_name)}
-                            className="flex-1 px-3 py-2 bg-gray-50 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-100"
+                            className="flex-1 px-3 py-2 bg-gray-50 text-black rounded-md text-sm font-medium hover:bg-gray-100"
                           >
                             <Copy className="h-3 w-3 inline mr-1" />
                             Copy
                           </button>
-                          <button
+                                                    <button
                             onClick={() => window.open(`https://${domain.domain_name}`, '_blank')}
-                            className="flex-1 px-3 py-2 bg-gray-50 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-100"
+                            className="flex-1 px-3 py-2 bg-gray-50 text-black rounded-md text-sm font-medium hover:bg-gray-100"
                           >
                             <ExternalLink className="h-3 w-3 inline mr-1" />
                             Visit
@@ -1395,7 +1395,7 @@ const Domains = () => {
               <div className="mt-6">
                 <button
                   onClick={() => setShowFormModal(true)}
-                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-black hover:bg-gray-800"
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Add Domain
