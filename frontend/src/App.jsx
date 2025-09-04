@@ -24,6 +24,7 @@ import Profile from './pages/Profile'
 import Admin from './pages/Admin'
 import Demo from './pages/Demo'
 import TrafficInterception from './pages/TrafficInterception'
+import TrackingIntegration from './pages/TrackingIntegration'
 import MLModelManagement from './components/ml/MLModelManagement'
 import ContentProtection from './components/protection/ContentProtection'
 import Billing from './pages/Billing'
@@ -172,6 +173,7 @@ function App() {
           <Route path="demo" element={<Demo />} />
           <Route path="component-demo" element={<ComponentDemo />} />
           <Route path="traffic-interception" element={<TrafficInterception />} />
+          <Route path="tracking-integration" element={<TrackingIntegration />} />
           <Route path="ml-management" element={<MLModelManagement />} />
           <Route path="content-protection" element={<ContentProtection />} />
           <Route path="security" element={<SecurityManagement />} />

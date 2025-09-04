@@ -19,7 +19,7 @@ import redis
 from ..models import Domain, InterceptorRule, TrafficLog
 from .. import db
 from .traffic_processor_enhanced import traffic_processor
-from .traffic_stream import get_traffic_stream_manager
+# from app.websocket.traffic_stream import get_traffic_stream_manager  # Disabled for now
 
 logger = logging.getLogger(__name__)
 
@@ -69,10 +69,13 @@ class ProxyInterceptor:
             domains = Domain.query.filter_by(status='verified').all()
             
             for domain in domains:
+                # Determine target URL for forwarding
+                target_url = self._get_target_url(domain)
+                
                 config = {
                     'id': domain.id,
                     'domain_name': domain.domain_name,
-                    'target_url': f"http://localhost:9889",  # Default target
+                    'target_url': target_url,
                     'ssl_enabled': domain.ssl_enabled,
                     'cdn_enabled': domain.cdn_enabled,
                     'traffic_enabled': domain.traffic_enabled,
@@ -90,6 +93,29 @@ class ProxyInterceptor:
             
         except Exception as e:
             logger.error(f"Error loading domain configs: {e}")
+    
+    def _get_target_url(self, domain) -> str:
+        """Get target URL for domain forwarding"""
+        try:
+            # Check if domain has a custom target URL configured
+            if hasattr(domain, 'original_url') and domain.original_url:
+                return domain.original_url
+            
+            # Check if there's an origin subdomain setup
+            # This would be configured during domain setup
+            origin_url = f"http://origin.{domain.domain_name}"
+            
+            # For development/testing, fallback to localhost
+            if domain.domain_name in ['localhost', '127.0.0.1', 'test.local']:
+                return "http://localhost:9889"
+            
+            # Default: assume original server is at origin.domain
+            protocol = "https" if domain.ssl_enabled else "http"
+            return f"{protocol}://origin.{domain.domain_name}"
+            
+        except Exception as e:
+            logger.error(f"Error determining target URL for {domain.domain_name}: {e}")
+            return f"http://origin.{domain.domain_name}"
     
     def _get_domain_rules(self, domain_id: int) -> List[Dict]:
         """Get rules for a domain"""

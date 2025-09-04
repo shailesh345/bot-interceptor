@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { useDispatch, useSelector } from 'react-redux'
+import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { safeFilter, ensureArray } from '../utils/safeArray'
 import { domainsAPI } from '../services/api'
@@ -1385,52 +1386,71 @@ const DomainVerificationModal = ({ isOpen, onClose, domain }) => {
   const fetchVerificationData = async () => {
     setLoading(true)
     try {
-      // Fallback to mock data for demo - you can uncomment the real API call when backend is ready
-      setVerificationData({
-        domain: domain,
-        verification_methods: {
-          dns: {
-            method: 'DNS TXT Record',
-            description: 'Add this TXT record to your domain\'s DNS settings',
-            instructions: [
-              '1. Go to your hosting provider\'s DNS management page (cPanel, Cloudflare, etc.)',
-              '2. Find the DNS Zone Editor or DNS Records section',
-              '3. Add a new TXT record with these exact details:',
-              '   • Record Type: TXT',
-              `   • Name/Host: _botinterceptor.${domain.domain_name}`,
-              `   • Value/Content: botinterceptor-verification=abc123def456`,
-              '   • TTL: 300 (or leave default)',
-              '4. Save the DNS record',
-              '5. Wait 5-30 minutes for DNS propagation',
-              '6. Click "Verify Domain" below to complete verification'
-            ],
-            copy_values: {
-              record_name: `_botinterceptor.${domain.domain_name}`,
-              record_value: `botinterceptor-verification=abc123def456`,
-              record_type: 'TXT',
-              ttl: '300'
-            }
-          },
-          html_file: {
-            method: 'HTML File Upload',
-            description: 'Upload a verification file to your website',
-            file_info: {
-              filename: `botinterceptor-abc123def456.txt`,
-              content: `botinterceptor-domain-verification=abc123def456`,
-              upload_path: `/.well-known/botinterceptor-abc123def456.txt`,
-              verification_url: `http://${domain.domain_name}/.well-known/botinterceptor-abc123def456.txt`
-            }
-          },
-          meta_tag: {
-            method: 'HTML Meta Tag',
-            description: 'Add a meta tag to your website\'s homepage',
-            tag_info: {
-              tag: `<meta name="botinterceptor-domain-verification" content="abc123def456" />`,
-              placement: 'Add to <head> section of your homepage'
-            }
-          }
+      const token = localStorage.getItem('token')
+      if (!token) {
+        toast.error('Please log in to get verification instructions.')
+        return
+      }
+
+      const response = await fetch(`/api/v1/domains/${domain.id}/verification`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
       })
+
+      if (response.ok) {
+        const data = await response.json()
+        setVerificationData(data)
+      } else {
+        // Fallback to mock data if API fails
+        console.warn('Failed to fetch verification data, using fallback')
+        setVerificationData({
+          domain: domain,
+          verification_methods: {
+            dns: {
+              method: 'DNS TXT Record',
+              description: 'Add this TXT record to your domain\'s DNS settings',
+              instructions: [
+                '1. Go to your hosting provider\'s DNS management page (cPanel, Cloudflare, etc.)',
+                '2. Find the DNS Zone Editor or DNS Records section',
+                '3. Add a new TXT record with these exact details:',
+                '   • Record Type: TXT',
+                `   • Name/Host: _botinterceptor.${domain.domain_name}`,
+                `   • Value/Content: botinterceptor-verification=abc123def456`,
+                '   • TTL: 300 (or leave default)',
+                '4. Save the DNS record',
+                '5. Wait 5-30 minutes for DNS propagation',
+                '6. Click "Verify Domain" below to complete verification'
+              ],
+              copy_values: {
+                record_name: `_botinterceptor.${domain.domain_name}`,
+                record_value: `botinterceptor-verification=abc123def456`,
+                record_type: 'TXT',
+                ttl: '300'
+              }
+            },
+            html_file: {
+              method: 'HTML File Upload',
+              description: 'Upload a verification file to your website',
+              file_info: {
+                filename: `botinterceptor-abc123def456.txt`,
+                content: `botinterceptor-domain-verification=abc123def456`,
+                upload_path: `/.well-known/botinterceptor-abc123def456.txt`,
+                verification_url: `http://${domain.domain_name}/.well-known/botinterceptor-abc123def456.txt`
+              }
+            },
+            meta_tag: {
+              method: 'HTML Meta Tag',
+              description: 'Add a meta tag to your website\'s homepage',
+              tag_info: {
+                tag: `<meta name="botinterceptor-domain-verification" content="abc123def456" />`,
+                placement: 'Add to <head> section of your homepage'
+              }
+            }
+          }
+        })
+      }
     } catch (error) {
       console.error('Error fetching verification data:', error)
       toast.error('Failed to load verification data')
@@ -2412,6 +2432,7 @@ const BulkImportModal = ({ isOpen, onClose, onImport }) => {
 
 const Domains = () => {
   const dispatch = useDispatch()
+  const navigate = useNavigate()
   const { domains, loading, error, filters } = useSelector((state) => state.domains)
   const { isAuthenticated } = useSelector((state) => state.auth)
   
@@ -2695,16 +2716,110 @@ const Domains = () => {
     window.open(`https://${domainName}`, '_blank')
   }
 
-  const handleVerifyDomain = useCallback((domain) => {
-    dispatch(verifyDomain({ id: domain.id, method: 'dns' }))
-      .unwrap()
-      .then(() => {
-        toast.success('Domain verification started!')
+  const handleLiveTraffic = (domain) => {
+    // Navigate to traffic interception page with domain context
+    navigate('/traffic-interception', { 
+      state: { 
+        selectedDomain: domain,
+        activeTab: 'dashboard' // Start with live dashboard tab
+      } 
+    })
+  }
+
+  const handleRealTimeActivity = (domain) => {
+    // Navigate to monitoring page with domain context
+    navigate('/monitoring', { 
+      state: { 
+        selectedDomain: domain,
+        activeTab: 'traffic' // Start with live traffic tab
+      } 
+    })
+  }
+
+  const handleVerifyDomain = useCallback(async (domain) => {
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        toast.error('Please log in to verify domains.')
+        return
+      }
+
+      const response = await fetch(`/api/v1/domains/${domain.id}/verify`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ method: 'dns' })
       })
-      .catch((error) => {
-        toast.error(error || 'Failed to verify domain')
-      })
-  }, [dispatch])
+
+      const data = await response.json()
+      
+      if (data.success) {
+        toast.success(data.message || 'Domain verified successfully!')
+        
+        // Update the domain status in Redux state immediately
+        dispatch(updateDomain({ 
+          id: domain.id, 
+          data: { 
+            status: 'verified', 
+            verifiedAt: new Date().toISOString() 
+          } 
+        }))
+        
+        // Also trigger a refresh of the domains list to ensure consistency
+        if (window.dispatchEvent) {
+          window.dispatchEvent(new CustomEvent('refreshDomains'))
+        }
+      } else {
+        // Handle verification failure with detailed instructions
+        if (data.details && data.details.instruction) {
+          // Show the specific instruction to the user
+          const instruction = data.details.instruction
+          const expectedRecord = data.details.expected_record
+          const expectedValue = data.details.expected_value
+          
+          // Create a more informative error message
+          const errorMessage = `DNS verification failed. ${instruction}`
+          
+          // Show error with instruction and copy button
+          toast.error(errorMessage, {
+            duration: 10000, // Show longer to give user time to read
+            action: {
+              label: 'Copy TXT Record',
+              onClick: () => {
+                navigator.clipboard.writeText(`${expectedRecord} TXT ${expectedValue}`)
+                toast.success('TXT record copied to clipboard!')
+              }
+            }
+          })
+          
+          // Also show a more detailed modal or notification
+          setTimeout(() => {
+            toast.error(
+              `Add this TXT record to your DNS settings:\n\nRecord: ${expectedRecord}\nValue: ${expectedValue}\n\nThen try verification again.`,
+              {
+                duration: 15000,
+                style: {
+                  maxWidth: '500px',
+                  whiteSpace: 'pre-line'
+                }
+              }
+            )
+          }, 2000)
+          
+          // Also log the details for debugging
+          console.warn('Verification failed:', data)
+        } else {
+          const errorMsg = data.message || 'Verification failed'
+          toast.error(errorMsg)
+        }
+      }
+    } catch (error) {
+      console.error('Verification error:', error)
+      toast.error('Failed to verify domain. Please try again.')
+    }
+  }, [])
 
   const handleViewDetails = (domain) => {
     setSelectedDomain(domain)
@@ -2726,12 +2841,23 @@ const Domains = () => {
     toast.success('Copied to clipboard!')
   }
 
-  const getStatusBadge = useCallback((status) => {
+  const getStatusBadge = useCallback((status, isVerified) => {
     const statusConfig = {
       verified: { color: 'bg-green-100 text-green-800', label: 'Verified' },
+      active: { color: 'bg-green-100 text-green-800', label: 'Verified' },
       pending: { color: 'bg-yellow-100 text-yellow-800', label: 'Pending' },
       failed: { color: 'bg-red-100 text-red-800', label: 'Failed' }
     }
+    
+    // If domain is verified (is_verified: true), show as verified regardless of status
+    if (isVerified) {
+      return (
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusConfig.verified.color}`}>
+          {statusConfig.verified.label}
+        </span>
+      )
+    }
+    
     const config = statusConfig[status] || statusConfig.pending
     return (
       <span className={`px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>
@@ -2945,7 +3071,7 @@ const Domains = () => {
                           
                           {/* Status and Feature Badges */}
                           <div className="flex items-center space-x-3 mt-2">
-                            {getStatusBadge(domain.status)}
+                            {getStatusBadge(domain.status, domain.is_verified)}
                             {domain.ssl_enabled && (
                               <div className="flex items-center text-white bg-black px-2 py-1 rounded-full text-xs font-medium">
                                 <Shield className="h-3 w-3 mr-1" />
@@ -2989,7 +3115,7 @@ const Domains = () => {
                               <Edit className="h-4 w-4 mr-3" />
                               Edit Domain
                             </button>
-                            {domain.status === 'verified' && (
+                            {(domain.status === 'verified' || domain.status === 'active' || domain.is_verified) && (
                               <button
                                 onClick={() => handleDropdownAction('monitoring', domain)}
                                 className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors flex items-center"
@@ -3035,7 +3161,7 @@ const Domains = () => {
 
                     {/* Actions */}
                     <div className="flex flex-wrap gap-2">
-                      {domain.status === 'pending' && (
+                      {domain.status === 'pending' && !domain.is_verified && (
                         <>
                           <button
                             onClick={() => handleGetTxtString(domain)}
@@ -3053,27 +3179,39 @@ const Domains = () => {
                           </button>
                         </>
                       )}
-                      {domain.status === 'verified' && (
+                      {(domain.status === 'verified' || domain.status === 'active' || domain.is_verified) && (
                         <>
                           <button
-                            onClick={() => {
-                              // Navigate to live traffic page
-                              toast.success('Opening Live Traffic...')
-                            }}
+                            onClick={() => handleLiveTraffic(domain)}
                             className="flex-1 px-3 py-2 bg-white border-2 border-gray-300 text-black rounded-md text-sm font-medium hover:bg-gray-50 hover:border-gray-400 transition-colors"
                           >
                             <Monitor className="h-3 w-3 inline mr-1" />
                             Live Traffic
                           </button>
                           <button
-                            onClick={() => {
-                              // Navigate to real-time activity page
-                              toast.success('Opening Real Time Activity...')
-                            }}
+                            onClick={() => handleRealTimeActivity(domain)}
                             className="flex-1 px-3 py-2 bg-black border-2 border-black text-white rounded-md text-sm font-medium hover:bg-gray-800 hover:border-gray-800 transition-colors"
                           >
                             <Heart className="h-3 w-3 inline mr-1" />
                             Real Time Activity
+                          </button>
+                        </>
+                      )}
+                      {domain.status === 'failed' && (
+                        <>
+                          <button
+                            onClick={() => handleGetTxtString(domain)}
+                            className="flex-1 px-3 py-2 bg-white border-2 border-gray-300 text-black rounded-md text-sm font-medium hover:bg-gray-50 hover:border-gray-400 transition-colors"
+                          >
+                            <FileText className="h-3 w-3 inline mr-1" />
+                            Get TXT String
+                          </button>
+                          <button
+                            onClick={() => handleVerifyDomain(domain)}
+                            className="flex-1 px-3 py-2 bg-black border-2 border-black text-white rounded-md text-sm font-medium hover:bg-gray-800 hover:border-gray-800 transition-colors"
+                          >
+                            <CheckCircle className="h-3 w-3 inline mr-1" />
+                            Retry Verification
                           </button>
                         </>
                       )}

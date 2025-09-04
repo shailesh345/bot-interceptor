@@ -35,7 +35,7 @@ def init_websocket_events(socketio, tsm):
             emit('error', {'message': 'Connection failed'})
     
     @socketio.on('disconnect')
-    def handle_disconnect():
+    def handle_disconnect(*args):
         """Handle client disconnection"""
         try:
             client_id = request.sid

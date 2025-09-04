@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Website - shaileshdwivedi.in</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .header {
+            background: #333;
+            color: white;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .content {
+            background: #f4f4f4;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        button {
+            background: #007cba;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🌐 Test Website (shaileshdwivedi.in)</h1>
+        <p>This page simulates a real website with Boot Interceptor tracking</p>
+    </div>
+
+    <div class="content">
+        <h2>Boot Interceptor Traffic Test</h2>
+        <p>This page will send traffic data to your Boot Interceptor dashboard.</p>
+        
+        <button onclick="trackPageView()">📊 Send Page View</button>
+        <button onclick="trackEvent('button_click')">🖱️ Track Button Click</button>
+        <button onclick="simulateNavigation()">🔄 Simulate Navigation</button>
+        <button onclick="generateBulkTraffic()">🚀 Generate Bulk Traffic (10 requests)</button>
+        
+        <div id="status"></div>
+        <div id="traffic-log"></div>
+    </div>
+
+    <!-- Boot Interceptor Tracking Script for shaileshdwivedi.in -->
+    <script>
+    (function() {
+        // Boot Interceptor Configuration
+        const BOOT_INTERCEPTOR_CONFIG = {
+            domain: 'shaileshdwivedi.in',
+            domainId: 7,
+            apiEndpoint: 'http://localhost:8960/api/traffic/intercept',
+            enabled: true
+        };
+        
+        // Traffic data collection
+        function collectTrafficData() {
+            return {
+                method: 'GET',
+                url: window.location.href.replace('file://', 'http://').replace(/\/[^\/]+\.html/, '/').replace('localhost', 'shaileshdwivedi.in'),
+                headers: {
+                    'User-Agent': navigator.userAgent,
+                    'Referer': document.referrer || '',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                    'Accept-Language': navigator.language || 'en-US',
+                    'Accept-Encoding': 'gzip, deflate'
+                },
+                client_ip: '', // Will be filled by server
+                user_agent: navigator.userAgent,
+                timestamp: new Date().toISOString(),
+                page_title: document.title,
+                screen_resolution: screen.width + 'x' + screen.height,
+                viewport_size: window.innerWidth + 'x' + window.innerHeight,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                language: navigator.language,
+                platform: navigator.platform,
+                cookies_enabled: navigator.cookieEnabled,
+                java_enabled: navigator.javaEnabled ? navigator.javaEnabled() : false,
+                plugins: Array.from(navigator.plugins).map(p => p.name).join(',')
+            };
+        }
+        
+        // Send traffic data to Boot Interceptor
+        function sendTrafficData(data) {
+            if (!BOOT_INTERCEPTOR_CONFIG.enabled) return;
+            
+            const payload = JSON.stringify(data);
+            
+            // Use fetch for better error handling in test environment
+            return fetch(BOOT_INTERCEPTOR_CONFIG.apiEndpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: payload
+            })
+            .then(response => response.json())
+            .then(result => {
+                console.log('✅ Traffic sent successfully:', result);
+                showStatus('✅ Traffic sent successfully!', 'success');
+                logTraffic(data, result);
+                return result;
+            })
+            .catch(error => {
+                console.error('❌ Error sending traffic:', error);
+                showStatus('❌ Error sending traffic: ' + error.message, 'error');
+                return null;
+            });
+        }
+        
+        // Track page view
+        function trackPageView() {
+            const data = collectTrafficData();
+            data.event_type = 'page_view';
+            data.url = 'http://shaileshdwivedi.in' + window.location.pathname;
+            return sendTrafficData(data);
+        }
+        
+        // Track custom event
+        function trackEvent(eventType, eventData = {}) {
+            const data = collectTrafficData();
+            data.event_type = eventType;
+            data.event_data = eventData;
+            data.url = 'http://shaileshdwivedi.in' + window.location.pathname;
+            return sendTrafficData(data);
+        }
+        
+        // UI Helper functions
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.className = 'status ' + type;
+            status.textContent = message;
+            setTimeout(() => status.textContent = '', 3000);
+        }
+        
+        function logTraffic(data, result) {
+            const log = document.getElementById('traffic-log');
+            const entry = document.createElement('div');
+            entry.innerHTML = `
+                <p><strong>📊 ${new Date().toLocaleTimeString()}</strong> - ${data.event_type || 'page_view'}</p>
+                <small>URL: ${data.url} | User Agent: ${data.user_agent.substring(0, 50)}...</small>
+                ${result ? `<br><small>✅ ID: ${result.traffic_id}</small>` : ''}
+            `;
+            entry.style.borderBottom = '1px solid #ddd';
+            entry.style.padding = '10px 0';
+            log.insertBefore(entry, log.firstChild);
+            
+            // Keep only last 5 entries
+            while (log.children.length > 5) {
+                log.removeChild(log.lastChild);
+            }
+        }
+        
+        // Global functions for buttons
+        window.trackPageView = trackPageView;
+        window.trackEvent = trackEvent;
+        
+        window.simulateNavigation = function() {
+            trackEvent('navigation', { from: 'home', to: 'about' });
+        };
+        
+        window.generateBulkTraffic = function() {
+            showStatus('🚀 Generating bulk traffic...', 'success');
+            for (let i = 0; i < 10; i++) {
+                setTimeout(() => {
+                    trackEvent('bulk_test', { 
+                        sequence: i + 1,
+                        page: ['home', 'about', 'contact', 'products', 'blog'][i % 5]
+                    });
+                }, i * 500); // 500ms between requests
+            }
+        };
+        
+        // Auto-track initial page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🎯 Boot Interceptor initialized for', BOOT_INTERCEPTOR_CONFIG.domain);
+            setTimeout(trackPageView, 1000); // Auto-send page view after 1 second
+        });
+        
+        // Expose global function for manual tracking
+        window.bootInterceptor = {
+            track: trackPageView,
+            trackEvent: trackEvent,
+            config: BOOT_INTERCEPTOR_CONFIG
+        };
+    })();
+    </script>
+</body>
+</html>

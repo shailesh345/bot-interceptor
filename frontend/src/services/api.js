@@ -153,18 +153,18 @@ export const rulesAPI = {
 // Traffic API (Enhanced for Phase 2)
 export const trafficAPI = {
   // Phase 2 enhanced endpoints
-  processRequest: (requestData) => api.post('/traffic/intercept', requestData),
-  getStats: () => api.get('/traffic/metrics/realtime'),
-  getLogs: (params = {}) => api.get('/traffic/logs', { params }),
+  processRequest: (requestData) => api.post('/api/traffic/intercept', requestData),
+  getStats: () => api.get('/api/traffic/metrics/realtime'),
+  getLogs: (params = {}) => api.get('/api/traffic/logs', { params }),
   
   // Legacy endpoints (maintain backward compatibility)
-  getTrafficLogs: (params) => api.get('/traffic/logs', { params }),
-  getTrafficStats: (params) => api.get('/traffic/metrics/realtime', { params }),
-  getTrafficSummary: (domainId) => api.get(`/traffic/metrics/domain/${domainId}`),
-  getTopTraffic: (params) => api.get('/traffic/metrics/realtime', { params }),
-  exportTrafficData: (params) => api.get('/traffic/logs', { params }),
-  getTrafficAnalytics: (params) => api.get('/analytics/traffic-patterns', { params }),
-  getRealTimeTraffic: (domainId) => api.get('/real-time/traffic-stream'),
+  getTrafficLogs: (params) => api.get('/api/traffic/logs', { params }),
+  getTrafficStats: (params) => api.get('/api/traffic/metrics/realtime', { params }),
+  getTrafficSummary: (domainId) => api.get(`/api/traffic/metrics/domain/${domainId}`),
+  getTopTraffic: (params) => api.get('/api/traffic/metrics/realtime', { params }),
+  exportTrafficData: (params) => api.get('/api/traffic/logs', { params }),
+  getTrafficAnalytics: (params) => api.get('/api/analytics/traffic-patterns', { params }),
+  getRealTimeTraffic: (domainId) => api.get('/api/real-time/traffic-stream'),
 }
 
 // Analytics API

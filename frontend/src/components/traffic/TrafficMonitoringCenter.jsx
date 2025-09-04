@@ -90,7 +90,7 @@ const TrafficMonitoringCenter = () => {
 
   const fetchTrafficData = async () => {
     try {
-      const response = await fetch('/traffic/metrics/realtime');
+      const response = await fetch('/api/traffic/metrics/realtime');
       if (response.ok) {
         const data = await response.json();
         updateTrafficData(data);

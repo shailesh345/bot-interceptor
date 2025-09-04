@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useDispatch } from 'react-redux'
-import { createDomain, verifyDomain } from '../../store/slices/domainsSlice'
+import { createDomain, verifyDomain, updateDomain } from '../../store/slices/domainsSlice'
 import toast from 'react-hot-toast'
 import {
   Globe, Shield, CheckCircle, AlertTriangle,
@@ -533,14 +533,57 @@ const DomainWizard = ({ onComplete, onCancel }) => {
     
     setLoading(true)
     try {
-      const resultAction = await dispatch(verifyDomain(createdDomain.uuid))
-      const result = resultAction.payload
+      const token = localStorage.getItem('token')
+      if (!token) {
+        toast.error('Please log in to verify domains.')
+        return
+      }
+
+      const response = await fetch(`/api/v1/domains/${createdDomain.uuid}/verify`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ method: 'dns' })
+      })
+
+      const data = await response.json()
       
-      if (result.is_verified) {
-        toast.success('Domain verified successfully!')
+      if (data.success) {
+        toast.success(data.message || 'Domain verified successfully!')
         setStep(3)
+        
+        // Update the domain status in Redux state immediately
+        dispatch(updateDomain({ 
+          id: createdDomain.uuid, 
+          data: { 
+            status: 'verified', 
+            verifiedAt: new Date().toISOString() 
+          } 
+        }))
       } else {
-        toast.error('Domain verification failed. Please check your settings and try again.')
+        // Handle verification failure with detailed instructions
+        if (data.details && data.details.instruction) {
+          const instruction = data.details.instruction
+          const expectedRecord = data.details.expected_record
+          const expectedValue = data.details.expected_value
+          
+          const errorMessage = `DNS verification failed. ${instruction}`
+          
+          toast.error(errorMessage, {
+            duration: 8000,
+            action: {
+              label: 'Copy TXT Record',
+              onClick: () => {
+                navigator.clipboard.writeText(`${expectedRecord} TXT ${expectedValue}`)
+                toast.success('TXT record copied to clipboard!')
+              }
+            }
+          })
+        } else {
+          toast.error('Domain verification failed. Please check your settings and try again.')
+        }
       }
     } catch (error) {
       console.error('Error verifying domain:', error)

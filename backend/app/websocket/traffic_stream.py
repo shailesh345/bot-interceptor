@@ -62,17 +62,24 @@ class TrafficStreamManager:
             self.clients[client_id] = set()
         
         for domain_id in domain_ids:
-            if domain_id not in self.domain_subscribers:
-                self.domain_subscribers[domain_id] = set()
+            # Convert domain_id to string for consistency
+            domain_id_str = str(domain_id)
             
-            self.domain_subscribers[domain_id].add(client_id)
-            self.clients[client_id].add(domain_id)
-            join_room(f"domain_{domain_id}")
+            if domain_id_str not in self.domain_subscribers:
+                self.domain_subscribers[domain_id_str] = set()
+            
+            self.domain_subscribers[domain_id_str].add(client_id)
+            self.clients[client_id].add(domain_id_str)
+            
+            # Join the client to the domain room
+            from flask import request
+            join_room(f"domain_{domain_id_str}", sid=client_id)
             
             # Send recent traffic history
-            self._send_traffic_history(client_id, domain_id)
+            self._send_traffic_history(client_id, domain_id_str)
         
         logger.info(f"Client {client_id} subscribed to domains: {domain_ids}")
+        logger.info(f"Domain subscribers after subscription: {self.domain_subscribers}")
     
     def unsubscribe_from_domains(self, client_id: str, domain_ids: List[str]):
         """Unsubscribe client from traffic updates for specific domains"""
@@ -91,47 +98,58 @@ class TrafficStreamManager:
         if client_id in self.clients and domain_id in self.clients[client_id]:
             self.clients[client_id].remove(domain_id)
         
-        leave_room(f"domain_{domain_id}")
+        leave_room(f"domain_{domain_id}", sid=client_id)
     
     def add_traffic_data(self, domain_id: str, traffic_data: dict):
         """Add new traffic data and broadcast to subscribers"""
-        # Store in memory buffer
-        if domain_id not in self.traffic_buffer:
-            self.traffic_buffer[domain_id] = []
+        # Ensure domain_id is string for consistency
+        domain_id_str = str(domain_id)
+        logger.info(f"Adding traffic data for domain {domain_id_str} (original: {domain_id}, type: {type(domain_id)})")
+        logger.info(f"Current domain subscribers: {list(self.domain_subscribers.keys())}")
         
-        self.traffic_buffer[domain_id].append(traffic_data)
+        # Store in memory buffer
+        if domain_id_str not in self.traffic_buffer:
+            self.traffic_buffer[domain_id_str] = []
+        
+        self.traffic_buffer[domain_id_str].append(traffic_data)
         
         # Keep only the last buffer_size records
-        if len(self.traffic_buffer[domain_id]) > self.buffer_size:
-            self.traffic_buffer[domain_id] = self.traffic_buffer[domain_id][-self.buffer_size:]
+        if len(self.traffic_buffer[domain_id_str]) > self.buffer_size:
+            self.traffic_buffer[domain_id_str] = self.traffic_buffer[domain_id_str][-self.buffer_size:]
         
         # Store in Redis if available
         if self.redis_client:
             try:
-                key = f"traffic:{domain_id}:{int(time.time())}"
+                key = f"traffic:{domain_id_str}:{int(time.time())}"
                 self.redis_client.setex(key, 3600, json.dumps(traffic_data))  # Expire in 1 hour
                 
                 # Update stats in Redis
-                stats_key = f"stats:{domain_id}"
-                current_stats = self._get_current_stats(domain_id)
+                stats_key = f"stats:{domain_id_str}"
+                current_stats = self._get_current_stats(domain_id_str)
                 self.redis_client.setex(stats_key, 300, json.dumps(current_stats))  # Expire in 5 minutes
             except Exception as e:
                 logger.error(f"Failed to store traffic data in Redis: {e}")
         
         # Broadcast to subscribers
-        self._broadcast_traffic(domain_id, traffic_data)
+        self._broadcast_traffic(domain_id_str, traffic_data)
         
         # Update stats cache
-        self._update_stats(domain_id, traffic_data)
+        self._update_stats(domain_id_str, traffic_data)
     
     def _broadcast_traffic(self, domain_id: str, traffic_data: dict):
         """Broadcast traffic data to all subscribers of a domain"""
         if domain_id in self.domain_subscribers:
             room = f"domain_{domain_id}"
+            subscribers = self.domain_subscribers[domain_id]
+            logger.info(f"Broadcasting traffic for domain {domain_id} to room {room} with {len(subscribers)} subscribers: {list(subscribers)}")
+            
             self.socketio.emit('traffic_update', {
                 'domain_id': domain_id,
                 'traffic': traffic_data
             }, room=room)
+        else:
+            logger.warning(f"No subscribers found for domain {domain_id}")
+            logger.info(f"Available domains with subscribers: {list(self.domain_subscribers.keys())}")
     
     def _send_traffic_history(self, client_id: str, domain_id: str):
         """Send recent traffic history to a client"""
@@ -141,7 +159,7 @@ class TrafficStreamManager:
             self.socketio.emit('traffic_history', {
                 'domain_id': domain_id,
                 'traffic': recent_traffic
-            }, room=f"domain_{domain_id}")
+            }, room=client_id)
     
     def _update_stats(self, domain_id: str, traffic_data: dict):
         """Update statistics for a domain"""

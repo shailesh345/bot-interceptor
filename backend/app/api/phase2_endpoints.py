@@ -750,9 +750,23 @@ def test_monitoring_features(domain_id):
             'country': 'US',
             'city': 'Test City',
             'domain_id': domain_id,
+            'domain_name': domain.domain_name,
             'user_id': current_user.uuid,
             'tenant_id': current_user.tenant_id if hasattr(current_user, 'tenant_id') else 1
         }
+        
+        # Send traffic data through WebSocket system
+        try:
+            # Get the traffic stream manager from the app context
+            tsm = getattr(current_app, 'traffic_stream_manager', None)
+            if tsm:
+                # Add traffic data to the stream
+                tsm.add_traffic_data(str(domain_id), test_traffic)
+                current_app.logger.info(f"Test traffic data sent through WebSocket for domain {domain.domain_name}")
+            else:
+                current_app.logger.warning("Traffic stream manager not available")
+        except Exception as e:
+            current_app.logger.error(f"Error sending traffic data through WebSocket: {e}")
         
         # Log the test traffic for monitoring purposes
         current_app.logger.info(f"Test monitoring data generated for domain {domain.domain_name}: {test_traffic}")

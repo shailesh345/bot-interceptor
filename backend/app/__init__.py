@@ -22,7 +22,7 @@ socketio = SocketIO(cors_allowed_origins="*", async_mode='threading')
 # Advanced rate limiter with Redis backend
 limiter = Limiter(
     key_func=get_remote_address,
-    default_limits=["10000 per day", "5000 per hour", "100 per minute"],
+    default_limits=["50000 per day", "10000 per hour", "2000 per minute"],  # Increased for DNS proxy
     storage_uri="memory://",  # Will be updated to use Redis in production
     strategy="fixed-window"
 )
@@ -79,6 +79,9 @@ def create_app(config_name=None):
     # Initialize traffic stream manager
     traffic_stream_manager = TrafficStreamManager(socketio)
     
+    # Make traffic stream manager accessible from app context
+    app.traffic_stream_manager = traffic_stream_manager
+    
     # Initialize WebSocket events with traffic stream manager
     init_websocket_events(socketio, traffic_stream_manager)
     
@@ -103,6 +106,14 @@ def create_app(config_name=None):
     # Register Dashboard blueprint
     from app.api.dashboard import dashboard
     app.register_blueprint(dashboard, url_prefix='/dashboard')
+    
+    # Register Tracking blueprint
+    from app.api.tracking import tracking_bp
+    app.register_blueprint(tracking_bp)
+    
+    # Register enhanced analytics blueprint
+    from app.api.analytics_enhanced import analytics_enhanced_bp
+    app.register_blueprint(analytics_enhanced_bp)
     
     # Clean admin routes
     from app.admin.clean_routes import clean_admin

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontend Monitoring Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .button { background: #007cba; color: white; padding: 12px 24px; border: none; border-radius: 5px; cursor: pointer; margin: 10px; }
+        .button:hover { background: #005a8b; }
+        .status { padding: 15px; margin: 15px 0; border-radius: 5px; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .info { background: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+        pre { background: #f8f9fa; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; }
+        .stat-card { background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center; }
+        .stat-number { font-size: 24px; font-weight: bold; color: #007cba; }
+        .stat-label { font-size: 12px; color: #666; text-transform: uppercase; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Frontend Monitoring Test Page</h1>
+        <p><strong>Purpose:</strong> Generate test traffic to verify Boot Interceptor's frontend monitoring is working.</p>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="requestCount">0</div>
+                <div class="stat-label">Requests Sent</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="successCount">0</div>
+                <div class="stat-label">Successful</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="errorCount">0</div>
+                <div class="stat-label">Errors</div>
+            </div>
+        </div>
+
+        <div>
+            <button class="button" onclick="sendSingleRequest()">📊 Send Single Request</button>
+            <button class="button" onclick="sendMultipleRequests()">🔥 Send 10 Requests</button>
+            <button class="button" onclick="sendRealisticTraffic()">🌐 Send Realistic Traffic</button>
+            <button class="button" onclick="clearLog()">🗑️ Clear Log</button>
+        </div>
+
+        <div id="log"></div>
+    </div>
+
+    <script>
+        let requestCount = 0;
+        let successCount = 0;
+        let errorCount = 0;
+
+        function updateStats() {
+            document.getElementById('requestCount').textContent = requestCount;
+            document.getElementById('successCount').textContent = successCount;
+            document.getElementById('errorCount').textContent = errorCount;
+        }
+
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `status ${type}`;
+            logEntry.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+            logDiv.appendChild(logEntry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        async function sendTrafficData(data) {
+            requestCount++;
+            updateStats();
+            
+            try {
+                const response = await fetch('http://localhost:8960/api/traffic/intercept', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    successCount++;
+                    log(`✅ Traffic sent successfully! Domain: ${result.domain}, ID: ${result.traffic_id?.substr(0,8)}...`, 'success');
+                } else {
+                    errorCount++;
+                    log(`❌ Traffic failed: ${result.error || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                errorCount++;
+                log(`❌ Network error: ${error.message}`, 'error');
+            }
+            updateStats();
+        }
+
+        function sendSingleRequest() {
+            const data = {
+                url: `${window.location.origin}/frontend-test-${Date.now()}`,
+                method: 'GET',
+                user_agent: navigator.userAgent,
+                client_ip: '192.168.1.100',
+                referrer: document.referrer || 'https://google.com',
+                page_title: 'Frontend Monitoring Test - Single Request',
+                event_type: 'page_view'
+            };
+            
+            log('📊 Sending single request...', 'info');
+            sendTrafficData(data);
+        }
+
+        async function sendMultipleRequests() {
+            log('🔥 Sending 10 requests...', 'info');
+            
+            for (let i = 1; i <= 10; i++) {
+                const data = {
+                    url: `${window.location.origin}/batch-test-${i}-${Date.now()}`,
+                    method: 'GET',
+                    user_agent: navigator.userAgent,
+                    client_ip: `192.168.1.${100 + i}`,
+                    referrer: 'https://search.google.com',
+                    page_title: `Frontend Monitoring Test - Batch ${i}`,
+                    event_type: 'page_view'
+                };
+                
+                await sendTrafficData(data);
+                await new Promise(resolve => setTimeout(resolve, 200)); // Small delay
+            }
+        }
+
+        async function sendRealisticTraffic() {
+            log('🌐 Sending realistic traffic patterns...', 'info');
+            
+            const scenarios = [
+                { page: '/home', title: 'Homepage Visit', method: 'GET', event: 'page_view' },
+                { page: '/products', title: 'Products Page', method: 'GET', event: 'page_view' },
+                { page: '/api/search', title: 'API Search', method: 'POST', event: 'api_call' },
+                { page: '/contact', title: 'Contact Us', method: 'GET', event: 'page_view' },
+                { page: '/api/newsletter', title: 'Newsletter Signup', method: 'POST', event: 'conversion' }
+            ];
+            
+            for (let i = 0; i < scenarios.length; i++) {
+                const scenario = scenarios[i];
+                const data = {
+                    url: `https://example.com${scenario.page}?timestamp=${Date.now()}`,
+                    method: scenario.method,
+                    user_agent: navigator.userAgent,
+                    client_ip: `203.0.113.${10 + i}`,
+                    referrer: i === 0 ? 'https://google.com/search?q=example' : `https://example.com${scenarios[i-1].page}`,
+                    page_title: scenario.title,
+                    event_type: scenario.event
+                };
+                
+                await sendTrafficData(data);
+                await new Promise(resolve => setTimeout(resolve, 500)); // Realistic delay
+            }
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+            requestCount = 0;
+            successCount = 0;
+            errorCount = 0;
+            updateStats();
+            log('🗑️ Log cleared and stats reset', 'info');
+        }
+
+        // Auto-send a test request on page load
+        window.addEventListener('load', () => {
+            log('🚀 Frontend Monitoring Test Page loaded', 'success');
+            log('💡 Use the buttons above to generate test traffic for Boot Interceptor monitoring', 'info');
+            
+            // Send an initial request after 2 seconds
+            setTimeout(() => {
+                log('📡 Sending initial test request...', 'info');
+                sendSingleRequest();
+            }, 2000);
+        });
+    </script>
+</body>
+</html>

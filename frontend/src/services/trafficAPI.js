@@ -14,10 +14,10 @@ export const trafficAPI = {
   protectContent: (protectionData) => api.post('/traffic/protect', protectionData),
   
   // Real-time Metrics
-  getRealTimeMetrics: () => api.get('/traffic/metrics/realtime'),
+  getRealTimeMetrics: () => api.get('/api/traffic/metrics/realtime'),
   
   // Domain-specific Metrics
-  getDomainMetrics: (domainName) => api.get(`/traffic/metrics/domain/${domainName}`),
+  getDomainMetrics: (domainName) => api.get(`/api/traffic/metrics/domain/${domainName}`),
   
   // Alerts
   getAlerts: () => api.get('/traffic/alerts'),

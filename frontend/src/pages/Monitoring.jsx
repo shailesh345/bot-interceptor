@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from 'react'
 import { useSelector } from 'react-redux'
+import { useLocation } from 'react-router-dom'
 import LiveTrafficStream from '../components/monitoring/LiveTrafficStream'
 import UptimeMonitor from '../components/monitoring/UptimeMonitor'
 import SecurityScanner from '../components/security/SecurityScanner'
+import DomainSelector from '../components/monitoring/DomainSelector'
 import { domainsAPI } from '../services/api'
 import { toast } from 'react-hot-toast'
 
 const Monitoring = () => {
+  const location = useLocation()
   const { domains } = useSelector((state) => state.domains)
-  const [activeTab, setActiveTab] = useState('overview')
+  const [activeTab, setActiveTab] = useState(location.state?.activeTab || 'overview')
+  const [selectedDomain, setSelectedDomain] = useState(location.state?.selectedDomain || null)
+  const [selectedDomains, setSelectedDomains] = useState([])
   const [globalMonitoring, setGlobalMonitoring] = useState(false)
   const [testResults, setTestResults] = useState(null)
 
@@ -29,6 +34,36 @@ const Monitoring = () => {
   }
 
   const overviewStats = calculateOverviewStats()
+
+  // Initialize selected domains when domains are loaded
+  useEffect(() => {
+    if (domains.length > 0 && selectedDomains.length === 0) {
+      // Debug: Log domain structure
+      console.log('🔍 Monitoring - All domains from Redux:', domains)
+      console.log('🔍 Monitoring - First domain structure:', domains[0])
+      console.log('🔍 Monitoring - First domain keys:', domains[0] ? Object.keys(domains[0]) : 'No domains')
+      
+      // Auto-select verified domains by default
+      const verifiedDomains = domains.filter(d => {
+        const isVerified = d.is_verified || d.status === 'verified' || d.status === 'active'
+        console.log(`🔍 Monitoring - Domain ${d.domain_name}: is_verified=${d.is_verified}, status=${d.status}, willSelect=${isVerified}`)
+        return isVerified
+      })
+      
+      console.log('🔍 Monitoring - Verified domains:', verifiedDomains)
+      if (verifiedDomains.length > 0) {
+        console.log('🔍 Monitoring - Setting selectedDomains to:', verifiedDomains)
+        setSelectedDomains(verifiedDomains)
+      }
+    }
+  }, [domains, selectedDomains.length])
+
+  // Handle domain selection change
+  const handleDomainSelectionChange = (newSelectedDomains) => {
+    console.log('🔍 Monitoring - Domain selection changed:', newSelectedDomains)
+    console.log('🔍 Monitoring - New selected domains length:', newSelectedDomains.length)
+    setSelectedDomains(newSelectedDomains)
+  }
 
   const handleTestMonitoring = async () => {
     if (domains.length === 0) {
@@ -178,22 +213,48 @@ const Monitoring = () => {
       )
     },
     {
+      id: 'domains',
+      label: 'Select Domains',
+      icon: '🌐',
+      component: (
+        <div className="space-y-6">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Domain Selection</h2>
+            <p className="text-gray-600">
+              Choose which domains you want to monitor. Only verified domains can be actively monitored.
+            </p>
+          </div>
+          <DomainSelector
+            domains={domains}
+            selectedDomains={selectedDomains}
+            onSelectionChange={handleDomainSelectionChange}
+            showFilters={true}
+          />
+        </div>
+      )
+    },
+    {
       id: 'traffic',
       label: 'Live Traffic',
       icon: '📊',
-      component: <LiveTrafficStream domains={domains} />
+      component: (() => {
+        console.log('🔍 Monitoring - Passing to LiveTrafficStream:', selectedDomains)
+        console.log('🔍 Monitoring - selectedDomains type:', typeof selectedDomains)
+        console.log('🔍 Monitoring - selectedDomains is array:', Array.isArray(selectedDomains))
+        return <LiveTrafficStream domains={selectedDomains} />
+      })()
     },
     {
       id: 'uptime',
       label: 'Uptime',
       icon: '⏱️',
-      component: <UptimeMonitor domains={domains} />
+      component: <UptimeMonitor domains={selectedDomains} />
     },
     {
       id: 'security',
       label: 'Security',
       icon: '🔒',
-      component: <SecurityScanner domains={domains} />
+      component: <SecurityScanner domains={selectedDomains} />
     }
   ]
 
@@ -206,6 +267,21 @@ const Monitoring = () => {
           <p className="mt-2 text-gray-600">
             Monitor your websites in real-time with advanced traffic analysis, uptime tracking, and security scanning.
           </p>
+          
+          {/* Debug Info */}
+          <div className="mt-4 p-4 bg-yellow-100 border border-yellow-300 rounded-md">
+            <h3 className="font-semibold text-yellow-800">Debug Info:</h3>
+            <p className="text-sm text-yellow-700">Total domains: {domains.length}</p>
+            <p className="text-sm text-yellow-700">Selected domains: {selectedDomains.length}</p>
+            {domains.length > 0 && (
+              <div className="mt-2">
+                <p className="text-sm text-yellow-700">First domain structure:</p>
+                <pre className="text-xs bg-white p-2 rounded border overflow-auto max-h-32">
+                  {JSON.stringify(domains[0], null, 2)}
+                </pre>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Global Monitoring Toggle */}

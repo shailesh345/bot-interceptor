@@ -1,0 +1,124 @@
+<!-- Copy this script and add it to the <head> section of your shaileshdwivedi.in website -->
+
+<!-- Boot Interceptor Tracking Script for shaileshdwivedi.in -->
+<script>
+(function() {
+    // Boot Interceptor Configuration
+    const BOOT_INTERCEPTOR_CONFIG = {
+        domain: 'shaileshdwivedi.in',
+        domainId: 7,
+        apiEndpoint: 'http://localhost:8960/api/traffic/intercept', // IMPORTANT: Change this to your public server IP when deployed
+        enabled: true
+    };
+    
+    // Traffic data collection
+    function collectTrafficData() {
+        return {
+            method: 'GET',
+            url: window.location.href,
+            headers: {
+                'User-Agent': navigator.userAgent,
+                'Referer': document.referrer || '',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': navigator.language || 'en-US',
+                'Accept-Encoding': 'gzip, deflate'
+            },
+            client_ip: '', // Will be filled by server
+            user_agent: navigator.userAgent,
+            timestamp: new Date().toISOString(),
+            page_title: document.title,
+            screen_resolution: screen.width + 'x' + screen.height,
+            viewport_size: window.innerWidth + 'x' + window.innerHeight,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            language: navigator.language,
+            platform: navigator.platform,
+            cookies_enabled: navigator.cookieEnabled,
+            java_enabled: navigator.javaEnabled ? navigator.javaEnabled() : false,
+            plugins: Array.from(navigator.plugins).map(p => p.name).join(',')
+        };
+    }
+    
+    // Send traffic data to Boot Interceptor
+    function sendTrafficData(data) {
+        if (!BOOT_INTERCEPTOR_CONFIG.enabled) return;
+        
+        // Use sendBeacon if available, fallback to fetch
+        const payload = JSON.stringify(data);
+        
+        if (navigator.sendBeacon) {
+            navigator.sendBeacon(BOOT_INTERCEPTOR_CONFIG.apiEndpoint, payload);
+        } else {
+            // Fallback to fetch for older browsers
+            fetch(BOOT_INTERCEPTOR_CONFIG.apiEndpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: payload,
+                keepalive: true,
+                mode: 'cors'
+            }).catch(function(error) {
+                console.warn('Boot Interceptor: Failed to send traffic data', error);
+            });
+        }
+    }
+    
+    // Track page view
+    function trackPageView() {
+        const data = collectTrafficData();
+        data.event_type = 'page_view';
+        sendTrafficData(data);
+    }
+    
+    // Track custom event
+    function trackEvent(eventType, eventData) {
+        const data = collectTrafficData();
+        data.event_type = eventType;
+        data.event_data = eventData || {};
+        sendTrafficData(data);
+    }
+    
+    // Initialize tracking
+    function initTracking() {
+        // Track initial page load
+        if (document.readyState === 'complete') {
+            trackPageView();
+        } else {
+            window.addEventListener('load', trackPageView);
+        }
+        
+        // Track page visibility changes (when user switches tabs)
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                trackEvent('page_visible');
+            }
+        });
+        
+        // Track clicks on important elements
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'A' || e.target.closest('a')) {
+                const link = e.target.tagName === 'A' ? e.target : e.target.closest('a');
+                trackEvent('link_click', {
+                    url: link.href,
+                    text: link.textContent.trim().substring(0, 100)
+                });
+            }
+        });
+        
+        // Track history changes (for SPAs)
+        window.addEventListener('popstate', trackPageView);
+    }
+    
+    // Start tracking
+    initTracking();
+    
+    // Expose global function for manual tracking
+    window.bootInterceptor = {
+        track: trackPageView,
+        trackEvent: trackEvent,
+        config: BOOT_INTERCEPTOR_CONFIG
+    };
+})();
+</script>
+<!-- End Boot Interceptor Tracking Script -->

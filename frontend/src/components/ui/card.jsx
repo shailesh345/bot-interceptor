@@ -24,6 +24,14 @@ const CardTitle = ({ children, className = '', ...props }) => {
   )
 }
 
+const CardDescription = ({ children, className = '', ...props }) => {
+  return (
+    <p className={`text-sm text-gray-600 mt-1 ${className}`} {...props}>
+      {children}
+    </p>
+  )
+}
+
 const CardContent = ({ children, className = '', ...props }) => {
   return (
     <div className={`px-6 py-4 ${className}`} {...props}>
@@ -32,4 +40,4 @@ const CardContent = ({ children, className = '', ...props }) => {
   )
 }
 
-export { Card, CardHeader, CardTitle, CardContent }
+export { Card, CardHeader, CardTitle, CardDescription, CardContent }

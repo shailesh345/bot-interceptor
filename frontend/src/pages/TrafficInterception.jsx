@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { 
   EyeIcon, 
   ShieldCheckIcon, 
@@ -20,7 +21,9 @@ import DataExportPanel from '../components/analytics/DataExportPanel'
 import TrafficInterceptionSettings from '../components/traffic/TrafficInterceptionSettings'
 
 const TrafficInterception = () => {
-  const [activeTab, setActiveTab] = useState('dashboard')
+  const location = useLocation()
+  const [activeTab, setActiveTab] = useState(location.state?.activeTab || 'dashboard')
+  const [selectedDomain, setSelectedDomain] = useState(location.state?.selectedDomain || null)
   const [systemStats, setSystemStats] = useState({
     status: 'active',
     totalRequests: 0,
