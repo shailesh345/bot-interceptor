@@ -20,8 +20,8 @@ const Login = () => {
   } = useForm({
     mode: 'onChange',
     defaultValues: {
-      username: '',
-      password: ''
+      username: 'admin',
+      password: 'admin123'
     }
   })
 

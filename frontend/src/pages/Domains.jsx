@@ -2976,7 +2976,7 @@ const Domains = () => {
                 // Test API call directly
                 const token = localStorage.getItem('token')
                 if (token) {
-                  fetch('http://localhost:8960/api/v1/domains', {
+                  fetch('http://127.0.0.1:9889/api/v1/domains', {
                     headers: {
                       'Authorization': `Bearer ${token}`,
                       'Content-Type': 'application/json'
@@ -3319,10 +3319,13 @@ const Domains = () => {
         onClose={() => setShowMonitoringConfigModal(false)}
         domain={selectedDomain}
         onSave={(updatedDomain) => {
+          // Update the selected domain with the returned data
+          if (updatedDomain) {
+            setSelectedDomain(updatedDomain)
+          }
           // Refresh domains list to show updated monitoring status
           dispatch(fetchDomains())
           setShowMonitoringConfigModal(false)
-          setSelectedDomain(null)
         }}
       />
 

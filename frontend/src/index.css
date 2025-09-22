@@ -969,6 +969,328 @@ button[class*="bg-pink"]:hover, button[class*="bg-orange"]:hover, button[class*=
   border-color: var(--color-accent) !important;
 }
 
+/* Enhanced Component Classes */
+.card-premium {
+  background: var(--color-secondary);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-xl);
+  box-shadow: var(--shadow-lg);
+  transition: all var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+}
+
+.card-premium::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-accent), var(--color-primary));
+  background-size: 200% 100%;
+  animation: shimmer 3s infinite linear;
+}
+
+.card-premium:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-xl);
+  transform: translateY(-4px);
+}
+
+.input-enhanced {
+  width: 100%;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  font-size: 1rem;
+  font-family: var(--font-family-primary);
+  background: var(--color-secondary);
+  color: var(--color-text-primary);
+  transition: all var(--transition-normal);
+  outline: none;
+}
+
+.input-enhanced:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.input-enhanced::placeholder {
+  color: var(--color-text-muted);
+  font-family: var(--font-family-primary);
+}
+
+.glow-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.glow-effect::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.glow-effect:hover::before {
+  left: 100%;
+}
+
+.interactive {
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.interactive:hover {
+  transform: scale(1.02);
+}
+
+.interactive:active {
+  transform: scale(0.98);
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes glow {
+  from {
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+  }
+  to {
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* Enhanced Skeleton Types */
+.skeleton-text {
+  height: 1rem;
+  margin-bottom: 0.5rem;
+  border-radius: var(--radius-sm);
+}
+
+.skeleton-title {
+  height: 1.5rem;
+  margin-bottom: 1rem;
+  border-radius: var(--radius-sm);
+}
+
+.skeleton-card {
+  height: 200px;
+  border-radius: var(--radius-lg);
+}
+
+.skeleton-input {
+  height: 2.5rem;
+  border-radius: var(--radius-md);
+}
+
+.skeleton-button {
+  height: 2.5rem;
+  width: 100px;
+  border-radius: var(--radius-md);
+}
+
+/* Enhanced Form Styles */
+.form-group {
+  margin-bottom: var(--spacing-lg);
+}
+
+.form-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-sm);
+  font-family: var(--font-family-primary);
+}
+
+.form-error {
+  color: var(--color-primary);
+  font-size: 0.75rem;
+  margin-top: var(--spacing-xs);
+  font-family: var(--font-family-primary);
+}
+
+/* Enhanced Badge Styles */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 500;
+  font-family: var(--font-family-primary);
+  transition: all var(--transition-fast);
+}
+
+.badge-success {
+  background: var(--color-primary);
+  color: var(--color-secondary);
+}
+
+.badge-warning {
+  background: var(--color-accent);
+  color: var(--color-secondary);
+}
+
+.badge-danger {
+  background: var(--color-primary);
+  color: var(--color-secondary);
+}
+
+.badge-info {
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+}
+
+/* Enhanced Loading States */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+/* Enhanced Animation Classes */
+.fade-in-up {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.fade-in-down {
+  animation: fadeInDown 0.6s ease-out;
+}
+
+.slide-in-left {
+  animation: slideInLeft 0.5s ease-out;
+}
+
+.slide-in-right {
+  animation: slideInRight 0.5s ease-out;
+}
+
+.scale-in {
+  animation: scaleIn 0.3s ease-out;
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Enhanced Responsive Utilities */
+.hidden-mobile {
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .hidden-mobile {
+    display: none;
+  }
+}
+
+.visible-mobile {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .visible-mobile {
+    display: block;
+  }
+}
+
+/* Enhanced Focus States */
+.focus-ring {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.focus-ring:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Enhanced Hover States */
+.hover-lift {
+  transition: transform var(--transition-fast);
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+}
+
+.hover-scale {
+  transition: transform var(--transition-fast);
+}
+
+.hover-scale:hover {
+  transform: scale(1.05);
+}
+
+/* Enhanced Text Utilities */
+.text-gradient {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-shadow {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Enhanced Border Utilities */
+.border-gradient {
+  border: 2px solid;
+  border-image: linear-gradient(135deg, var(--color-primary), var(--color-accent)) 1;
+}
+
+/* Enhanced Shadow Utilities */
+.shadow-soft {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.shadow-medium {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.shadow-strong {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
 /* Fix any white text on white backgrounds */
 .text-white[class*="bg-white"], 
 .text-gray-100[class*="bg-white"],

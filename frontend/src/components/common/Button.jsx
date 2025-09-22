@@ -30,49 +30,50 @@ const Button = ({
 
   const variantClasses = {
     primary: `
-      bg-black text-white hover:bg-gray-800
-      focus:ring-black/20 focus:ring-offset-2
-      border-black hover:border-gray-800
-      hover:shadow-black/25
+      bg-primary-600 text-white hover:bg-primary-700
+      focus:ring-primary-500/20 focus:ring-offset-2
+      border-primary-600 hover:border-primary-700
+      hover:shadow-primary-500/25
     `,
     secondary: `
-      bg-gray-100 text-black hover:bg-gray-200
+      bg-gray-100 text-gray-700 hover:bg-gray-200
       focus:ring-gray-500/20 focus:ring-offset-2
       border-gray-300 hover:border-gray-400
-      hover:shadow-gray/25
+      hover:shadow-gray-500/25
     `,
     outline: `
-      bg-transparent text-black border-2 border-black hover:bg-black hover:text-white
-      focus:ring-black/20 focus:ring-offset-2
-      hover:shadow-black/25
+      bg-transparent text-primary-600 border-2 border-primary-600 hover:bg-primary-600 hover:text-white
+      focus:ring-primary-500/20 focus:ring-offset-2
+      hover:shadow-primary-500/25
     `,
     ghost: `
-      bg-transparent text-black hover:bg-gray-100 hover:text-black
+      bg-transparent text-gray-700 hover:bg-gray-100 hover:text-gray-900
       focus:ring-gray-500/20 focus:ring-offset-2
       border-transparent hover:border-gray-300
     `,
     danger: `
-      bg-black text-white hover:bg-gray-800
-      focus:ring-black/20 focus:ring-offset-2
-      border-black hover:border-gray-800
-      hover:shadow-black/25
+      bg-error-500 text-white hover:bg-error-600
+      focus:ring-error-500/20 focus:ring-offset-2
+      border-error-500 hover:border-error-600
+      hover:shadow-error-500/25
     `,
     success: `
-      bg-black text-white hover:bg-gray-800
-      focus:ring-black/20 focus:ring-offset-2
-      border-black hover:border-gray-800
-      hover:shadow-black/25
+      bg-success-500 text-white hover:bg-success-600
+      focus:ring-success-500/20 focus:ring-offset-2
+      border-success-500 hover:border-success-600
+      hover:shadow-success-500/25
     `,
     warning: `
-      bg-gray-100 text-black hover:bg-gray-200
-      focus:ring-gray-500/20 focus:ring-offset-2
-      border-gray-300 hover:border-gray-400
-      hover:shadow-gray/25
+      bg-warning-500 text-white hover:bg-warning-600
+      focus:ring-warning-500/20 focus:ring-offset-2
+      border-warning-500 hover:border-warning-600
+      hover:shadow-warning-500/25
     `,
     info: `
-      bg-white text-black border-2 border-black hover:bg-black hover:text-white
-      focus:ring-black/20 focus:ring-offset-2
-      hover:shadow-black/25
+      bg-info-500 text-white hover:bg-info-600
+      focus:ring-info-500/20 focus:ring-offset-2
+      border-info-500 hover:border-info-600
+      hover:shadow-info-500/25
     `
   }
 

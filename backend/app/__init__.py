@@ -53,13 +53,30 @@ def create_app(config_name=None):
     mail.init_app(app)
     limiter.init_app(app)
     
+    # Configure JWT
+    app.config['JWT_SECRET_KEY'] = app.config.get('JWT_SECRET_KEY', 'jwt-secret-change-in-production')
+    
+    # Configure JWT error handlers
+    @jwt.expired_token_loader
+    def expired_token_callback(jwt_header, jwt_payload):
+        return {'message': 'Token has expired'}, 401
+    
+    @jwt.invalid_token_loader
+    def invalid_token_callback(error):
+        return {'message': 'Invalid token'}, 401
+    
+    @jwt.unauthorized_loader
+    def missing_token_callback(error):
+        return {'message': 'Authorization token is required'}, 401
+    
     # Initialize middleware
-    error_handler.init_app(app)
+    # Temporarily disable error handler to test JWT
+    # error_handler.init_app(app)
     api_monitor.init_app(app)
     
     # Configure CORS
     CORS(app, 
-         origins=['http://localhost:9889', 'http://127.0.0.1:9889', 'https://yourdomain.com'],
+         origins=['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:9889', 'http://127.0.0.1:9889', 'https://yourdomain.com'],
          supports_credentials=True,
          methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
          allow_headers=['Content-Type', 'Authorization', 'X-Requested-With'],
@@ -149,8 +166,6 @@ def create_app(config_name=None):
     # Register API documentation
     if API_DOCS_AVAILABLE:
         api_doc.init_app(app)
-    
-
     
     # JWT token handlers
     @jwt.token_in_blocklist_loader

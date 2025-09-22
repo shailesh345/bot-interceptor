@@ -43,7 +43,7 @@ const TrackingIntegration = () => {
   const fetchTrackingScript = async (domainId) => {
     setLoading(true)
     try {
-      const response = await fetch(`http://localhost:8960/api/v1/domains/${domainId}/tracking-script`, {
+      const response = await fetch(`http://127.0.0.1:9889/api/v1/domains/${domainId}/tracking-script`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -69,7 +69,7 @@ const TrackingIntegration = () => {
     
     setVerifying(true)
     try {
-      const response = await fetch(`http://localhost:8960/api/v1/domains/${selectedDomain.id}/verify-integration`, {
+      const response = await fetch(`http://127.0.0.1:9889/api/v1/domains/${selectedDomain.id}/verify-integration`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

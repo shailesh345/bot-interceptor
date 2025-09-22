@@ -12,13 +12,13 @@ const Badge = ({
   const baseClasses = 'inline-flex items-center font-medium rounded-full transition-all duration-200'
   
   const variants = {
-    default: 'bg-gray-100 text-black',
-    secondary: 'bg-gray-200 text-black',
-    destructive: 'bg-gray-800 text-white',
-    outline: 'border border-gray-300 text-black',
-    success: 'bg-gray-700 text-white',
-    warning: 'bg-gray-600 text-white',
-    info: 'bg-gray-500 text-white'
+    default: 'bg-gray-100 text-gray-700',
+    secondary: 'bg-gray-200 text-gray-700',
+    destructive: 'bg-error-500 text-white',
+    outline: 'border border-gray-300 text-gray-700',
+    success: 'bg-success-500 text-white',
+    warning: 'bg-warning-500 text-white',
+    info: 'bg-info-500 text-white'
   }
   
   const sizeClasses = {
@@ -31,38 +31,38 @@ const Badge = ({
     switch (variant) {
       case 'default':
         return {
-          backgroundColor: '#f3f4f6',
-          color: '#000000',
+          backgroundColor: '#f7fafc',
+          color: '#4a5568',
         }
       case 'primary':
         return {
-          backgroundColor: '#000000',
+          backgroundColor: '#4a5568',
           color: '#ffffff',
         }
       case 'success':
         return {
-          backgroundColor: '#374151',
+          backgroundColor: '#38a169',
           color: '#ffffff',
         }
       case 'warning':
         return {
-          backgroundColor: '#4b5563',
+          backgroundColor: '#d69e2e',
           color: '#ffffff',
         }
       case 'danger':
         return {
-          backgroundColor: '#1f2937',
+          backgroundColor: '#e53e3e',
           color: '#ffffff',
         }
       case 'info':
         return {
-          backgroundColor: '#6b7280',
+          backgroundColor: '#3182ce',
           color: '#ffffff',
         }
       case 'secondary':
         return {
-          backgroundColor: '#e5e7eb',
-          color: '#000000',
+          backgroundColor: '#e2e8f0',
+          color: '#4a5568',
         }
       default:
         return {}

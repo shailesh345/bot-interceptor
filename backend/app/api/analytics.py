@@ -146,8 +146,8 @@ def get_traffic_patterns():
         daily_pattern = db.session.query(
             func.date(TrafficLog.timestamp).label('date'),
             func.count(TrafficLog.id).label('total_requests'),
-            func.sum(func.case([(TrafficLog.is_bot == True, 1)], else_=0)).label('bot_requests'),
-            func.sum(func.case([(TrafficLog.action_taken == 'block', 1)], else_=0)).label('blocked_requests')
+            func.sum(func.case([(TrafficLog.is_bot == True, 1)], else_value=0)).label('bot_requests'),
+            func.sum(func.case([(TrafficLog.action_taken == 'block', 1)], else_value=0)).label('blocked_requests')
         ).join(Domain).filter(
             Domain.tenant_id == user.tenant_id,
             TrafficLog.timestamp >= start_date
@@ -229,7 +229,7 @@ def get_bot_intelligence():
         threat_indicators = db.session.query(
             TrafficLog.client_ip,
             func.count(TrafficLog.id).label('request_count'),
-            func.sum(func.case([(TrafficLog.action_taken == 'block', 1)], else_=0)).label('blocked_count')
+            func.sum(func.case([(TrafficLog.action_taken == 'block', 1)], else_value=0)).label('blocked_count')
         ).join(Domain).filter(
             Domain.tenant_id == user.tenant_id,
             TrafficLog.timestamp >= start_date
@@ -241,9 +241,9 @@ def get_bot_intelligence():
         bot_evolution = db.session.query(
             func.date(TrafficLog.timestamp).label('date'),
             func.count(TrafficLog.id).label('total_bots'),
-            func.sum(func.case([(TrafficLog.bot_type == 'scraper', 1)], else_=0)).label('scrapers'),
-            func.sum(func.case([(TrafficLog.bot_type == 'botnet', 1)], else_=0)).label('botnets'),
-            func.sum(func.case([(TrafficLog.bot_type == 'automation', 1)], else_=0)).label('automation')
+            func.sum(func.case([(TrafficLog.bot_type == 'scraper', 1)], else_value=0)).label('scrapers'),
+            func.sum(func.case([(TrafficLog.bot_type == 'botnet', 1)], else_value=0)).label('botnets'),
+            func.sum(func.case([(TrafficLog.bot_type == 'automation', 1)], else_value=0)).label('automation')
         ).join(Domain).filter(
             Domain.tenant_id == user.tenant_id,
             TrafficLog.timestamp >= start_date,

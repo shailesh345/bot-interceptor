@@ -41,8 +41,8 @@ export const setAuth = (data) => {
 // Login function
 export const login = async (credentials) => {
   try {
-    // Use the proper API instance instead of hardcoded URL
-    const response = await fetch('http://localhost:8960/auth/login', {
+    // Use the Vite proxy instead of direct backend URL
+    const response = await fetch('/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -51,11 +51,23 @@ export const login = async (credentials) => {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Login failed');
+      let errorMessage = 'Login failed';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorMessage;
+      } catch (jsonError) {
+        // If response is not JSON, use status text
+        errorMessage = response.statusText || `HTTP ${response.status} Error`;
+      }
+      throw new Error(errorMessage);
     }
 
-    const data = await response.json();
+    let data;
+    try {
+      data = await response.json();
+    } catch (jsonError) {
+      throw new Error('Invalid response format from server');
+    }
     
     console.log('🔐 Login successful, data received:', data);
     

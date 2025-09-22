@@ -33,7 +33,7 @@ const AnalyticsDashboard = ({ domainId, timeRange = 24 }) => {
     try {
       setLoading(true)
       const response = await fetch(
-        `http://localhost:8960/api/v1/analytics/traffic/summary?${domainId ? `domain_id=${domainId}&` : ''}hours=${selectedTimeRange}`,
+        `http://127.0.0.1:9889/api/v1/analytics/traffic/summary?${domainId ? `domain_id=${domainId}&` : ''}hours=${selectedTimeRange}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -59,7 +59,7 @@ const AnalyticsDashboard = ({ domainId, timeRange = 24 }) => {
   const fetchRealtimeMetrics = async () => {
     try {
       const response = await fetch(
-        `http://localhost:8960/api/v1/analytics/traffic/realtime?${domainId ? `domain_id=${domainId}&` : ''}minutes=5`,
+        `http://127.0.0.1:9889/api/v1/analytics/traffic/realtime?${domainId ? `domain_id=${domainId}&` : ''}minutes=5`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,

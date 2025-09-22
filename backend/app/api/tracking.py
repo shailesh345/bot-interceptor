@@ -257,17 +257,17 @@ def intercept_traffic():
         if not domain and not is_dns_proxy_traffic:
             return jsonify({'error': 'Domain not registered'}), 404
         
-                        # For DNS proxy traffic, find or use the first verified domain
-                if is_dns_proxy_traffic and not domain:
-                    # Find any verified domain to associate DNS proxy traffic with
-                    verified_domain = Domain.query.filter_by(is_verified=True).first()
-                    if verified_domain:
-                        domain_id = verified_domain.id
-                        domain = verified_domain  # Use the verified domain for consistency
-                        logger.info(f"🎯 Using verified domain ID {domain_id} ({domain.domain_name}) for DNS proxy traffic")
-                    else:
-                        domain_id = -1  # Fallback if no verified domains exist
-                        logger.warning("⚠️ No verified domains found, using fallback domain_id = -1")
+        # For DNS proxy traffic, find or use the first verified domain
+        if is_dns_proxy_traffic and not domain:
+            # Find any verified domain to associate DNS proxy traffic with
+            verified_domain = Domain.query.filter_by(is_verified=True).first()
+            if verified_domain:
+                domain_id = verified_domain.id
+                domain = verified_domain  # Use the verified domain for consistency
+                logger.info(f"🎯 Using verified domain ID {domain_id} ({domain.domain_name}) for DNS proxy traffic")
+            else:
+                domain_id = -1  # Fallback if no verified domains exist
+                logger.warning("⚠️ No verified domains found, using fallback domain_id = -1")
         elif domain:
             if not domain.is_verified or not domain.traffic_enabled:
                 return jsonify({'error': 'Traffic monitoring not enabled for this domain'}), 403

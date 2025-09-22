@@ -4,7 +4,7 @@ import { io } from 'socket.io-client';
 class WebSocketService {
   constructor() {
     this.socket = null;
-    this.url = import.meta.env.VITE_WS_URL || 'http://localhost:8960';
+    this.url = import.meta.env.VITE_WS_URL || 'http://127.0.0.1:9889';
     this.reconnectAttempts = 0;
     this.maxReconnectAttempts = 5;
     this.reconnectDelay = 1000;

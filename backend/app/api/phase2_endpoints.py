@@ -825,8 +825,9 @@ def update_domain_monitoring(domain_id):
         if 'security_scan_interval' in data:
             domain.security_scan_interval = data['security_scan_interval']
         
-        # Note: Additional monitoring features can be added to the Domain model as needed
-        # For now, we only support the basic monitoring attributes defined in the model
+        # Note: Additional monitoring features (proxy_interception_enabled, traffic_analysis_enabled, 
+        # uptime_alerts_enabled, security_alerts_enabled) are not yet implemented in the Domain model
+        # These fields are handled in the frontend for UI purposes but not persisted to database
         
         domain.updated_at = datetime.utcnow()
         
@@ -844,7 +845,12 @@ def update_domain_monitoring(domain_id):
                 'monitoring_content': domain.monitoring_content,
                 'monitoring_headers': domain.monitoring_headers,
                 'security_scan_enabled': domain.security_scan_enabled,
-                'security_scan_interval': domain.security_scan_interval
+                'security_scan_interval': domain.security_scan_interval,
+                # Additional fields are not persisted to database yet
+                'proxy_interception_enabled': False,
+                'traffic_analysis_enabled': False,
+                'uptime_alerts_enabled': False,
+                'security_alerts_enabled': False
             }
         })
         

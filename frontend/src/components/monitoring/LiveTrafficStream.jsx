@@ -150,7 +150,7 @@ const LiveTrafficStream = ({ domains = [] }) => {
       }
 
       // Initialize socket connection with version compatibility
-      socketRef.current = io('http://localhost:8960', {
+      socketRef.current = io('http://127.0.0.1:9889', {
         transports: ['websocket', 'polling'],
         upgrade: true,
         rememberUpgrade: false,

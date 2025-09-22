@@ -159,7 +159,7 @@ export const monitoringAPI = {
 
 // WebSocket connection for real-time updates
 export const createWebSocketConnection = (domainId, onMessage, onError) => {
-  const ws = new WebSocket(`ws://localhost:8960/ws/traffic/${domainId}`)
+  const ws = new WebSocket(`ws://127.0.0.1:9889/ws/traffic/${domainId}`)
   
   ws.onopen = () => {
     console.log('WebSocket connected for domain:', domainId)
